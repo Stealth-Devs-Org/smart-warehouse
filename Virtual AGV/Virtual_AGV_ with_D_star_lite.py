@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from queue import PriorityQueue
 import copy
+import time
 
 # Define the fixed grid from the Excel file
 def ReadGrid(file_path):
@@ -80,7 +81,7 @@ def CalculatePath(start, goal, grid):
     return path
 
 # Function to plot the grid and path
-def plot_grid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
+def PlotGrid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
     ax.clear()  # Clear the current plot
 
     # Plot main grid lines (dashed)
@@ -139,9 +140,9 @@ def CreateSegments(path):
     if not path:
         return segments
 
-    current_segment = [path[0]]
+    current_segment = [path[1]]
     direction = None
-    for i in range(1, len(path)):
+    for i in range(2, len(path)):
         if path[i][0] == current_segment[-1][0]:
             new_direction = 'vertical'
             if direction != new_direction:
@@ -161,59 +162,90 @@ def CreateSegments(path):
     segments.append(current_segment)
     return segments
 
+# Function to update current location in Main server
+def UpdateCurrentLocation(current_location):
+    # Update the current location in the Main server
+    print(f"Current location updated to: {current_location}")
+    
+# Function for simulate loading and unloading
+def SimulateLoadingUnloading(current_location):
+    # Simulate loading and unloading at the current location
+    print(f"Loading and unloading at location: {current_location}")
+    time.sleep(2)  # Simulate loading and unloading time
+
+# Function to request path clearance from the Main server
+def RequestPathClearance(segment):
+    print(f"Path clearance from {segment[0]} to {segment[-1]}:")
+    return input("Enter '1' to proceed, '2' to pause, or blocked cells as a list (Ex: [(2,15),(2,16)]) to recalculate the path: ").strip().lower()
+
+# Function to recalculate the path considering new obstacles
+def RecalculatePath(path_clearance, current_node, goal):
+    grid = copy.deepcopy(fixed_grid)  # Reset the grid to the original state
+    obstacles = eval(path_clearance)
+    # Update grid to remove connections for new obstacles
+    for obs in obstacles:
+        grid.pop(obs, None)
+        for node, connections in grid.items():
+            if obs in connections:
+                grid[node].remove(obs)
+                    
+    # Recalculate path from the current node
+    new_path = CalculatePath(current_node, goal, grid)
+    return new_path, obstacles
+                    
+     
+
 # Function to handle interactive path display
-def interactive_path_display(segments_list, grid, start, goal, ax):
+def InteractivePathDisplay(segments_list, current_location, goal, ax):
     segments = segments_list.copy()
     index = 0
-    current_node = segments[index][0]
     while index < len(segments):
         segment = segments[index]        
         while True:
-            print(f"Path clearance from {segment[0]} to {segment[-1]}:")
-            user_input = input("Enter '1' to proceed, '2' to pause, or blocked cells as a list (Ex: [(2,15),(2,16)]) to recalculate the path: ").strip().lower()
-            if user_input == '1':
-                print(f"Proceeding to the segment from {segment[0]} to {segment[-1]}")
-                current_node = segment[-1]
+            path_clearance = RequestPathClearance(segment)
+
+            if path_clearance == '1':
+                print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
+                for cell in segment:
+                    # delay
+                    time.sleep(1)
+                    current_location = cell
+                    UpdateCurrentLocation(current_location)
+                
                 index += 1
                 break
-            elif user_input == '2':
+
+            elif path_clearance == '2':
                 print("Pausing...")
                 continue
+
             else:
                 # Recalculate the path from the last node printed considering new obstacles
                 try:
-                    grid = copy.deepcopy(fixed_grid)  # Reset the grid to the original state
-                    obstacles = eval(user_input)
-                    # Update grid to remove connections for new obstacles
-                    for obs in obstacles:
-                        grid.pop(obs, None)
-                        for node, connections in grid.items():
-                            if obs in connections:
-                                grid[node].remove(obs)
-                    
-                    # Recalculate path from the current node
-                    new_path = CalculatePath(current_node, goal, grid)
+                    new_path,obstacles = RecalculatePath(path_clearance, current_location, goal)
                     if not new_path:
                         print("No valid path found after recalculation.")
                         return
-                    
-                    print("New path:", new_path)
-                    
-                    # Break the new path into segments
-                    new_segments = CreateSegments(new_path)
-                    
-                    # Plot the grid with new path and obstacles
-                    plot_grid(ax, grid_size, start, goal, new_path, obstacles)  # Update the plot
-                    
-                    # Update segments and reset index
-                    segments = new_segments
-                    index = 0
-                    break
+                    else:
+                        print("New path:", new_path)
+                        
+                        # Break the new path into segments
+                        new_segments = CreateSegments(new_path)
+                        
+                        # Plot the grid with new path and obstacles
+                        PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)  # Update the plot
+                        
+                        # Update segments and reset index
+                        segments = new_segments
+                        index = 0
+                        break
+
                 except Exception as e:
                     print(f"Invalid input: {e}")
                     continue
     print("End of path reached")
-    return current_node
+    SimulateLoadingUnloading(current_location)
+    return current_location
 
 # Read the grid from the Excel file
 file_path = 'E:/acadamic/sem 7/EN4203 - Project/Project Repo/smart-warehouse/Floor Plan Sketcher/grid.xlsx' 
@@ -228,18 +260,18 @@ current_location = tuple(map(int, input("Enter start coordinates( Ex: For (1,18)
 
 
 while True:
-    start = current_location
-    goal = tuple(map(int, input("Enter end coordinates ( Ex: For (24,11) type 24,11 ): ").strip().split(',')))
+    
+    goal = tuple(map(int, input("Enter goal coordinates ( Ex: For (24,11) type 24,11 ): ").strip().split(',')))
 
     # Compute the path using D* Lite
-    path = CalculatePath(start, goal, grid)
+    path = CalculatePath(current_location, goal, grid)
     print("Path:", path)
 
     # Initialize the plot
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Plot the initial grid with the first path
-    plot_grid(ax, grid_size, start, goal, path)
+    PlotGrid(ax, grid_size, current_location, goal, path)
 
     # Show the initial plot
     plt.show(block=False)
@@ -249,7 +281,7 @@ while True:
     print("segments:", segments)
 
     # Display the path interactively
-    current_location = interactive_path_display(segments, grid, start, goal, ax)
+    current_location = InteractivePathDisplay(segments, current_location, goal, ax)
 
     # Close the plot
     plt.close(fig)
