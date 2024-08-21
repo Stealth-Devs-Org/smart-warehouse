@@ -1,18 +1,9 @@
-from flask import Flask, jsonify
-from flask_mqtt import Mqtt
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from server.config import Config
 
+
 db = SQLAlchemy()
-mqtt_client = Mqtt()
-
-
-@mqtt_client.on_connect()
-def handle_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print('Connected successfully')
-    else:
-        print('Bad connection. Code:', rc)
 
 
 def create_app(config_class=Config):
@@ -20,6 +11,8 @@ def create_app(config_class=Config):
     app.config.from_object(Config)
     
     db.init_app(app)
+    
+    from server.mqtt.utils import mqtt_client
     mqtt_client.init_app(app)
     
     return app
