@@ -179,9 +179,23 @@ def UpdateCurrentLocation(current_location):
     print(f"Current location updated to: {current_location}")
     
 # Function to request path clearance from the Main server
-def RequestPathClearance(segment):
-    print(f"Path clearance from {segment[0]} to {segment[-1]}:")
-    return input("Enter '1' to proceed, '2' to pause, or blocked cells as a list (Ex: [(2,15),(2,16)]) to recalculate the path: ").strip().lower()
+def RequestPathClearance(AGV_ID, segment):
+    url = "http://127.0.0.1:5000/path_clearance"  # Replace with the actual URL of the target Flask application
+    payload = {'AGV_ID': AGV_ID, 'segment': [segment[0], segment[-1]]}
+    
+    print(f"Requesting path clearance from {segment[0]} to {segment[-1]}...")
+
+    # return input("Enter 1 to proceed, 2 to pause, or any other key to recalculate path: ")
+    
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()  # Check for HTTP errors
+        return response.text  # Return the response content
+    except requests.exceptions.RequestException as e:
+        print(f"Error obtaining path clearance: {e}")
+        return None  # or handle the error as needed
+    
+
 
 # Function to recalculate the path considering new obstacles
 def RecalculatePath(path_clearance, current_node, goal):
@@ -197,6 +211,19 @@ def RecalculatePath(path_clearance, current_node, goal):
     # Recalculate path from the current node
     new_path = CalculatePath(current_node, goal, grid)
     return new_path, obstacles
+
+def ObtainGoal(AGV_ID):
+    url = "http://127.0.0.1:5000/get_goal"  # Replace with the actual URL of the target Flask application
+    payload = {'AGV_ID': AGV_ID}
+    
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        goal = tuple(map(int, response.json().get('goal')))
+        return goal
+    except requests.exceptions.RequestException as e:
+        print(f"Error obtaining goal: {e}")
+        return None  # or handle the error as needed
                     
 # Function to handle interactive path display
 def InteractivePathDisplay(segments_list, current_location, goal, ax):
@@ -205,7 +232,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
     while index < len(segments):
         segment = segments[index]        
         while True:
-            path_clearance = RequestPathClearance(segment)
+            path_clearance = RequestPathClearance(AGV_ID,segment)
 
             if path_clearance == '1':
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
@@ -237,7 +264,8 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                         
                         # Plot the grid with new path and obstacles
                         PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)  # Update the plot
-                        
+                        plt.pause(0.001)
+
                         # Update segments and reset index
                         segments = new_segments
                         index = 0
@@ -250,18 +278,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
     SimulateLoadingUnloading(current_location)
     return current_location
 
-def ObtainGoal(AGV_ID):
-    url = "http://127.0.0.1:5000/get_goal"  # Replace with the actual URL of the target Flask application
-    payload = {'AGV_ID': AGV_ID}
-    
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        goal = tuple(map(int, response.json().get('goal')))
-        return goal
-    except requests.exceptions.RequestException as e:
-        print(f"Error obtaining goal: {e}")
-        return None  # or handle the error as needed
+
 
     
 
@@ -292,6 +309,7 @@ if __name__ == '__main__':
 
         # Plot the initial grid with the first path
         PlotGrid(ax, grid_size, current_location, goal, path)
+        plt.pause(0.001)
 
         # Show the initial plot
         plt.show(block=False)
