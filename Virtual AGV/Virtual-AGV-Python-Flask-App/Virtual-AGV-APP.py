@@ -1,14 +1,33 @@
-from flask import Flask
+from flask import Flask,request, jsonify
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from queue import PriorityQueue
 import copy
 import time
-
+import threading
 
 app = Flask(__name__)
 
+# Shared variable to indicate stop signal
+interrupt = 0
+
+
+@app.route('/interrupt', methods=['POST'])
+def interrupt_route():
+    print("Inturrupt occred")
+    global interrupt
+    data = request.json
+    if data.get('interrupt')=='1':
+        interrupt = 0
+        return jsonify({'status': 'Resuming AGV'}), 200
+    elif data.get('interrupt')=='2':
+        interrupt = 1
+        return jsonify({'status': 'Stopping AGV'}), 200
+    else:
+        interrupt = data.get('interrupt')
+        return jsonify({'status': 'Recalculate path'}), 
+    
 
 # Define the fixed grid from the Excel file
 def ReadGrid(file_path):
@@ -237,13 +256,45 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
             if path_clearance == '1':
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 for cell in segment:
+                    is_path_correct = 1
+                    while True:
+                        # Check for stop signal before moving to the next cell
+                        if interrupt==0:
+                            break
+                        elif interrupt==1:
+                            time.sleep(1)
+                            print("Stop signal received! Halting AGV.")
+                        else:
+                            print("Recalculating path...")
+                            is_path_correct = 0
+                            new_path,obstacles = RecalculatePath(interrupt, current_location, goal)
+                            if not new_path:
+                                print("No valid path found after recalculation.")
+                                return
+                            else:
+                                print("New path:", new_path)
+                                
+                                # Break the new path into segments
+                                new_segments = CreateSegments(new_path)
+                                
+                                # Plot the grid with new path and obstacles
+                                PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)  # Update the plot
+                                plt.pause(0.001)
+
+                                # Update segments and reset index
+                                segments = new_segments
+                                index = 0
+                                break
+                    if not is_path_correct:
+                        is_path_correct = 1
+                        break
                     # delay
                     time.sleep(1)
                     current_location = cell
                     UpdateCurrentLocation(current_location)
-                
-                index += 1
-                break
+                else:
+                    index += 1
+                    break
 
             elif path_clearance == '2':
                 print("Pausing...")
@@ -280,9 +331,13 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
 
 
 
+
+
+
     
 
 if __name__ == '__main__':
+    threading.Thread(target=lambda: app.run(port=5001)).start()
 
     AGV_ID = int(input("Enter AGV ID: "))
     # Read the grid from the Excel file
