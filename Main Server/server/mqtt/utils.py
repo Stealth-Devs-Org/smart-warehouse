@@ -1,4 +1,6 @@
+import json
 from flask_mqtt import Mqtt
+from server.agv.utils import save_agv_location
 
 mqtt_client = Mqtt()
 
@@ -6,16 +8,33 @@ mqtt_client = Mqtt()
 def handle_connect(client, userdata, flags, rc):
     if rc == 0:
         print('Connected successfully')
+        mqtt_client.subscribe('agv_location')
+        print('Subscribed to agv_location')
     else:
         print('Bad connection. Code:', rc)
         
 
 @mqtt_client.on_message()
 def handle_mqtt_message(client, userdata, message):
-    data = dict(
-        topic=message.topic,
-        payload=message.payload.decode()
-    )
     
-    if data['topic'].split('/')[1] == 'agv':
-        print(data)
+    topic=message.topic
+    payload=message.payload.decode()
+    data = json.loads(payload)
+        
+    match topic:
+        case "agv_location":
+            save_agv_location(data)
+
+        case "Python":
+            print("You can become a Data Scientist")
+
+        case "PHP":
+            print("You can become a backend developer")
+
+        case "Solidity":
+            print("You can become a Blockchain developer")
+
+        case "Java":
+            print("You can become a mobile app developer")
+        case _:
+            print("The language doesn't matter, what matters is solving problems.")
