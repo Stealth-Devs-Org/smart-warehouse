@@ -1,6 +1,8 @@
 
 class Config :
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'
+    SECRET_KEY = 'dbdd91de1ea616b24740a3d963a7f95c'
+    
+    MONGO_URI = 'mongodb://localhost:27017/'
     
     # MQTT configuration
     MQTT_BROKER_URL = "test.mosquitto.org"
