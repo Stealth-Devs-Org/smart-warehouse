@@ -158,6 +158,8 @@ def PlotGrid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
     ax.set_aspect('equal')
     ax.grid(True)
     plt.draw()  # Update the plot
+    plt.pause(0.001)
+
 
 # Function to break path into straight-line segments
 def CreateSegments(path):
@@ -252,12 +254,13 @@ def ResetInterrupt():
 
 # Function to handle interactive path display
 def InteractivePathDisplay(segments_list, current_location, goal, ax):
+    plt.ion()  # Ensure interactive mode is on
     segments = segments_list.copy()
     index = 0
     while index < len(segments):
         segment = segments[index]        
         while True:
-            path_clearance = RequestPathClearance(AGV_ID,segment)
+            path_clearance = RequestPathClearance(AGV_ID, segment)
 
             if path_clearance == '1':
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
@@ -265,26 +268,29 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                     is_path_correct = 1
                     while True:
                         # Check for stop signal before moving to the next cell
-                        if interrupt==0:
+                        if interrupt == 0:
                             break
-                        elif interrupt==1:
+                        elif interrupt == 1:
                             time.sleep(2)
                             print("Stop signal received! Halting AGV.")
                         else:
                             print("Recalculating path...")
                             is_path_correct = 0
-                            new_path,obstacles = RecalculatePath(interrupt, current_location, goal)
+                            new_path, obstacles = RecalculatePath(interrupt, current_location, goal)
                             if not new_path:
                                 print("No valid path found after recalculation.")
                                 return
                             else:
                                 print("New path:", new_path)
                                 print("Obstacles:", obstacles)
+                                
                                 # Break the new path into segments
                                 new_segments = CreateSegments(new_path)
                                 
-                                # Plot the grid with new path and obstacles
-                                PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)  # Update the plot
+                                # Plot the grid with the new path and obstacles
+                                ax.clear()  # Clear the previous plot
+                                PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)
+                                ax.figure.canvas.draw()  # Redraw the canvas
                                 plt.pause(0.001)
 
                                 # Update segments and reset index
@@ -296,7 +302,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                     if not is_path_correct:
                         is_path_correct = 1
                         break
-                    # delay
+                    
                     time.sleep(2)
                     current_location = cell
                     UpdateCurrentLocation(current_location)
@@ -311,7 +317,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
             else:
                 # Recalculate the path from the last node printed considering new obstacles
                 try:
-                    new_path,obstacles = RecalculatePath(path_clearance, current_location, goal)
+                    new_path, obstacles = RecalculatePath(path_clearance, current_location, goal)
                     if not new_path:
                         print("No valid path found after recalculation.")
                         return
@@ -322,7 +328,9 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                         new_segments = CreateSegments(new_path)
                         
                         # Plot the grid with new path and obstacles
-                        PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)  # Update the plot
+                        ax.clear()  # Clear the previous plot
+                        PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles)
+                        ax.figure.canvas.draw()  # Redraw the canvas
                         plt.pause(0.001)
 
                         # Update segments and reset index
@@ -333,6 +341,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                 except Exception as e:
                     print(f"Invalid input: {e}")
                     continue
+
     print("End of path reached")
     SimulateLoadingUnloading(current_location)
     return current_location
@@ -369,6 +378,8 @@ if __name__ == '__main__':
 
         # Initialize the plot
         fig, ax = plt.subplots(figsize=(10, 10))
+
+        plt.ion()  # Turn on interactive mode
 
         # Plot the initial grid with the first path
         PlotGrid(ax, grid_size, current_location, goal, path)
