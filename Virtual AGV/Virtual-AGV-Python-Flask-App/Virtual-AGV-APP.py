@@ -26,8 +26,8 @@ def interrupt_route():
         return jsonify({'status': 'Stopping AGV'}), 200
     else:
         interrupt = data.get('interrupt')
-        print("Interrupt:",interrupt) ####################################3
-        return jsonify({'status': 'Recalculate path'}), 
+        print("Interrupt:",interrupt) 
+        return jsonify({'status': 'Recalculate path'}), 200
     
 
 # Define the fixed grid from the Excel file
