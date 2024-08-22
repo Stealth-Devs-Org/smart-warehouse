@@ -26,6 +26,7 @@ def interrupt_route():
         return jsonify({'status': 'Stopping AGV'}), 200
     else:
         interrupt = data.get('interrupt')
+        print("Interrupt:",interrupt) ####################################3
         return jsonify({'status': 'Recalculate path'}), 
     
 
@@ -217,9 +218,9 @@ def RequestPathClearance(AGV_ID, segment):
 
 
 # Function to recalculate the path considering new obstacles
-def RecalculatePath(path_clearance, current_node, goal):
+def RecalculatePath(obstacle, current_node, goal):
     grid = copy.deepcopy(fixed_grid)  # Reset the grid to the original state
-    obstacles = eval(path_clearance)
+    obstacles = eval(obstacle)
     # Update grid to remove connections for new obstacles
     for obs in obstacles:
         grid.pop(obs, None)
@@ -243,7 +244,12 @@ def ObtainGoal(AGV_ID):
     except requests.exceptions.RequestException as e:
         print(f"Error obtaining goal: {e}")
         return None  # or handle the error as needed
-                    
+
+# Reset the interrupt signal
+def ResetInterrupt():    
+    global interrupt
+    interrupt = 0
+
 # Function to handle interactive path display
 def InteractivePathDisplay(segments_list, current_location, goal, ax):
     segments = segments_list.copy()
@@ -262,7 +268,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                         if interrupt==0:
                             break
                         elif interrupt==1:
-                            time.sleep(1)
+                            time.sleep(2)
                             print("Stop signal received! Halting AGV.")
                         else:
                             print("Recalculating path...")
@@ -273,7 +279,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
                                 return
                             else:
                                 print("New path:", new_path)
-                                
+                                print("Obstacles:", obstacles)
                                 # Break the new path into segments
                                 new_segments = CreateSegments(new_path)
                                 
@@ -283,18 +289,20 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
 
                                 # Update segments and reset index
                                 segments = new_segments
+                                print("new_segments:", segments)
                                 index = 0
+                                ResetInterrupt()
                                 break
                     if not is_path_correct:
                         is_path_correct = 1
                         break
                     # delay
-                    time.sleep(1)
+                    time.sleep(2)
                     current_location = cell
                     UpdateCurrentLocation(current_location)
                 else:
                     index += 1
-                    break
+                break
 
             elif path_clearance == '2':
                 print("Pausing...")
