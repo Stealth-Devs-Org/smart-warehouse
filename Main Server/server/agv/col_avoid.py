@@ -8,7 +8,6 @@ from server.agv.utils import (
     get_close_agv_pairs,
     get_common_elements,
 )
-from server.mqtt.utils import mqtt_client
 
 agv = Blueprint("agv", __name__)
 
@@ -30,6 +29,9 @@ def find_obstacles_in_segment(segment):
         get_buffered_positions(1, get_agv_locations_array(agvs_data)), segment
     )
     return obstacles
+
+
+from server.mqtt.utils import mqtt_client
 
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.

@@ -24,6 +24,8 @@ def handle_mqtt_message(client, userdata, message):
 
     match topic:
         case "agv_location":
+            from server.agv.col_avoid import update_agv_location
+
             update_agv_location(data)
 
         case "Python":
@@ -39,6 +41,3 @@ def handle_mqtt_message(client, userdata, message):
             print("You can become a mobile app developer")
         case _:
             print("The language doesn't matter, what matters is solving problems.")
-
-
-from server.agv.col_avoid import update_agv_location
