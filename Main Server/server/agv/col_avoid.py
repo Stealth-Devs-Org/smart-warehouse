@@ -13,9 +13,10 @@ agv = Blueprint("agv", __name__)
 agvs_data = {}
 
 
-def get_agv_locations_array(agv_data):
+# This function returns the current locations of the AGVs as an array of cordinates.
+def get_agv_locations_array(agvs_data):
     values = []
-    for agv_id, data in agv_data.items():
+    for agv_id, data in agvs_data.items():
         if "location" in data:
             values.append(data["location"])
     return values
@@ -23,15 +24,19 @@ def get_agv_locations_array(agv_data):
 
 # This function returns the current obstacles in a segment of the path as an array of cordinates.
 def find_obstacles_in_segment(segment):
-    obstacles = get_common_elements(get_buffered_positions(1, get_agv_locations_array()), segment)
+    obstacles = get_common_elements(
+        get_buffered_positions(1, get_agv_locations_array(agvs_data)), segment
+    )
     return obstacles
 
 
+# This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id):
     topic = f"agv_stop/{agv_id}"
     mqtt_client.publish(topic, "stop")
 
 
+# This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
     topic = f"agv_recalibrate/{agv_id}"
     obstacles = find_obstacles_in_segment(segment)
@@ -43,12 +48,15 @@ def collision_avoidance(agvs_data):
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             print(f"AGV pair: {agv_pair}")
-            if agvs_data[agv_pair[0]]["status"] == 1:
-                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
+            if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
                 stop_agv(agv_pair[0])
-            else:
+                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
+            elif agvs_data[agv_pair[0]]["status"] == 1:
                 recalibrate_path(agv_pair[0], agvs_data[agv_pair[1]["segment"]])
-                stop_agv(agv_pair[1])
+            elif agvs_data[agv_pair[1]]["status"] == 1:
+                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]["segment"]])
+            else:
+                pass
 
 
 def update_agv_location(data):
