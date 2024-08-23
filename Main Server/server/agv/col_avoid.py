@@ -24,7 +24,7 @@ def get_agv_locations_array(agvs_data):
 
 
 # This function returns the current obstacles in a segment of the path as an array of cordinates.
-def find_obstacles_in_segment(segment):
+def find_obstacles_in_segment(agvs_data, segment):
     obstacles = get_common_elements(
         get_buffered_positions(1, get_agv_locations_array(agvs_data)), segment
     )
@@ -45,7 +45,7 @@ def stop_agv(agv_id):
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
     topic = f"{agv_id}/recalibrate"
-    obstacles = find_obstacles_in_segment(segment)
+    obstacles = find_obstacles_in_segment(agvs_data, segment)
     message_dict = {
         "agv_id": agv_id,
         "action": "recalibrate",
@@ -86,7 +86,7 @@ def update_agv_location(data):
 def path_clearance():
     data = request.json
     segment = data.get("segment")
-    obstacles = find_obstacles_in_segment(segment)
+    obstacles = find_obstacles_in_segment(agvs_data, segment)
 
     if not obstacles:
         return 1
