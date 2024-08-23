@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, request
 
 from server.agv.db_operations import save_agv_location
@@ -32,17 +34,25 @@ def find_obstacles_in_segment(segment):
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id):
-    topic = f"agv_stop/{agv_id}"
-    mqtt_client.publish(topic, "stop")
+    topic = f"{agv_id}/stop"
+    message_dict = {"agv_id": agv_id, "action": "stop"}
+    message_json = json.dumps(message_dict)
+    mqtt_client.publish(topic, message_json)
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
-    topic = f"agv_recalibrate/{agv_id}"
+    topic = f"{agv_id}/recalibrate"
     obstacles = find_obstacles_in_segment(segment)
+    message_dict = {
+        "agv_id": agv_id,
+        "action": "recalibrate",
+        "obstacles": obstacles,
+    }
     mqtt_client.publish(topic, obstacles)
 
 
+# This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance(agvs_data):
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
@@ -52,9 +62,9 @@ def collision_avoidance(agvs_data):
                 stop_agv(agv_pair[0])
                 recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
             elif agvs_data[agv_pair[0]]["status"] == 1:
-                recalibrate_path(agv_pair[0], agvs_data[agv_pair[1]["segment"]])
+                recalibrate_path(agv_pair[0], agvs_data[agv_pair[1]]["segment"])
             elif agvs_data[agv_pair[1]]["status"] == 1:
-                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]["segment"]])
+                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
             else:
                 pass
 

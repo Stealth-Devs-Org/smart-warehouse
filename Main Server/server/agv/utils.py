@@ -32,8 +32,8 @@ def calculate_distance(coord1, coord2):
     Calculate the Euclidean distance between two coordinates.
 
     Parameters:
-    coord1 (tuple): The first coordinate as (x1, y1).
-    coord2 (tuple): The second coordinate as (x2, y2).
+    coord1 (list): The first coordinate as [x1, y1].
+    coord2 (list): The second coordinate as [x2, y2].
 
     Returns:
     float: The Euclidean distance between the two coordinates.
@@ -49,7 +49,7 @@ def calculate_agv_distances(agvs_data):
     Calculate the distances between AGVs based on their IDs and coordinates.
 
     Parameters:
-    agv_locations (dict): A dictionary where keys are AGV IDs and values are coordinates (x, y).
+    agv_locations (dict): A dictionary where keys are AGV IDs and values are coordinates [x1, y1].
 
     Returns:
     dict: A dictionary where the keys are tuples of AGV IDs and the values are the distances.
