@@ -25,13 +25,14 @@ def get_agv_locations_array(agvs_data):
 
 # This function returns the current obstacles in a segment of the path as an array of cordinates.
 def find_obstacles_in_segment(agvs_data, agv_id, segment):
-    obstacles = get_common_elements(
-        get_buffered_positions(1, get_agv_locations_array(agvs_data)), segment
-    )
+    obstacles = get_common_elements(get_agv_locations_array(agvs_data), segment)
+
     cur_agv_loc = agvs_data[agv_id]["location"]
     if cur_agv_loc in obstacles:
-        obstacles = obstacles.remove(cur_agv_loc)
-    return obstacles
+        obstacles = [obstacle for obstacle in obstacles if obstacle != cur_agv_loc]
+
+    buffered_obstacles = get_buffered_positions(1, obstacles)
+    return buffered_obstacles
 
 
 from server.mqtt.utils import mqtt_client
@@ -42,7 +43,7 @@ def stop_agv(agv_id):
     topic = f"{agv_id}/stop"
     message_dict = {"agv_id": agv_id, "action": "stop"}
     message_json = json.dumps(message_dict)
-    mqtt_client.publish(topic, message_json)
+    mqtt_client.publish(topic, message_json, qos=1)
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
@@ -54,7 +55,7 @@ def recalibrate_path(agv_id, segment):
         "action": "recalibrate",
         "obstacles": obstacles,
     }
-    mqtt_client.publish(topic, obstacles)
+    mqtt_client.publish(topic, obstacles, qos=1)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
@@ -62,7 +63,6 @@ def collision_avoidance(agvs_data):
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
-            print(f"AGV pair: {agv_pair}")
             if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
                 stop_agv(agv_pair[0])
                 recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
@@ -76,6 +76,7 @@ def collision_avoidance(agvs_data):
 
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
+    print(agvs_data)
     collision_avoidance(agvs_data)
     save_agv_location(data)
 

@@ -2,12 +2,12 @@ import math
 
 
 def get_common_elements(array1, array2):
-    set1 = set(array1)
-    set2 = set(array2)
+    set1 = set(tuple(x) for x in array1)
+    set2 = set(tuple(x) for x in array2)
 
     common_elements = set1.intersection(set2)
 
-    return list(common_elements)
+    return [list(x) for x in common_elements]
 
 
 """
@@ -18,11 +18,13 @@ This is done to avoid collisions with other agvs.
 
 
 def get_buffered_positions(buffer, current_agv_postions):
-    buffered_positions = current_agv_postions.copy()
+    buffered_positions = []
     for position in current_agv_postions:
         for i in range(-buffer, buffer + 1):
             for j in range(-buffer, buffer + 1):
-                buffered_positions.append([position[0] + i, position[1] + j])
+                new_position = [position[0] + i, position[1] + j]
+                if new_position not in buffered_positions:
+                    buffered_positions.append(new_position)
 
     return buffered_positions
 
