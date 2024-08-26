@@ -6,11 +6,31 @@ from queue import PriorityQueue
 import copy
 import time
 import threading
+import paho.mqtt.client as mqtt
+import json
 
 app = Flask(__name__)
 
 # Shared variable to indicate stop signal
 interrupt = 0
+
+# MQTT setup
+MQTT_BROKER = "test.mosquitto.org"  
+MQTT_PORT = 1883
+MQTT_TOPIC = "agv/location"
+
+
+# Initialize MQTT client
+mqtt_client = mqtt.Client()
+
+def ConnectMQTT():
+    # Connect to the MQTT broker
+    try:
+        mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
+    except Exception as e:
+        print(f"Failed to connect to MQTT broker: {e}")
+
 
 
 @app.route('/interrupt', methods=['POST'])
@@ -195,11 +215,19 @@ def SimulateLoadingUnloading(current_location):
     print(f"Loading and unloading at location: {current_location}")
     time.sleep(2)  # Simulate loading and unloading time
 
-# Function to update current location in Main server
+# Function to update current location in Main server and publish to MQTT
 def UpdateCurrentLocation(current_location):
+    # Publish the current location to the MQTT topic
+    try:
+        location_data = {"current_location": current_location}
+        mqtt_client.publish(MQTT_TOPIC, json.dumps(location_data))
+        print(f"Published current location {current_location} to MQTT topic '{MQTT_TOPIC}'")
+    except Exception as e:
+        print(f"Failed to publish to MQTT: {e}")
+
     # Update the current location in the Main server
     print(f"Current location updated to: {current_location}")
-    
+
 # Function to request path clearance from the Main server
 def RequestPathClearance(AGV_ID, segment):
     url = "http://127.0.0.1:5000/path_clearance"  # Replace with the actual URL of the target Flask application
@@ -355,6 +383,8 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
 
 if __name__ == '__main__':
     threading.Thread(target=lambda: app.run(port=5001)).start()
+
+    ConnectMQTT()
 
     AGV_ID = int(input("Enter AGV ID: "))
     # Read the grid from the Excel file
