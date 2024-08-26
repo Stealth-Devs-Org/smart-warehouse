@@ -1,4 +1,4 @@
-from flask import Flask,request, jsonify
+from flask import Flask, request, jsonify
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,44 +15,44 @@ app = Flask(__name__)
 interrupt = 0
 
 # MQTT setup
-MQTT_BROKER = "test.mosquitto.org"  
+MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 MQTT_TOPIC = "agv/location"
-
+MQTT_INTERRUPT_TOPIC = "agv/interrupt"  # Topic to subscribe to for interrupts
 
 # Initialize MQTT client
 mqtt_client = mqtt.Client()
+
+def on_message(client, userdata, message):
+    global interrupt
+    try:
+        data = json.loads(message.payload.decode())
+        interrupt_value = data.get('interrupt')
+        if interrupt_value == '1':
+            interrupt = 0
+            print("Received 'Resume' interrupt. Resuming AGV.")
+        elif interrupt_value == '2':
+            interrupt = 1
+            print("Received 'Stop' interrupt. Stopping AGV.")
+        else:
+            interrupt = interrupt_value
+            print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding interrupt message: {e}")
 
 def ConnectMQTT():
     # Connect to the MQTT broker
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC)  # Subscribe to the interrupt topic
+        mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
+        print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
 
-
-
-@app.route('/interrupt', methods=['POST'])
-def interrupt_route():
-    print("Inturrupt occred")
-    global interrupt
-    data = request.json
-    if data.get('interrupt')=='1':
-        interrupt = 0
-        return jsonify({'status': 'Resuming AGV'}), 200
-    elif data.get('interrupt')=='2':
-        interrupt = 1
-        return jsonify({'status': 'Stopping AGV'}), 200
-    else:
-        interrupt = data.get('interrupt')
-        print("Interrupt:",interrupt) 
-        return jsonify({'status': 'Recalculate path'}), 200
-    
-
 # Define the fixed grid from the Excel file
 def ReadGrid(file_path):
-
     # Function to split and clean the connected nodes and convert to tuples
     def process_connected_nodes(connected_nodes_str):
         connected_nodes_str = connected_nodes_str.strip()[1:-1]
@@ -72,8 +72,6 @@ def ReadGrid(file_path):
         fixed_grid[node] = connected_nodes_list
 
     return fixed_grid
-
-
 
 # Function to calculate the path from start to goal
 def CalculatePath(start, goal, grid):
@@ -180,7 +178,6 @@ def PlotGrid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
     plt.draw()  # Update the plot
     plt.pause(0.001)
 
-
 # Function to break path into straight-line segments
 def CreateSegments(path):
     segments = []
@@ -235,8 +232,6 @@ def RequestPathClearance(AGV_ID, segment):
     
     print(f"Requesting path clearance from {segment[0]} to {segment[-1]}...")
 
-    # return input("Enter 1 to proceed, 2 to pause, or any other key to recalculate path: ")
-    
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()  # Check for HTTP errors
@@ -244,8 +239,6 @@ def RequestPathClearance(AGV_ID, segment):
     except requests.exceptions.RequestException as e:
         print(f"Error obtaining path clearance: {e}")
         return None  # or handle the error as needed
-    
-
 
 # Function to recalculate the path considering new obstacles
 def RecalculatePath(obstacle, current_node, goal):
@@ -276,7 +269,7 @@ def ObtainGoal(AGV_ID):
         return None  # or handle the error as needed
 
 # Reset the interrupt signal
-def ResetInterrupt():    
+def ResetInterrupt():
     global interrupt
     interrupt = 0
 
@@ -374,13 +367,6 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
     SimulateLoadingUnloading(current_location)
     return current_location
 
-
-
-
-
-
-    
-
 if __name__ == '__main__':
     threading.Thread(target=lambda: app.run(port=5001)).start()
 
@@ -388,7 +374,7 @@ if __name__ == '__main__':
 
     AGV_ID = int(input("Enter AGV ID: "))
     # Read the grid from the Excel file
-    file_path = 'Floor Plan Sketcher\grid.xlsx' 
+    file_path = 'Floor Plan Sketcher\grid.xlsx'
     grid_size = int(input("Enter the grid size (default is 32): ") or 32)
     fixed_grid = ReadGrid(file_path)
 
@@ -399,7 +385,6 @@ if __name__ == '__main__':
     current_location = tuple(map(int, input("Enter start coordinates( Ex: For (1,18) type 1,18 ): ").strip().split(',')))
 
     while True:
-        
         goal = ObtainGoal(AGV_ID)
 
         # Compute the path using D* Lite
