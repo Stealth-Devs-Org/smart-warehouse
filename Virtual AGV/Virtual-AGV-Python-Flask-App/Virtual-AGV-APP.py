@@ -1,3 +1,6 @@
+# ================================================================================================================================
+# Imports and Initialization
+# ================================================================================================================================
 from flask import Flask, request, jsonify
 import requests
 import pandas as pd
@@ -8,21 +11,42 @@ import time
 import threading
 import paho.mqtt.client as mqtt
 import json
+# ================================================================================================================================
 
 app = Flask(__name__)
 
-# Shared variable to indicate stop signal
-interrupt = 0
+# ================================================================================================================================
+# Initialize the global variables
+# ================================================================================================================================
+interrupt = 0 # 0: Resume, 1: Stop, obstacles list: Recalculate path
+
+# Main server URL
+MAIN_SERVER_URL = "http://127.0.0.1:5000"
 
 # MQTT setup
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
-MQTT_TOPIC = "agv/location"
+MQTT_TOPIC = "agv/location" # Topic to publish the current location
 MQTT_INTERRUPT_TOPIC = "agv/interrupt"  # Topic to subscribe to for interrupts
 
 # Initialize MQTT client
 mqtt_client = mqtt.Client()
 
+# ================================================================================================================================
+# MQTT Functions
+# ================================================================================================================================
+# Function to connect to the MQTT broker to recive interrupts form the main server
+def ConnectMQTT():
+    try:
+        mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC)  # Subscribe to the interrupt topic
+        mqtt_client.on_message = on_message  # Set the message handler
+        mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
+        print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
+    except Exception as e:
+        print(f"Failed to connect to MQTT broker: {e}")
+
+# Function to set inturrupt status according to the subscription to MQTT_INTERRUPT_TOPIC
 def on_message(client, userdata, message):
     global interrupt
     try:
@@ -40,16 +64,22 @@ def on_message(client, userdata, message):
     except json.JSONDecodeError as e:
         print(f"Error decoding interrupt message: {e}")
 
-def ConnectMQTT():
-    # Connect to the MQTT broker
+# Function to update current location in Main server and publish to MQTT
+def UpdateCurrentLocation(current_location):
+    # Publish the current location to the MQTT topic
     try:
-        mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC)  # Subscribe to the interrupt topic
-        mqtt_client.on_message = on_message  # Set the message handler
-        mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
-        print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
+        location_data = {"current_location": current_location}
+        mqtt_client.publish(MQTT_TOPIC, json.dumps(location_data))
+        print(f"Published current location {current_location} to MQTT topic '{MQTT_TOPIC}'")
     except Exception as e:
-        print(f"Failed to connect to MQTT broker: {e}")
+        print(f"Failed to publish to MQTT: {e}")
+
+    # Update the current location in the Main server
+    print(f"Current location updated to: {current_location}")
+
+# ================================================================================================================================
+# Path Calculation 
+# ================================================================================================================================
 
 # Define the fixed grid from the Excel file
 def ReadGrid(file_path):
@@ -123,6 +153,53 @@ def CalculatePath(start, goal, grid):
     path.append(goal)
     return path
 
+# Function to break path into straight-line segments
+def CreateSegments(path):
+    segments = []
+    if not path:
+        return segments
+
+    current_segment = [path[1]]
+    direction = None
+    for i in range(2, len(path)):
+        if path[i][0] == current_segment[-1][0]:
+            new_direction = 'vertical'
+            if direction != new_direction:
+                if direction:
+                    segments.append(current_segment[0:-1])
+                    current_segment = [current_segment[-1]]
+                direction = new_direction
+            current_segment.append(path[i])
+        elif path[i][1] == current_segment[-1][1]:
+            new_direction = 'horizontal'
+            if direction != new_direction:
+                if direction:
+                    segments.append(current_segment[0:-1])
+                    current_segment = [current_segment[-1]]
+                direction = new_direction
+            current_segment.append(path[i])
+    segments.append(current_segment)
+    return segments
+
+# Function to recalculate the path considering new obstacles
+def RecalculatePath(obstacle, current_node, goal):
+    grid = copy.deepcopy(fixed_grid)  # Reset the grid to the original state
+    obstacles = eval(obstacle)
+    # Update grid to remove connections for new obstacles
+    for obs in obstacles:
+        grid.pop(obs, None)
+        for node, connections in grid.items():
+            if obs in connections:
+                grid[node].remove(obs)
+                    
+    # Recalculate path from the current node
+    new_path = CalculatePath(current_node, goal, grid)
+    return new_path, obstacles
+
+# ================================================================================================================================
+# Visualization & Simulation
+# ================================================================================================================================
+
 # Function to plot the grid and path
 def PlotGrid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
     ax.clear()  # Clear the current plot
@@ -178,33 +255,7 @@ def PlotGrid(ax, grid_size, start=None, goal=None, path=None, obstacles=None):
     plt.draw()  # Update the plot
     plt.pause(0.001)
 
-# Function to break path into straight-line segments
-def CreateSegments(path):
-    segments = []
-    if not path:
-        return segments
 
-    current_segment = [path[1]]
-    direction = None
-    for i in range(2, len(path)):
-        if path[i][0] == current_segment[-1][0]:
-            new_direction = 'vertical'
-            if direction != new_direction:
-                if direction:
-                    segments.append(current_segment[0:-1])
-                    current_segment = [current_segment[-1]]
-                direction = new_direction
-            current_segment.append(path[i])
-        elif path[i][1] == current_segment[-1][1]:
-            new_direction = 'horizontal'
-            if direction != new_direction:
-                if direction:
-                    segments.append(current_segment[0:-1])
-                    current_segment = [current_segment[-1]]
-                direction = new_direction
-            current_segment.append(path[i])
-    segments.append(current_segment)
-    return segments
 
 # Function for simulate loading and unloading
 def SimulateLoadingUnloading(current_location):
@@ -212,22 +263,13 @@ def SimulateLoadingUnloading(current_location):
     print(f"Loading and unloading at location: {current_location}")
     time.sleep(2)  # Simulate loading and unloading time
 
-# Function to update current location in Main server and publish to MQTT
-def UpdateCurrentLocation(current_location):
-    # Publish the current location to the MQTT topic
-    try:
-        location_data = {"current_location": current_location}
-        mqtt_client.publish(MQTT_TOPIC, json.dumps(location_data))
-        print(f"Published current location {current_location} to MQTT topic '{MQTT_TOPIC}'")
-    except Exception as e:
-        print(f"Failed to publish to MQTT: {e}")
-
-    # Update the current location in the Main server
-    print(f"Current location updated to: {current_location}")
+# ================================================================================================================================
+# Functions for calling Main Server APIs
+# ================================================================================================================================
 
 # Function to request path clearance from the Main server
 def RequestPathClearance(AGV_ID, segment):
-    url = "http://127.0.0.1:5000/path_clearance"  # Replace with the actual URL of the target Flask application
+    url = MAIN_SERVER_URL + "/path_clearance"  # API endpoint for request path clearance
     payload = {'AGV_ID': AGV_ID, 'segment': [segment[0], segment[-1]]}
     
     print(f"Requesting path clearance from {segment[0]} to {segment[-1]}...")
@@ -240,23 +282,10 @@ def RequestPathClearance(AGV_ID, segment):
         print(f"Error obtaining path clearance: {e}")
         return None  # or handle the error as needed
 
-# Function to recalculate the path considering new obstacles
-def RecalculatePath(obstacle, current_node, goal):
-    grid = copy.deepcopy(fixed_grid)  # Reset the grid to the original state
-    obstacles = eval(obstacle)
-    # Update grid to remove connections for new obstacles
-    for obs in obstacles:
-        grid.pop(obs, None)
-        for node, connections in grid.items():
-            if obs in connections:
-                grid[node].remove(obs)
-                    
-    # Recalculate path from the current node
-    new_path = CalculatePath(current_node, goal, grid)
-    return new_path, obstacles
+
 
 def ObtainGoal(AGV_ID):
-    url = "http://127.0.0.1:5000/get_goal"  # Replace with the actual URL of the target Flask application
+    url = MAIN_SERVER_URL + "/get_goal"  # API endpoint for obtaining the goal
     payload = {'AGV_ID': AGV_ID}
     
     try:
@@ -268,6 +297,9 @@ def ObtainGoal(AGV_ID):
         print(f"Error obtaining goal: {e}")
         return None  # or handle the error as needed
 
+# ================================================================================================================================
+# AGV Movwmwnt Control
+# ================================================================================================================================
 # Reset the interrupt signal
 def ResetInterrupt():
     global interrupt
@@ -367,6 +399,9 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax):
     SimulateLoadingUnloading(current_location)
     return current_location
 
+# ================================================================================================================================
+# Main Function
+# ================================================================================================================================
 if __name__ == '__main__':
     threading.Thread(target=lambda: app.run(port=5001)).start()
 
