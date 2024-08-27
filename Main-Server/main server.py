@@ -22,7 +22,7 @@ def get_goal():
 @app.route('/path_clearance', methods=['POST'])
 def path_clearance():
     data = request.json
-    agv_id = data.get('AGV_ID')
+    agv_id = data.get('agv_id')
     segment = data.get('segment')
 
     if not segment or len(segment) != 2:
@@ -39,7 +39,7 @@ def path_clearance():
     print(points)
 
     # Randomly choose between '1', '2', or a point from the segment
-    choices = ['1', '2'] + [str([point]) for point in points]
+    choices = ['1', '2'] #+ [str([point]) for point in points]
     result = random.choice(choices)
     
 

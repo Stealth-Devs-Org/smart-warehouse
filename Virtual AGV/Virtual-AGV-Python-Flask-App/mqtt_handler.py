@@ -1,6 +1,7 @@
 import json
 import paho.mqtt.client as mqtt
 import threading
+import datetime
 
 interrupt = 0  # Global interrupt variable
 interrupt_lock = threading.Lock()
@@ -57,7 +58,13 @@ def on_message(client, userdata, message):
 
 def UpdateCurrentLocation(current_location):
     try:
-        location_data = {"current_location": current_location}
+        # Get the current time in a readable format
+        timestamp = datetime.datetime.now().isoformat()
+
+        location_data = {
+            "current_location": current_location,
+            "timestamp": timestamp
+            }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
         print(f"Published current location {current_location} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
     except Exception as e:
