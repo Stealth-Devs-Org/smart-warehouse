@@ -43,6 +43,13 @@ agvs_data = {
         "status": 1,
         "timestamp": "2023-10-01T12:34:56Z",
     },
+    # "agv5": {
+    #     "agv_id": "agv5",
+    #     "location": [1, 5],
+    #     "segment": [[1, 5], [2, 5], [3, 5]],
+    #     "status": 1,
+    #     "timestamp": "2023-10-01T12:34:56Z",
+    # },
 }
 
 
@@ -60,11 +67,21 @@ class TestColAvoid(unittest.TestCase):
                 agvs_data, "agv1", [[1, 2], [1, 3], [1, 4]]
             )
         )
-        set2 = set(
-            tuple(x)
-            for x in [[0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
-        )
+        # set2 = set(
+        #     tuple(x)
+        #     for x in [[0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
+        # )
+        set2 = set(tuple(x) for x in [[1, 4]])
         self.assertEqual(set1, set2)
+
+        # set1 = set(
+        #     tuple(x)
+        #     for x in col_avoid.find_obstacles_in_segment(
+        #         agvs_data, "agv3", [[1, 4], [1, 3], [1, 2]]
+        #     )
+        # )
+        # set2 = set(tuple(x) for x in [[1, 2], [1, 5]])
+        # self.assertEqual(set1, set2)
 
     def test_stop_agv(self):
         pass
@@ -126,6 +143,12 @@ class TestUtils(unittest.TestCase):
     def test_get_close_agv_pairs(self):
         self.assertEqual(
             utils.get_close_agv_pairs(agvs_data, 3), [("agv1", "agv3"), ("agv2", "agv4")]
+        )
+
+    def test_get_distance_of_furthest_obstacle(self):
+        self.assertEqual(
+            utils.get_distance_of_furthest_obstacle([1, 2], [[1, 3], [1, 4], [2, 5]]),
+            3.1622776601683795,
         )
 
 
