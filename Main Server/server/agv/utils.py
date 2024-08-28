@@ -88,3 +88,46 @@ def get_close_agv_pairs(agvs_data, threshold):
     close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance < threshold]
 
     return close_pairs
+
+
+def get_agvs_location_within_range(agvs_data, agv_id, threshold):
+    """
+    Get AGVs that are within a threshold distance from the given AGV.
+
+    Parameters:
+    agv_locations (dict): A dictionary where keys are AGV IDs and values are coordinates (x, y).
+    agv_id (str): The ID of the AGV.
+    threshold (float): The threshold distance.
+
+    Returns:
+    list: A list of AGV IDs that are within the threshold distance from the given AGV.
+    """
+    distances = calculate_agv_distances(agvs_data)
+    agv_ids = list(agvs_data.keys())
+    agvs_within_range = [
+        agvs_data[agv_id2]["location"]
+        for (agv_id1, agv_id2), distance in distances.items()
+        if agv_id1 == agv_id and distance < threshold
+    ]
+
+    return agvs_within_range
+
+
+def get_distance_of_furthest_obstacle(agv_location, obstacles):
+    """
+    Get the distance of the furthest obstacle from the AGV location.
+
+    Parameters:
+    agv_location (list): The current location of the AGV as [x, y].
+    obstacles (list): A list of obstacle locations as [x, y].
+
+    Returns:
+    float: The distance of the furthest obstacle from the AGV location.
+    """
+    max_distance = 0
+    for obstacle in obstacles:
+        distance = calculate_distance(agv_location, obstacle)
+        if distance > max_distance:
+            max_distance = distance
+
+    return max_distance

@@ -4,9 +4,11 @@ from flask import Blueprint, request
 
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
+    get_agvs_location_within_range,
     get_buffered_positions,
     get_close_agv_pairs,
     get_common_elements,
+    get_distance_of_furthest_obstacle,
 )
 
 agv = Blueprint("agv", __name__)
@@ -31,8 +33,16 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
     if cur_agv_loc in obstacles:
         obstacles = [obstacle for obstacle in obstacles if obstacle != cur_agv_loc]
 
-    buffered_obstacles = get_buffered_positions(1, obstacles)
-    return buffered_obstacles
+    # obstacles = get_buffered_positions(1, obstacles) # No need to buffer the obstacles
+
+    if obstacles:
+        furthest_obstacle_distance = get_distance_of_furthest_obstacle(cur_agv_loc, obstacles)
+        obstacles_within_range = get_agvs_location_within_range(
+            agvs_data, agv_id, furthest_obstacle_distance
+        )
+        obstacles = obstacles + obstacles_within_range
+
+    return obstacles
 
 
 from server.mqtt.utils import mqtt_client
@@ -77,7 +87,7 @@ def collision_avoidance(agvs_data):
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     print(agvs_data)
-    collision_avoidance(agvs_data)
+    # collision_avoidance(agvs_data) # Not needed for now
     save_agv_location(data)
 
 
