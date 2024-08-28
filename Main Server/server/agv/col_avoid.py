@@ -9,6 +9,7 @@ from server.agv.utils import (
     get_close_agv_pairs,
     get_common_elements,
     get_distance_of_furthest_obstacle,
+    is_segment_occupied,
 )
 
 agv = Blueprint("agv", __name__)
@@ -101,6 +102,10 @@ def path_clearance():
     data = request.json
     agv_id = data.get("agv_id")
     segment = data.get("segment")
+
+    if is_segment_occupied(agvs_data, agv_id, segment):
+        return 2
+
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 
     if not obstacles:

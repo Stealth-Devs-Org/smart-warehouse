@@ -131,3 +131,24 @@ def get_distance_of_furthest_obstacle(agv_location, obstacles):
             max_distance = distance
 
     return max_distance
+
+
+def is_segment_occupied(agvs_data, agv_id, segment):
+    """
+    Check if the segment of the path is occupied by other AGVs.
+
+    Parameters:
+    agvs_data (dict): A dictionary containing AGV data.
+    agv_id (str): The ID of the AGV.
+    segment (list): A list of coordinates representing the segment of the path.
+
+    Returns:
+    bool: True if the segment is occupied, False otherwise.
+    """
+    for agv in agvs_data.values():
+        if (
+            "location" in agv
+            and agv["agv_id"] != agv_id
+            and (agv["segment"] in segment or segment in agv["segment"])
+        ):
+            return True
