@@ -10,3 +10,20 @@ def save_agv_location(data):
         "timestamp": data["timestamp"],
     }
     database["agvs"].insert_one(agv)
+
+
+
+def get_all_agvs():
+    agvs_collection = database["agvs"]
+    agvs_cursor = agvs_collection.find()
+    agvs_data = {}
+    for agv in agvs_cursor:
+        agv_id = agv.get("agv_id")
+        agvs_data[agv_id] = {
+            "agv_id": agv.get("agv_id"),
+            "location": agv.get("location"),
+            "segment": agv.get("segment"),
+            "status": agv.get("status"),
+            "timestamp": agv.get("timestamp"),
+        }
+    return agvs_data
