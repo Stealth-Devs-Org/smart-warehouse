@@ -5,6 +5,7 @@ from server.config import Config
 
 mongo_client = MongoClient(Config.MONGO_URI)
 database = mongo_client["warehouse_database"]
+database.drop_collection("agvs")
 
 
 def create_app(config_class=Config):
