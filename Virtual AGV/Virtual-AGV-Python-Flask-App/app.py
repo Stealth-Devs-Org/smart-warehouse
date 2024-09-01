@@ -1,18 +1,25 @@
-from flask import Flask
+import yaml
 import threading
 import copy
 import matplotlib.pyplot as plt
 import time
+import os
 from pathfinding import ReadGrid, CalculatePath, RecalculatePath
 from visualization import PlotGrid
 from server_communication import RequestPathClearance, ObtainGoal
 from utils import CreateSegments, SimulateLoadingUnloading, SimulateTurning
-from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt,SetInterrupt
+from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt, SetInterrupt
+from flask import Flask
 
 app = Flask(__name__)
 
 fixed_grid = None  # Global variable for the fixed grid
 global AGV_ID
+current_location = None
+
+def read_config(config_path):
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
 
 def InteractivePathDisplay(segments_list, current_location, goal, ax, direction):
     current_direction = direction
@@ -119,26 +126,32 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
     return current_location
 
 if __name__ == '__main__':
-    threading.Thread(target=lambda: app.run(port=5001)).start()
+    # Read configuration file
+    config_path = os.getenv('CONFIG_PATH', 'config.yaml')
+    instance_id = int(os.getenv('INSTANCE_ID', '0'))
 
-    AGV_ID = int(input("Enter AGV ID: "))
-    speed = 1 # speed of the AGV
-    dicetance = 1 # distance between two cells
-    turning_time = 1 # time taken to turn the AGV in 45 degrees
-    direction = "N" # initial direction of the AGV
+    # Load configurations
+    config = read_config(config_path)["instances"][instance_id]
+
+    port = config["port"]
+    AGV_ID = config["AGV_ID"]
+    speed = 1  # Speed of the AGV
+    dicetance = 1  # Distance between two cells
+    turning_time = 1  # Time taken to turn the AGV in 45 degrees
+    direction = "N"  # Initial direction of the AGV
+    current_location = tuple(config["current_location"])
+
+    threading.Thread(target=lambda: app.run(port=port)).start()
 
     ConnectMQTT(AGV_ID)
 
     # Read the grid from the Excel file
-    file_path = 'Floor Plan Sketcher/grid.xlsx'
-    grid_size = int(input("Enter the grid size (default is 32): ") or 32)
+    file_path = 'grid.xlsx'
+    grid_size = 32  # Default grid size
     fixed_grid = ReadGrid(file_path)
 
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
-
-    # User input for start and end coordinates
-    current_location = tuple(map(int, input("Enter start coordinates( Ex: For (1,18) type 1,18 ): ").strip().split(',')))
 
     while True:
         goal = ObtainGoal(AGV_ID)

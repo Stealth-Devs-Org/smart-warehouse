@@ -1,0 +1,8 @@
+instances:
+  - port: 5001
+    AGV_ID: 1
+    current_location: [15, 12]
+  - port: 5002
+    AGV_ID: 2
+    current_location: [14, 1]
+  # Add more instances as needed
