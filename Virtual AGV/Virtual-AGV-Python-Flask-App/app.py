@@ -39,7 +39,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                     if segment != segments[0] and cell == segment[1]:
                         print(f"Current location: {current_location}, next location: {segment[1]}")
                         current_direction = SimulateTurning(current_location, segment[1], current_direction, turning_time)
-                    cell_time = dicetance / speed
+                    cell_time = cell_distance / speed
                     movement_time = 0
                     is_path_correct = 1
                     while movement_time < cell_time:
@@ -135,10 +135,10 @@ if __name__ == '__main__':
 
     port = config["port"]
     AGV_ID = config["AGV_ID"]
-    speed = 1  # Speed of the AGV
-    dicetance = 1  # Distance between two cells
-    turning_time = 1  # Time taken to turn the AGV in 45 degrees
-    direction = "N"  # Initial direction of the AGV
+    speed = config["speed"]  # Speed of the AGV
+    cell_distance = config["cell_distance"]  # cell_distance between two cells
+    turning_time = config["turning_time"]  # Time taken to turn the AGV in 45 degrees
+    direction = config["direction"]  # Initial direction of the AGV
     current_location = tuple(config["current_location"])
 
     threading.Thread(target=lambda: app.run(port=port)).start()
@@ -146,9 +146,9 @@ if __name__ == '__main__':
     ConnectMQTT(AGV_ID)
 
     # Read the grid from the Excel file
-    file_path = 'grid.xlsx'
+    grid_path = config["grid_path"]
     grid_size = 32  # Default grid size
-    fixed_grid = ReadGrid(file_path)
+    fixed_grid = ReadGrid(grid_path)
 
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
