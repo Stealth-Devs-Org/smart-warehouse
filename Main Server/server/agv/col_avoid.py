@@ -1,7 +1,6 @@
 import json
 
 from flask import Blueprint, request
-
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     get_agvs_location_within_range,
@@ -52,7 +51,7 @@ from server.mqtt.utils import mqtt_client
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id):
-    topic = f"{agv_id}/stop"
+    topic = f"{agv_id}/interrupt"
     message_dict = {"agv_id": agv_id, "action": "stop"}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=1)
@@ -60,7 +59,7 @@ def stop_agv(agv_id):
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
-    topic = f"{agv_id}/recalibrate"
+    topic = f"{agv_id}/interrupt"
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
     message_dict = {
         "agv_id": agv_id,
