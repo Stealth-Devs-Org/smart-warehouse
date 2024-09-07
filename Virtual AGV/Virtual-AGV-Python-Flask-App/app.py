@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     # Read the grid from the Excel file
     grid_path = config["grid_path"]
-    grid_size = 32  # Default grid size
+    grid_size = 40  # Default grid size
     fixed_grid = ReadGrid(grid_path)
 
     # Create a copy of the fixed grid

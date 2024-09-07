@@ -5,8 +5,8 @@ app = Flask(__name__)
 
 # Mock goal mapping based on AGV_ID
 goal_mapping = {
-    1: [(30, 11),(18,26)],
-    2: [(20, 26),(30, 11)]
+    1: [(37, 22),(38,9)],
+    2: [(23, 28),(30, 19)]
     # Add more AGV_ID to goal mappings here
 }
 
