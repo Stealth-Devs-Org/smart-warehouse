@@ -1,6 +1,5 @@
 from flask import Flask
 from pymongo import MongoClient
-
 from server.config import Config
 
 mongo_client = MongoClient(Config.MONGO_URI)
@@ -15,5 +14,9 @@ def create_app(config_class=Config):
     from server.mqtt.utils import mqtt_client
 
     mqtt_client.init_app(app)
+
+    from server.agv.col_avoid import agv
+
+    app.register_blueprint(agv)
 
     return app

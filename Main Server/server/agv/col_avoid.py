@@ -1,6 +1,6 @@
 import json
 
-from flask import Blueprint, request
+from flask import Blueprint, jsonify, render_template, request
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     get_agvs_location_within_range,
@@ -66,7 +66,8 @@ def recalibrate_path(agv_id, segment):
         "action": "recalibrate",
         "obstacles": obstacles,
     }
-    mqtt_client.publish(topic, message_dict, qos=1)
+    message_json = json.dumps(message_dict)
+    mqtt_client.publish(topic, message_json, qos=1)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
@@ -113,3 +114,15 @@ def path_clearance():
         return 1
 
     return obstacles
+
+
+@agv.route("/")
+def index():
+    return render_template("grid.html")
+
+
+@agv.route("/get_dynamic_locations")
+def get_dynamic_locations():
+    agv_locations = get_agv_locations_array(agvs_data)
+    # Return the dynamic dot color data
+    return jsonify(agv_locations)
