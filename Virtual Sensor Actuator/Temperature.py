@@ -40,6 +40,9 @@ class WarehouseSimulator(tk.Tk):
         self.measure_button = tk.Button(self, text="Measure Heat", command=self.enable_heat_measurement)
         self.measure_button.pack(side=tk.LEFT)
 
+        # Button to clear measurement points
+        self.clear_measurement_button = tk.Button(self, text="Clear Measurement Points", command=self.clear_measurement_points)
+        self.clear_measurement_button.pack(side=tk.LEFT)
 
         # Button to toggle radius visibility
         self.toggle_radius_button = tk.Button(self, text="Hide Radii", command=self.toggle_radius_visibility)
@@ -69,6 +72,11 @@ class WarehouseSimulator(tk.Tk):
         self.current_id = 0
         self.radius_visible = True  # Track visibility of radii
         self.delete_mode = False  # Track delete mode
+        self.measure_mode = False
+        self.add_heat_mode = True  # Start in add heat points mode
+
+        # Track measurement text IDs
+        self.measurement_text_ids = []
 
         # Initialize rectangle drawing variables
         self.rect_start_x = None
@@ -78,8 +86,6 @@ class WarehouseSimulator(tk.Tk):
         self.canvas.bind("<Button-1>", self.handle_click)
         self.canvas.bind("<B1-Motion>", self.handle_drag)
         self.canvas.bind("<ButtonRelease-1>", self.handle_release)
-        self.measure_mode = False
-        self.add_heat_mode = True  # Start in add heat points mode
 
     def upload_floor_plan(self):
         """Upload the floor plan image."""
@@ -100,7 +106,8 @@ class WarehouseSimulator(tk.Tk):
             total_heat = self.calculate_heat_at_point(x, y)
             env_temp = float(self.env_temp_entry.get())
             final_temp = max(total_heat, env_temp)
-            self.canvas.create_text(x, y, text=f"{final_temp:.2f}°C", fill="blue")
+            text_id = self.canvas.create_text(x, y, text=f"{final_temp:.2f}°C", fill="blue")
+            self.measurement_text_ids.append(text_id)
 
         elif self.add_heat_mode:
             # Add a new heat point with the selected values
@@ -237,14 +244,15 @@ class WarehouseSimulator(tk.Tk):
         if self.floor_plan:
             self.canvas.create_image(0, 0, anchor=tk.NW, image=self.floor_plan)
 
-
-        # Redraw the floor plan if it's uploaded
-        if self.floor_plan:
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=self.floor_plan)
-
         # Redraw all heat points
         for _, x, y, radius, value in self.heat_points:
             self.draw_heat_point(x, y, radius, value, _)
+
+    def clear_measurement_points(self):
+        """Clear all measurement points from the canvas."""
+        for text_id in self.measurement_text_ids:
+            self.canvas.delete(text_id)
+        self.measurement_text_ids.clear()
 
     def toggle_radius_visibility(self):
         """Toggle the visibility of heat radii."""
