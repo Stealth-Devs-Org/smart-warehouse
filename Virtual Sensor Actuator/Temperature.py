@@ -40,8 +40,6 @@ class WarehouseSimulator(tk.Tk):
         self.measure_button = tk.Button(self, text="Measure Heat", command=self.enable_heat_measurement)
         self.measure_button.pack(side=tk.LEFT)
 
-        self.refresh_button = tk.Button(self, text="Refresh", command=self.refresh_canvas)
-        self.refresh_button.pack(side=tk.LEFT)
 
         # Button to toggle radius visibility
         self.toggle_radius_button = tk.Button(self, text="Hide Radii", command=self.toggle_radius_visibility)
@@ -239,10 +237,6 @@ class WarehouseSimulator(tk.Tk):
         if self.floor_plan:
             self.canvas.create_image(0, 0, anchor=tk.NW, image=self.floor_plan)
 
-    def refresh_canvas(self):
-        """Refresh the canvas by clearing and redrawing it."""
-        self.clear_heat_points()
-        self.canvas.delete("all")
 
         # Redraw the floor plan if it's uploaded
         if self.floor_plan:
