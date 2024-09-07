@@ -9,6 +9,7 @@ from server.agv.utils import (
     get_close_agv_pairs,
     get_common_elements,
     get_distance_of_furthest_obstacle,
+    is_path_crossing,
     is_segment_occupied,
 )
 
@@ -66,7 +67,7 @@ def recalibrate_path(agv_id, segment):
         "action": "recalibrate",
         "obstacles": obstacles,
     }
-    mqtt_client.publish(topic, obstacles, qos=1)
+    mqtt_client.publish(topic, message_dict, qos=1)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
@@ -74,21 +75,22 @@ def collision_avoidance(agvs_data):
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
-            if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
-                stop_agv(agv_pair[0])
-                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
-            elif agvs_data[agv_pair[0]]["status"] == 1:
-                recalibrate_path(agv_pair[0], agvs_data[agv_pair[1]]["segment"])
-            elif agvs_data[agv_pair[1]]["status"] == 1:
-                recalibrate_path(agv_pair[1], agvs_data[agv_pair[0]]["segment"])
-            else:
-                pass
+            if is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]]):
+                if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
+                    stop_agv(agv_pair[0])
+                    recalibrate_path(agv_pair[1], agvs_data[agv_pair[1]]["segment"])
+                elif agvs_data[agv_pair[0]]["status"] == 1:
+                    recalibrate_path(agv_pair[0], agvs_data[agv_pair[0]]["segment"])
+                elif agvs_data[agv_pair[1]]["status"] == 1:
+                    recalibrate_path(agv_pair[1], agvs_data[agv_pair[1]]["segment"])
+                else:
+                    pass
 
 
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     print(agvs_data)
-    # collision_avoidance(agvs_data) # Not needed for now
+    collision_avoidance(agvs_data)  # Not needed for now
     save_agv_location(data)
 
 

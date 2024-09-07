@@ -151,6 +151,11 @@ class TestUtils(unittest.TestCase):
             3.1622776601683795,
         )
 
+    def test_is_path_crossing(self):
+        self.assertTrue(utils.is_path_crossing(agvs_data["agv1"], agvs_data["agv3"]))
+        self.assertTrue(utils.is_path_crossing(agvs_data["agv1"], agvs_data["agv2"]))
+        self.assertFalse(utils.is_path_crossing(agvs_data["agv1"], agvs_data["agv4"]))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -152,3 +152,29 @@ def is_segment_occupied(agvs_data, agv_id, segment):
             and (agv["segment"] in segment or segment in agv["segment"])
         ):
             return True
+
+
+def is_path_crossing(agv_1, agv_2):
+    """
+    Check if the paths of two AGVs are crossing.
+
+    Parameters:
+    agv_1 (dict): The data of the first AGV.
+    agv_2 (dict): The data of the second AGV.
+
+    Returns:
+    bool: True if the paths are crossing, False otherwise.
+    """
+    loc_1 = agv_1["location"]
+    loc_2 = agv_2["location"]
+    path_1 = agv_1["segment"]
+    path_2 = agv_2["segment"]
+
+    if loc_1 in path_2 or loc_2 in path_1:
+        return True
+    else:
+        for i in range(len(path_1) - 1):
+            if path_1[i] in path_2:
+                return True
+
+    return False
