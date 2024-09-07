@@ -22,22 +22,7 @@ def handle_mqtt_message(client, userdata, message):
     payload = message.payload.decode()
     data = json.loads(payload)
 
-    match topic:
-        case "agv_location":
-            from server.agv.col_avoid import update_agv_location
+    if topic == "agv_location":
+        from server.agv.col_avoid import update_agv_location
 
-            update_agv_location(data)
-
-        case "Python":
-            print("You can become a Data Scientist")
-
-        case "PHP":
-            print("You can become a backend developer")
-
-        case "Solidity":
-            print("You can become a Blockchain developer")
-
-        case "Java":
-            print("You can become a mobile app developer")
-        case _:
-            print("The language doesn't matter, what matters is solving problems.")
+        update_agv_location(data)
