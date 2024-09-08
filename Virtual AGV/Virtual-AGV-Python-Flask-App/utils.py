@@ -61,3 +61,18 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
         print(time.time())
 
     return direction
+
+
+def EvalNewPath(new_segments, obstacles, remain_path):
+    # Find the farthest obstacle from the start of the remaining path
+    start_point = remain_path[0][0]  # First point in the remaining path
+    farthest_obstacle_distance = max(abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1]) 
+                                     for obstacle in obstacles)
+
+    # Calculate total time for remaining path and new path
+    time_to_remain_path = farthest_obstacle_distance + sum(len(segment) for segment in remain_path)
+    time_to_new_path = sum(len(segment) for segment in new_segments)
+
+    # Compare the times to decide whether the new path is better
+    return time_to_remain_path > time_to_new_path
+

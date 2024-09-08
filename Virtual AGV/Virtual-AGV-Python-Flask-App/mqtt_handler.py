@@ -56,16 +56,21 @@ def on_message(client, userdata, message):
     except json.JSONDecodeError as e:
         print(f"Error decoding interrupt message: {e}")
 
-def UpdateCurrentLocation(current_location):
+def UpdateCurrentLocation(current_segment):
     try:
         # Get the current time in a readable format
         timestamp = datetime.datetime.now().isoformat()
+        if len(current_segment) == 1:
+            remaining_path = []
+        else:
+            remaining_path = current_segment[1:]
 
         location_data = {
-            "current_location": current_location,
+            "current_location": current_segment[0],
+            "remaining_path": remaining_path,
             "timestamp": timestamp
             }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
-        print(f"Published current location {current_location} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
+        print(f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
     except Exception as e:
         print(f"Failed to publish to MQTT: {e}")
