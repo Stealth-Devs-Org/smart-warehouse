@@ -67,7 +67,7 @@ def UpdateCurrentLocation(current_segment):
 
         location_data = {
             "current_location": current_segment[0],
-            "remaining_path": remaining_path,
+            "remaining_segment": remaining_path,
             "timestamp": timestamp
             }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))

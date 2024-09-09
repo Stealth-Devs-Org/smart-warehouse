@@ -22,6 +22,7 @@ def read_config(config_path):
         return yaml.safe_load(f)
 
 def InteractivePathDisplay(segments_list, current_location, goal, ax, direction):
+    previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
     plt.ion()  # Ensure interactive mode is on
@@ -29,7 +30,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
     index = 0
     while index < len(segments):
         segment = segments[index]
-        previous_obstacles = None
+        
         while True:
             path_clearance = RequestPathClearance(AGV_ID, segment)
             if path_clearance == '1':
@@ -55,6 +56,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                                 print("Stop signal received! Halting AGV.")
                             else:
                                 print("Recalculating path...")
+                                print("Interrupt value:", interrupt_value)
                                 is_path_correct = 0
                                 if movement_time > 0:
                                     obstacles = eval(interrupt_value)
@@ -74,6 +76,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                                     print("Obstacles:", obstacles)
                                     
                                     new_segments = CreateSegments(new_path)
+                                    UpdateCurrentLocation([current_location])
                                     
                                     ax.clear()  # Clear the previous plot
                                     PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles, fixed_grid)
@@ -105,6 +108,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                 continue
 
             else:
+                print("obstacle*",path_clearance)
                 try:
                     new_path, obstacles = RecalculatePath(path_clearance, current_location, goal, fixed_grid)
                     if not new_path:
@@ -114,12 +118,18 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                         recal_path = 0
                         print("New path:", new_path)
                         new_segments = CreateSegments(new_path)
+                        print("previous_obstacles:",previous_obstacles)
+                        print("obstacles:",obstacles)
                         if obstacles != previous_obstacles:
                             remain_path = segments[index:]
-                            is_new_path_efficient,waiting_time = EvalNewPath(new_segments,obstacles,remain_path)
+                            is_new_path_efficient,waiting_time = EvalNewPath(new_segments,obstacles,remain_path,cell_time,turning_time)
+                            print("is_new_path_efficient:",is_new_path_efficient)
+                            print("waiting_time:",waiting_time)
                             if not is_new_path_efficient:
                                 previous_obstacles = obstacles
+                                print("Waiting for obstacle to clear...",time.time())
                                 time.sleep(waiting_time)
+                                print("Obstacle cleared!",time.time())
                                 break
                             else:
                                 recal_path = 1
@@ -131,7 +141,6 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                                 PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles, fixed_grid)
                                 ax.figure.canvas.draw()  # Redraw the canvas
                                 plt.pause(0.001)
-
                                 segments = new_segments
                                 index = 0
                                 break

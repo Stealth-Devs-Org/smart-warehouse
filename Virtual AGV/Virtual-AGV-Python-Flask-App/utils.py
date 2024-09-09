@@ -63,16 +63,21 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
     return direction
 
 
-def EvalNewPath(new_segments, obstacles, remain_path):
+def EvalNewPath(new_segments, obstacles, remain_path,cell_time,turning_time):
     # Find the farthest obstacle from the start of the remaining path
     start_point = remain_path[0][0]  # First point in the remaining path
     farthest_obstacle_distance = max(abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1]) 
                                      for obstacle in obstacles)
 
     # Calculate total time for remaining path and new path
-    time_to_remain_path = farthest_obstacle_distance + sum(len(segment) for segment in remain_path)
-    time_to_new_path = sum(len(segment) for segment in new_segments)
+    time_to_remain_path = (farthest_obstacle_distance + sum(len(segment) for segment in remain_path)) * cell_time + len(remain_path) * turning_time
+    time_to_new_path = sum(len(segment) for segment in new_segments)  * cell_time + len(new_segments)* turning_time
+
+    print("time to remain_path",time_to_remain_path)
+    print("time to new_path",time_to_new_path)
 
     # Compare the times to decide whether the new path is better
-    return time_to_remain_path > time_to_new_path
+    is_new_path_efficient = time_to_remain_path > time_to_new_path
+    waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
+    return is_new_path_efficient, waiting_time
 
