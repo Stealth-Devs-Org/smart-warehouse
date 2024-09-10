@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <title>Sensors & Actuators</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -15,23 +14,38 @@
         .custom-h1 {
             font-size: 4rem; /* Adjust the size as needed */
         }
-
-
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+        #coordinateCanvas {
+            flex: 1;
+            border: 1px solid #ccc;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .btn-custom {
+            margin-bottom: 10px; /* Adjust spacing between buttons as needed */
+        }
     </style>
-
-
     <script src="static/javascripts/drawcartesianCordinate.js"></script>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg" style="background-color: rgb(180,180,180);">
-        <a class="navbar-brand" style="color:black" href="/"> <img src="static/5g.png" alt="Logo" style="width: 50px; height: 50px; margin-left: 16px margin-bottom: 0px;">Use of 5G Slicing in 5G</a>
+        <a class="navbar-brand" style="color:black" href="/"> <img src="static/5g.png" alt="Logo" style="width: 50px; height: 50px; margin-left: 16px; margin-bottom: 0px;">Use of 5G Slicing in 5G</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-
                 <li class="nav-item">
                     <a class="nav-link" style="color:black" href="/">Home</a>
                 </li>
@@ -44,34 +58,27 @@
                 <li class="nav-item">
                     <a class="nav-link" style="color:black" href="/Sensors&Actuators">Sensors & Actuators</a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link" style="color:black" href="/DigitalWarehouse">Digital Warehouse</a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link" style="color:black" href="/AboutUs">About Us</a>
                 </li>
-
-
             </ul>
         </div>
     </nav>
-
-
-    <div class="container">
-        <h1 class="text-center mt-3 mb-3 custom-h2  text-dark">Sensor Actuator Environment</h1>
-        
-    </div>
-
-
     <canvas id="coordinateCanvas" width="1200" height="640"></canvas>
+    
+        
+    <div class="button-container">
+        <button class="btn btn-primary btn-custom">Button 1</button>
+        <button class="btn btn-secondary btn-custom">Button 2</button>
+        <button class="btn btn-success btn-custom">Button 3</button>
+    </div>
+    
 
     <script>
-        
         drawCartesianCoordinates();
-
-
     </script>
 </body>
 </html>
