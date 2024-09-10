@@ -1,75 +1,65 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, request, jsonify
+from PIL import Image
+import os
 import math
-import json
-from flask import request
 
 app = Flask(__name__)
 
-# Store heat and air quality points
+
+
+# To store heat and air quality points
 heat_points = []
 air_quality_points = []
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/add_heat_point', methods=['POST'])
-def add_heat_point():
-    data = request.json
-    heat_points.append(data)
-    return jsonify({'success': True})
-
-@app.route('/add_air_quality_point', methods=['POST'])
-def add_air_quality_point():
-    data = request.json
-    air_quality_points.append(data)
-    return jsonify({'success': True})
-
-@app.route('/delete_points', methods=['POST'])
-def delete_points():
-    data = request.json
-    global heat_points, air_quality_points
-    x1, y1, x2, y2 = data['x1'], data['y1'], data['x2'], data['y2']
-    heat_points = [p for p in heat_points if not (x1 <= p['x'] <= x2 and y1 <= p['y'] <= y2)]
-    air_quality_points = [p for p in air_quality_points if not (x1 <= p['x'] <= x2 and y1 <= p['y'] <= y2)]
-    return jsonify({'success': True})
-
-@app.route('/measure', methods=['POST'])
-def measure():
-    data = request.json
-    x, y = data['x'], data['y']
-    env_temp = data['env_temp']
-    total_heat = calculate_heat_at_point(x, y)
-    total_air_quality = calculate_air_quality_at_point(x, y)
-    final_temp = max(total_heat, env_temp)
-    return jsonify({'heat': final_temp, 'air_quality': total_air_quality})
-
-@app.route('/clear_all', methods=['POST'])
-def clear_all():
-    global heat_points, air_quality_points
-    heat_points = []
-    air_quality_points = []
-    return jsonify({'success': True})
-
-def calculate_heat_at_point(x, y):
+# Function to calculate heat
+def calculate_heat_at_point(x, y, points):
     total_heat = 0
-    for point in heat_points:
-        distance = math.sqrt((x - point['x']) ** 2 + (y - point['y']) ** 2)
-        if distance <= point['radius']:
-            gradient = max(0, (point['radius'] - distance) / point['radius'])
-            contribution = point['value'] * gradient
+    for _, heat_x, heat_y, heat_radius, heat_value in points:
+        distance = math.sqrt((x - heat_x) ** 2 + (y - heat_y) ** 2)
+        if distance <= heat_radius:
+            gradient = max(0, (heat_radius - distance) / heat_radius)
+            contribution = heat_value * gradient
             total_heat = max(total_heat, contribution)
     return total_heat
 
-def calculate_air_quality_at_point(x, y):
-    total_air_quality = 0
-    for point in air_quality_points:
-        distance = math.sqrt((x - point['x']) ** 2 + (y - point['y']) ** 2)
-        if distance <= point['radius']:
-            gradient = max(0, (point['radius'] - distance) / point['radius'])
-            contribution = point['value'] * gradient
-            total_air_quality = max(total_air_quality, contribution)
-    return total_air_quality
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+@app.route('/upload', methods=['POST'])
+def upload_floor_plan():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file:
+        filename = os.path.join('static/images', file.filename)
+        file.save(filename)
+        return jsonify({"message": "File uploaded", "file_path": filename}), 200
+    
+@app.route('/Environment')
+def environment():
+    return render_template('index.html')
+
+# API to add heat/air quality points
+@app.route('/add_point', methods=['POST'])
+def add_point():
+    data = request.get_json()
+    point_type = data['type']
+    x, y = data['x'], data['y']
+    radius, value = data['radius'], data['value']
+    
+    point = (x, y, radius, value)
+    if point_type == "heat":
+        heat_points.append(point)
+    elif point_type == "air_quality":
+        air_quality_points.append(point)
+    
+    return jsonify({"message": "Point added"}), 200
+
+# More routes to handle measurement, deletion, etc.
+
 
 if __name__ == '__main__':
     app.run(debug=True)

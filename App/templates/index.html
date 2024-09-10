@@ -3,117 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warehouse Temperature and Air Quality Simulator</title>
+    <title>Warehouse Simulator </title>
     <style>
-        #floor-plan { width: 1200px; height: 700px; background-color: #f0f0f0; background-image: url('/static/Floor_plan.jpg'); background-size: cover; }
-        .controls { margin-top: 20px; }
-        .button { margin-bottom: 10px; }
+        canvas {
+            border: 1px solid black;
+        }
     </style>
 </head>
 <body>
-    <h1>Warehouse Temperature and Air Quality Simulator</h1>
+    <h1> Warehouse Simulator </h1>
 
-    <div id="floor-plan" onclick="handleCanvasClick(event)">
-        <!-- The floor plan image will be displayed here -->
-    </div>
+<canvas id="cartesianPlane" width="1200" height="600"></canvas>
 
-    <div class="controls">
-        <label for="heatValue">Heat Value (°C):</label>
-        <input type="number" id="heatValue" value="50" />
-        <label for="heatRadius">Heat Radius:</label>
-        <input type="number" id="heatRadius" value="50" />
-        <button class="button" onclick="addHeatPoint()">Add Heat Point</button>
+<script>
+    const canvas = document.getElementById('cartesianPlane');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
 
-        <label for="airQualityValue">Air Quality Value:</label>
-        <input type="number" id="airQualityValue" value="50" />
-        <label for="airQualityRadius">Air Quality Radius:</label>
-        <input type="number" id="airQualityRadius" value="50" />
-        <button class="button" onclick="addAirQualityPoint()">Add Air Quality Point</button>
+    // Cartesian Plane center at (300, 300) with an image
+    img.src = 'static/Floor_plan.jpg';  // Replace with your image file path
+    img.onload = function () {
+        drawCartesianPlane();
+        // Drawing the image at coordinates (0, 0) in Cartesian, which is the center of the canvas
+        ctx.drawImage(img, 0, 0, 1200, 600);  // Adjust the position and size
+    };
 
-        <button class="button" onclick="clearAll()">Clear All Points</button>
+    function drawCartesianPlane() {
+        const width = canvas.width;
+        const height = canvas.height;
 
-        <label for="envTemp">Environmental Temperature (°C):</label>
-        <input type="number" id="envTemp" value="30" />
-        <button class="button" onclick="measure()">Measure</button>
+        // Draw X axis
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
 
-        <button class="button" onclick="deletePoints()">Delete Points</button>
-    </div>
+        // Draw Y axis
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width / 2, height);
+        ctx.stroke();
 
-    <script>
-        function addHeatPoint() {
-            const heatValue = document.getElementById('heatValue').value;
-            const heatRadius = document.getElementById('heatRadius').value;
-            console.log('Adding heat point:', { x: 100, y: 100, radius: heatRadius, value: heatValue });
-            fetch('/add_heat_point', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    x: 100,
-                    y: 100,
-                    radius: heatRadius,
-                    value: heatValue
-                })
-            })
-            .then(response => response.json())
-            .then(data => console.log(data));
-        }
+        // Draw arrows for x and y axes
+        ctx.font = "16px Arial";
+        ctx.fillText("+X", width - 20, height / 2 + 20);
+        ctx.fillText("-X", 10, height / 2 + 20);
+        ctx.fillText("+Y", width / 2 + 10, 20);
+        ctx.fillText("-Y", width / 2 + 10, height - 10);
+    }
+</script>
 
-        function addAirQualityPoint() {
-            const airQualityValue = document.getElementById('airQualityValue').value;
-            const airQualityRadius = document.getElementById('airQualityRadius').value;
-            console.log('Adding air quality point:', { x: 100, y: 100, radius: airQualityRadius, value: airQualityValue });
-            fetch('/add_air_quality_point', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    x: 100,
-                    y: 100,
-                    radius: airQualityRadius,
-                    value: airQualityValue
-                })
-            })
-            .then(response => response.json())
-            .then(data => console.log(data));
-        }
-
-        function measure() {
-            const envTemp = document.getElementById('envTemp').value;
-            fetch('/measure', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x: 100, y: 100, env_temp: envTemp })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(`Heat: ${data.heat}°C\nAir Quality: ${data.air_quality}`);
-            });
-        }
-
-        function clearAll() {
-            fetch('/clear_all', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => console.log(data));
-        }
-
-        function deletePoints() {
-            // Define the selection area
-            fetch('/delete_points', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    x1: 50,
-                    y1: 50,
-                    x2: 200,
-                    y2: 200
-                })
-            })
-            .then(response => response.json())
-            .then(data => console.log(data));
-        }
-
-        function handleCanvasClick(event) {
-            // Implement canvas click handling logic here
-        }
-    </script>
 </body>
 </html>
