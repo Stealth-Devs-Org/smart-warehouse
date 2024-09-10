@@ -12,7 +12,7 @@
 </head>
 <body>
     <h1>Warehouse Simulator</h1>
-    <canvas id="coordinateCanvas" width="1100" height="640"></canvas>
+    <canvas id="coordinateCanvas" width="1200" height="640"></canvas>
     <script>
         function drawCartesianCoordinates() {
 
@@ -89,36 +89,50 @@
 
 
 
-            
+
             ////////floor Plan Sketching //////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            function drawRectangle(startX, startY, color, strokeWidth, xOffset, yOffset, rectWidth, rectHeight) {
+            // Variables for the rectangle position 
+            function drawRectangle(color, strokeWidth, startXCordinateForShape, startYCordinateForShape, rectWidth, rectHeight) {
                 ctx.strokeStyle = color; // Set the stroke color
                 ctx.lineWidth = strokeWidth; // Set the stroke width
-                const rectX = startX + xOffset * 20;
-                const rectY = startY - yOffset * 20;
+            
+                // Calculate the rectangle's top-left corner based on the offsets
+                const rectX1 = gridSpacing + startXCordinateForShape * 20;
+                const rectY1 = 620 - startYCordinateForShape * 20;
+            
+                // Draw the rectangle
                 ctx.beginPath();
-                ctx.rect(rectX, rectY, rectWidth, rectHeight); 
+                ctx.rect(rectX1, rectY1, rectWidth * gridSpacing, rectHeight * gridSpacing);
                 ctx.stroke();
             }
 
-            function drawLine(startX, startY, color, strokeWidth, xOffset, yOffset, lineEndX, lineEndY) {
-                ctx.strokeStyle = color; 
-                ctx.lineWidth = strokeWidth; 
-                const lineStartX = startX + xOffset * 20;
-                const lineStartY = startY - yOffset * 20;
+            function drawLine(color, strokeWidth, startXCord, startYCord, EndXCor, EndYCor) {
+                ctx.strokeStyle = color; // Set the stroke color
+                ctx.lineWidth = strokeWidth; // Set the stroke width
+                
+                const lineStartX = gridSpacing + startXCord * 20;
+                const lineStartY = 620 - startYCord * 20;
+                const lineEndX = gridSpacing + EndXCor * 20;
+                const lineEndY = 620 - EndYCor * 20;
                 ctx.beginPath();
-                ctx.moveTo(lineStartX, lineStartY); 
-                ctx.lineTo(lineEndX, lineEndY); 
-                ctx.stroke(); 
+                ctx.moveTo(lineStartX, lineStartY); // Start the line
+                ctx.lineTo(lineEndX, lineEndY); // End the line
+                ctx.stroke(); // Draw the line
             }
-            
-            // Example usage:
-            drawLine(20, 620, 'maroon', 2, 5, 5, 200, 100);
-            drawRectangle(20, 620, 'maroon', 2, 10, 5, 200, 100);
+           
+            drawLine('maroon', 4, 0, 0, 47, 0);
+            drawLine('maroon', 4, 47, 0, 47, 9);
+            drawLine('maroon', 4, 47, 9, 55, 9);
+            drawLine('maroon', 4, 55, 9, 55, 30);
+            drawLine('maroon', 4, 0, 0, 0, 30);
+            drawLine('maroon', 4, 0, 30, 55, 30);
 
+            drawRectangle('blue', 2, 5, 5, 12, 2);
+
+            
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
