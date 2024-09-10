@@ -1,11 +1,9 @@
 import yaml
 import threading
 import copy
-import matplotlib.pyplot as plt
 import time
 import os
 from pathfinding import ReadGrid, CalculatePath, RecalculatePath
-from visualization import PlotGrid
 from server_communication import RequestPathClearance, ObtainGoal
 from utils import CreateSegments, SimulateLoadingUnloading, SimulateTurning, EvalNewPath
 from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt, SetInterrupt
@@ -21,11 +19,11 @@ def read_config(config_path):
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
-def InteractivePathDisplay(segments_list, current_location, goal, ax, direction):
+def InteractivePathDisplay(segments_list, current_location, goal, direction):
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
-    plt.ion()  # Ensure interactive mode is on
+    
     segments = segments_list.copy()
     index = 0
     while index < len(segments):
@@ -78,11 +76,6 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                                     new_segments = CreateSegments(new_path)
                                     UpdateCurrentLocation([current_location])
                                     
-                                    ax.clear()  # Clear the previous plot
-                                    PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles, fixed_grid)
-                                    ax.figure.canvas.draw()  # Redraw the canvas
-                                    plt.pause(0.001)
-
                                     segments = new_segments
                                     print("new_segments:", segments)
                                     index = 0
@@ -137,10 +130,6 @@ def InteractivePathDisplay(segments_list, current_location, goal, ax, direction)
                             recal_path = 1
                         
                         if recal_path:
-                                ax.clear()  # Clear the previous plot
-                                PlotGrid(ax, grid_size, current_location, goal, new_path, obstacles, fixed_grid)
-                                ax.figure.canvas.draw()  # Redraw the canvas
-                                plt.pause(0.001)
                                 segments = new_segments
                                 index = 0
                                 break
@@ -190,24 +179,9 @@ if __name__ == '__main__':
         path = CalculatePath(current_location, goal, grid)
         print("Path:", path)
 
-        # Initialize the plot
-        fig, ax = plt.subplots(figsize=(10, 10))
-
-        plt.ion()  # Turn on interactive mode
-
-        # Plot the initial grid with the first path
-        PlotGrid(ax, grid_size, current_location, goal, path, None, fixed_grid)
-        plt.pause(0.001)
-
-        # Show the initial plot
-        plt.show(block=False)
-
         # Break the path into straight-line segments
         segments = CreateSegments(path)
         print("segments:", segments)
 
         # Display the path interactively
-        current_location = InteractivePathDisplay(segments, current_location, goal, ax, direction)
-
-        # Close the plot
-        plt.close(fig)
+        current_location = InteractivePathDisplay(segments, current_location, goal, direction)
