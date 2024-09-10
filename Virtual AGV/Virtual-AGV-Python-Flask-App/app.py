@@ -30,8 +30,10 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
         segment = segments[index]
         
         while True:
+            interrupt_value = GetInterrupt()
             path_clearance = RequestPathClearance(AGV_ID, segment)
             if path_clearance == '1':
+                previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 if segment == segments[0]:
                     current_direction = SimulateTurning(current_location, segment[0], current_direction, turning_time)
@@ -65,6 +67,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                                         current_location = cell
                                     else:
                                         time.sleep(cell_time/2) # move reverse for half the cell time
+                                        movement_time += cell_time/2
                                 new_path, obstacles = RecalculatePath(interrupt_value, current_location, goal, fixed_grid)
                                 if not new_path:
                                     print("No valid path found after recalculation.")
@@ -74,7 +77,8 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                                     print("Obstacles:", obstacles)
                                     
                                     new_segments = CreateSegments(new_path)
-                                    UpdateCurrentLocation([current_location])
+                                    UpdateCurrentLocation([current_location],AGV_ID,0)
+                                    
                                     
                                     segments = new_segments
                                     print("new_segments:", segments)
@@ -90,7 +94,11 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                         break
                     current_location = cell
                     current_location_index = segment.index(current_location)
-                    UpdateCurrentLocation(segment[current_location_index:])
+                    if current_location == goal:
+                        UpdateCurrentLocation(segment[current_location_index:],AGV_ID,0)
+                    else:
+                        UpdateCurrentLocation(segment[current_location_index:],AGV_ID,1)
+                    
                 else:
                     index += 1
                 break

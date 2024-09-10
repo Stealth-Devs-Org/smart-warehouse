@@ -8,6 +8,7 @@ interrupt_lock = threading.Lock()
 
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
+MQTT_LOCATION_TOPIC = "agv/location"
 
 mqtt_client = mqtt.Client()
 
@@ -22,11 +23,13 @@ def GetInterrupt():
         return interrupt
 
 def setTopic(AGV_ID):
-    global MQTT_LOCATION_TOPIC
+    
     global MQTT_INTERRUPT_TOPIC
-    MQTT_LOCATION_TOPIC = f"agv/{AGV_ID}/location"
+    global MQTT_GOAL_TOPIC
+    MQTT_GOAL_TOPIC = f"agv{AGV_ID}/goal"
     print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
-    MQTT_INTERRUPT_TOPIC = f"agv/{AGV_ID}/interrupt"
+    print(f"MQTT_GOAL_TOPIC: {MQTT_GOAL_TOPIC}")
+    MQTT_INTERRUPT_TOPIC = f"agv{AGV_ID}/interrupt"
     print(f"MQTT_INTERRUPT_TOPIC: {MQTT_INTERRUPT_TOPIC}")
 
 def ConnectMQTT(AGV_ID):
@@ -56,18 +59,17 @@ def on_message(client, userdata, message):
     except json.JSONDecodeError as e:
         print(f"Error decoding interrupt message: {e}")
 
-def UpdateCurrentLocation(current_segment):
+def UpdateCurrentLocation(current_segment,AGV_ID,status):
     try:
         # Get the current time in a readable format
         timestamp = datetime.datetime.now().isoformat()
-        if len(current_segment) == 1:
-            remaining_path = []
-        else:
-            remaining_path = current_segment[1:]
+        
 
         location_data = {
-            "current_location": current_segment[0],
-            "remaining_segment": remaining_path,
+            "agv_id": f"agv{AGV_ID}",
+            "location": current_segment[0],
+            "segment": current_segment,
+            "status": status,
             "timestamp": timestamp
             }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
