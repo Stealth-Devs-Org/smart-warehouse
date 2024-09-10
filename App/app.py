@@ -38,9 +38,26 @@ def upload_floor_plan():
         file.save(filename)
         return jsonify({"message": "File uploaded", "file_path": filename}), 200
     
-@app.route('/Environment')
-def environment():
-    return render_template('index.html')
+@app.route('/Sensors&Actuators')
+def Sensors():
+    return render_template('Sensors & Actuators.html')
+
+@app.route('/DigitalWarehouse')
+def Digital():
+    return render_template('Digital Warehouse.html')
+
+
+@app.route('/MainServer')
+def Mainserver():
+    return render_template('Main Server.html')
+
+@app.route('/AutomateGuidedVehicles')
+def agv():
+    return render_template('Automate Guided Vehicles.html')
+
+
+
+
 
 # API to add heat/air quality points
 @app.route('/add_point', methods=['POST'])

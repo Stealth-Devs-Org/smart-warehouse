@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartesian Coordinates on Canvas</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Warehouse Simulator</h1>
+    <canvas id="coordinateCanvas" width="1100" height="640"></canvas>
+    <script>
+        function drawCartesianCoordinates() {
+
+
+
+
+
+
+
+
+            const canvas = document.getElementById('coordinateCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const gridSpacing = 20;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw grid lines
+            ctx.strokeStyle = '#e0e0e0'; // Light gray for grid lines
+            ctx.lineWidth = 1;
+            
+            // Draw vertical grid lines
+            for (let x = 0; x <= width; x += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal grid lines
+            for (let y = 0; y <= height; y += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Draw X and Y axes
+            ctx.strokeStyle = 'black'; // Black for axes
+            ctx.lineWidth = 2;
+
+            // X axis
+            ctx.beginPath();
+            ctx.moveTo(-100, height - gridSpacing);
+            ctx.lineTo(width + 100, height - gridSpacing);
+            ctx.stroke();
+
+            // Y axis
+            ctx.beginPath();
+            ctx.moveTo(gridSpacing, height + gridSpacing + 100);  // Extend grid below
+            ctx.lineTo(gridSpacing, -gridSpacing - 100); // Extend above
+            ctx.stroke();
+
+            // Draw X-axis labels
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.font = '12px Arial';
+            for (let x = 0; x <= width; x += gridSpacing) {
+                if (x !== 0) {
+                    ctx.fillText(x / gridSpacing - 1, x, height - gridSpacing + 15);
+                }
+            }
+
+            // Draw Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let y = 0; y <= height; y += gridSpacing) {
+                if (y !== height) {
+                    ctx.fillText(y / gridSpacing - 1, gridSpacing - 6, height - y);
+                }
+            }
+
+
+
+
+            
+            ////////floor Plan Sketching //////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            function drawRectangle(startX, startY, color, strokeWidth, xOffset, yOffset, rectWidth, rectHeight) {
+                ctx.strokeStyle = color; // Set the stroke color
+                ctx.lineWidth = strokeWidth; // Set the stroke width
+                const rectX = startX + xOffset * 20;
+                const rectY = startY - yOffset * 20;
+                ctx.beginPath();
+                ctx.rect(rectX, rectY, rectWidth, rectHeight); 
+                ctx.stroke();
+            }
+
+            function drawLine(startX, startY, color, strokeWidth, xOffset, yOffset, lineEndX, lineEndY) {
+                ctx.strokeStyle = color; 
+                ctx.lineWidth = strokeWidth; 
+                const lineStartX = startX + xOffset * 20;
+                const lineStartY = startY - yOffset * 20;
+                ctx.beginPath();
+                ctx.moveTo(lineStartX, lineStartY); 
+                ctx.lineTo(lineEndX, lineEndY); 
+                ctx.stroke(); 
+            }
+            
+            // Example usage:
+            drawLine(20, 620, 'maroon', 2, 5, 5, 200, 100);
+            drawRectangle(20, 620, 'maroon', 2, 10, 5, 200, 100);
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+        }
+
+        drawCartesianCoordinates();
+    </script>
+</body>
+</html>
