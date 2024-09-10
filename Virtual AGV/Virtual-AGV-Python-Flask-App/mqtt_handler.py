@@ -47,10 +47,7 @@ def on_message(client, userdata, message):
     try:
         data = json.loads(message.payload.decode())
         interrupt_value = data.get('interrupt')
-        if interrupt_value == '1':
-            SetInterrupt(0)
-            print("Received 'Resume' interrupt. Resuming AGV.")
-        elif interrupt_value == '2':
+        if interrupt_value == 1:
             SetInterrupt(1)
             print("Received 'Stop' interrupt. Stopping AGV.")
         else:

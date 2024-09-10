@@ -30,9 +30,10 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
         segment = segments[index]
         
         while True:
-            interrupt_value = GetInterrupt()
+            
             path_clearance = RequestPathClearance(AGV_ID, segment)
-            if path_clearance == '1':
+            
+            if (path_clearance) == 1:
                 previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 if segment == segments[0]:
@@ -52,14 +53,24 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                             if interrupt_value == 0:
                                 break
                             elif interrupt_value == 1:
-                                time.sleep(cell_time)
+                                time.sleep(cell_time*3)
                                 print("Stop signal received! Halting AGV.")
+                                if current_location in segment:
+                                    current_segment = segment[segment.index(current_location)+1:]
+                                    new_path_clearance = RequestPathClearance(AGV_ID, current_segment)
+                                else:
+                                    new_path_clearance = RequestPathClearance(AGV_ID, segment)
+                                if (new_path_clearance) == 1:
+                                    SetInterrupt(0)
+                                    break
+                                else:
+                                    SetInterrupt(new_path_clearance)
                             else:
                                 print("Recalculating path...")
                                 print("Interrupt value:", interrupt_value)
                                 is_path_correct = 0
                                 if movement_time > 0:
-                                    obstacles = eval(interrupt_value)
+                                    obstacles = [tuple(obstacle) for obstacle in interrupt_value]
                                     current_location_index = segment.index(current_location)
                                     if segment[current_location_index+1] not in obstacles:
                                         time.sleep(cell_time/2) # move forward for half the cell time
@@ -103,15 +114,11 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                     index += 1
                 break
 
-            elif path_clearance == '2':
-                print("Pausing...")
-                time.sleep(cell_time)
-                continue
 
             else:
                 print("obstacle*",path_clearance)
                 try:
-                    new_path, obstacles = RecalculatePath(path_clearance, current_location, goal, fixed_grid)
+                    new_path, obstacles = RecalculatePath((path_clearance), current_location, goal, fixed_grid)
                     if not new_path:
                         print("No valid path found after recalculation.")
                         break
