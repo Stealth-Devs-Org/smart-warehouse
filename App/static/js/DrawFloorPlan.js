@@ -144,8 +144,3 @@ function drawCartesianCoordinates() {
 
 
 
-<script>
-
-</script>
-
-
