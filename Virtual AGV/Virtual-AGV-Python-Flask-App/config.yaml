@@ -8,12 +8,14 @@ defaults: &defaults
 instances:
   - port: 5001
     AGV_ID: 1
-    current_location: [15, 22]
+    current_location: [36, 13]
+    idle_location: [36, 13]
     <<: *defaults  # Merges default values here
 
   - port: 5002
     AGV_ID: 2
-    current_location: [17, 4]
+    current_location: [37, 13]
+    idle_location: [37, 13]
     <<: *defaults  # Merges default values here
 
   # Add more instances as needed

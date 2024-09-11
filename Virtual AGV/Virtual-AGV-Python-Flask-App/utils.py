@@ -1,4 +1,5 @@
 import time
+from mqtt_handler import UpdateCurrentLocation
 
 def CreateSegments(path):
     segments = []
@@ -27,9 +28,35 @@ def CreateSegments(path):
     segments.append(current_segment)
     return segments
 
-def SimulateLoadingUnloading(current_location):
-    print(f"Loading and unloading at location: {current_location}")
-    time.sleep(2)  # Simulate loading and unloading time
+def LoadUnload(storage_level):
+    if storage_level == 1:
+        return 1
+    elif storage_level == 2:
+        return 2
+    elif storage_level == 3:
+        return 3
+    elif storage_level == 4:
+        return 4
+    else:
+        return 5 
+
+def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
+    UpdateCurrentLocation([current_location], AGV_ID, action)
+    if action == 1 or action == 2:
+        direction = SimulateTurning(current_location, (storage[0],storage[1]), direction, turning_time)
+        duration = LoadUnload(storage[2])
+        if action == 1:
+            print(f"AGV {AGV_ID} started loading at {current_location}...")
+        else:
+            print(f"AGV {AGV_ID} started unloading at {current_location}...")
+        time.sleep(duration)
+    elif action == 3:
+        print(f"AGV {AGV_ID} started charging at {current_location}...")
+        time.sleep(10)
+    UpdateCurrentLocation([current_location], AGV_ID, 0)
+    return direction  
+    
+    
 
 def SimulateTurning(current_location, next_location, current_direction, turning_time):
     

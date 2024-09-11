@@ -19,6 +19,7 @@ def ReadGrid(file_path):
     return fixed_grid
 
 def CalculatePath(start, goal, grid):
+    print("Calculating path from", start, "to", goal)
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
@@ -61,6 +62,7 @@ def CalculatePath(start, goal, grid):
             return []  # Return empty path if no valid path exists
         node = came_from[node]
     path.append(goal)
+    print("Returning path")
     return path
 
 def RecalculatePath(obstacles, current_node, goal, fixed_grid):

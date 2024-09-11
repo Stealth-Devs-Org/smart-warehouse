@@ -5,8 +5,8 @@ import time
 import os
 from pathfinding import ReadGrid, CalculatePath, RecalculatePath
 from server_communication import RequestPathClearance, ObtainGoal
-from utils import CreateSegments, SimulateLoadingUnloading, SimulateTurning, EvalNewPath
-from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt, SetInterrupt
+from utils import CreateSegments, SimulateEndAction, SimulateTurning, EvalNewPath
+from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt, SetInterrupt, GetGoal, SetGoal
 from flask import Flask
 
 app = Flask(__name__)
@@ -19,7 +19,27 @@ def read_config(config_path):
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
-def InteractivePathDisplay(segments_list, current_location, goal, direction):
+def ObtainGoal(idle_location):
+    print("Obtaining goal...")
+    goal = GetGoal()
+    print("Goal:", goal)
+    if goal:
+        destination = tuple(map(int, goal.get('destination')))
+        if goal.get('storage'):
+            storage = tuple(map(int, goal.get('storage')))
+        else:
+            storage = None
+
+        action = goal.get('action') # 0: idle, 2: load, 3: unload, 4: charge
+    else:
+        destination = idle_location
+        storage = None
+        action = 4
+    print("Returning goal...", destination, storage, action)
+    return destination, storage, action
+
+
+def InteractivePathDisplay(segments_list, current_location, destination, direction, storage, action):
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
@@ -79,7 +99,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                                     else:
                                         time.sleep(cell_time/2) # move reverse for half the cell time
                                         movement_time += cell_time/2
-                                new_path, obstacles = RecalculatePath(interrupt_value, current_location, goal, fixed_grid)
+                                new_path, obstacles = RecalculatePath(interrupt_value, current_location, destination, fixed_grid)
                                 if not new_path:
                                     print("No valid path found after recalculation.")
                                     break
@@ -105,7 +125,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                         break
                     current_location = cell
                     current_location_index = segment.index(current_location)
-                    if current_location == goal:
+                    if current_location == destination:
                         UpdateCurrentLocation(segment[current_location_index:],AGV_ID,0)
                     else:
                         UpdateCurrentLocation(segment[current_location_index:],AGV_ID,1)
@@ -118,7 +138,7 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
             else:
                 print("obstacle*",path_clearance)
                 try:
-                    new_path, obstacles = RecalculatePath((path_clearance), current_location, goal, fixed_grid)
+                    new_path, obstacles = RecalculatePath((path_clearance), current_location, destination, fixed_grid)
                     if not new_path:
                         print("No valid path found after recalculation.")
                         break
@@ -156,8 +176,10 @@ def InteractivePathDisplay(segments_list, current_location, goal, direction):
                     continue
 
     print("End of path reached")
-    SimulateLoadingUnloading(current_location)
-    return current_location
+    SetGoal(None)
+    direction = SimulateEndAction(AGV_ID, current_location, current_direction, storage, action, turning_time)
+    time.sleep(cell_time)
+    return current_location, direction
 
 if __name__ == '__main__':
     # Read configuration file
@@ -174,8 +196,18 @@ if __name__ == '__main__':
     turning_time = config["turning_time"]  # Time taken to turn the AGV in 45 degrees
     direction = config["direction"]  # Initial direction of the AGV
     current_location = tuple(config["current_location"])
+    idle_location = tuple(config["idle_location"])
 
-    threading.Thread(target=lambda: app.run(port=port)).start()
+
+    '''port = 501
+    AGV_ID = 1
+    speed = 2  # Speed of the AGV
+    cell_distance = 2  # cell_distance between two cells
+    turning_time = 2  # Time taken to turn the AGV in 45 degrees
+    direction = "N"  # Initial direction of the AGV
+    current_location = (36, 13)
+    idle_location = (36, 13)
+    threading.Thread(target=lambda: app.run(port=port)).start()'''
 
     ConnectMQTT(AGV_ID)
 
@@ -187,16 +219,25 @@ if __name__ == '__main__':
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
 
+    UpdateCurrentLocation([current_location],AGV_ID,0)
+    
+
     while True:
-        goal = ObtainGoal(AGV_ID)
+        destination,storage,action = ObtainGoal(idle_location)
+        print("Destination:", destination, "Storage:", storage, "Action:", action)
+        if (idle_location != current_location) or (destination != current_location):
+            print("Current location is not the destination")
+            
+            # Compute the path using D* Lite
+            path = CalculatePath(current_location, destination, grid)
+            print("Path:", path)
 
-        # Compute the path using D* Lite
-        path = CalculatePath(current_location, goal, grid)
-        print("Path:", path)
+            # Break the path into straight-line segments
+            segments = CreateSegments(path)
+            print("segments:", segments)
 
-        # Break the path into straight-line segments
-        segments = CreateSegments(path)
-        print("segments:", segments)
-
-        # Display the path interactively
-        current_location = InteractivePathDisplay(segments, current_location, goal, direction)
+            # Display the path interactively
+            current_location, direction = InteractivePathDisplay(segments, current_location, destination, direction, storage, action)
+        else:
+            print("AGV is already at the destination")
+            time.sleep(5)

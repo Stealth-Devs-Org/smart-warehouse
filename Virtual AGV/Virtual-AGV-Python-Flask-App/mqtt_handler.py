@@ -4,7 +4,9 @@ import threading
 import datetime
 
 interrupt = 0  # Global interrupt variable
+goal = None  # Global goal variable
 interrupt_lock = threading.Lock()
+goal_lock = threading.Lock()
 
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
@@ -22,39 +24,63 @@ def GetInterrupt():
     with interrupt_lock:
         return interrupt
 
+def SetGoal(new_goal):
+    global goal
+    with goal_lock:
+        goal = new_goal
+
+def GetGoal():
+    global goal
+    with goal_lock:
+        return goal
+
 def setTopic(AGV_ID):
     
     global MQTT_INTERRUPT_TOPIC
     global MQTT_GOAL_TOPIC
     MQTT_GOAL_TOPIC = f"agv{AGV_ID}/goal"
+    MQTT_INTERRUPT_TOPIC = f"agv{AGV_ID}/interrupt"
     print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
     print(f"MQTT_GOAL_TOPIC: {MQTT_GOAL_TOPIC}")
-    MQTT_INTERRUPT_TOPIC = f"agv{AGV_ID}/interrupt"
     print(f"MQTT_INTERRUPT_TOPIC: {MQTT_INTERRUPT_TOPIC}")
+
 
 def ConnectMQTT(AGV_ID):
     setTopic(AGV_ID)
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
         mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC)  # Subscribe to the interrupt topic
+        mqtt_client.subscribe(MQTT_GOAL_TOPIC)  # Subscribe to the goal topic
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
         print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
+        print(f"Subscribed to MQTT topic '{MQTT_GOAL_TOPIC}' for goals")
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
+
+
+
 
 def on_message(client, userdata, message):
     try:
         data = json.loads(message.payload.decode())
-        interrupt_value = data.get('interrupt')
-        if interrupt_value == 1:
-            SetInterrupt(1)
-            print("Received 'Stop' interrupt. Stopping AGV.")
-        else:
-            SetInterrupt(interrupt_value)
-            print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt_value)
+        if message.topic == MQTT_INTERRUPT_TOPIC:
+            interrupt_value = data.get('interrupt')
+            if interrupt_value == 1:
+                SetInterrupt(1)
+                print("Received 'Stop' interrupt. Stopping AGV.")
+            else:
+                SetInterrupt(interrupt_value)
+                print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt_value)
+
+        elif message.topic == MQTT_GOAL_TOPIC:
+            SetGoal(data)
+            print(f"Received new goal: {goal}")
+            
+
     except json.JSONDecodeError as e:
-        print(f"Error decoding interrupt message: {e}")
+        print(f"Error decoding message: {e}")
+
 
 def UpdateCurrentLocation(current_segment,AGV_ID,status):
     try:
@@ -73,3 +99,5 @@ def UpdateCurrentLocation(current_segment,AGV_ID,status):
         print(f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
     except Exception as e:
         print(f"Failed to publish to MQTT: {e}")
+
+
