@@ -1,6 +1,7 @@
 from server import create_app
+from server.websocket.utils import socketio
 
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    socketio.run(app)

@@ -4,26 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Grid</title>
-    <style>
-        /* Basic grid styling */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(31, 20px);  /* 31 columns */
-            grid-template-rows: repeat(27, 20px);    /* 27 rows */
-            gap: 5px;
-            margin: 20px;
-        }
-        
-        /* Dot styling */
-        .dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: white;  /* Default color */
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    socket.on('connect', function() {
+        socket.emit('connected', {data: 'Web interface connected!'});
+    });
+</script>
 
 <h1>Main server AGV location tracker</h1>
 <div class="grid" id="grid">
@@ -34,9 +25,6 @@
         {% endfor %}
     {% endfor %}
 </div>
-
-
-
 
 <script>
     // Set static dots to red
@@ -110,11 +98,23 @@
             });
     }
 
+    socket.on('agv_location', function(data) {
+        // Reset all dots to default color
+        reset();
+
+        // Set the dynamic dots to blue based on the data received
+        data.forEach(position => {
+            const [row, col] = position;
+            let dotId = `dot-${row}-${col}`;
+            document.getElementById(dotId).style.backgroundColor = 'blue';
+        });
+    });
+
     // Run once to initialize dynamic dots
-    updateDynamicDots();
+    reset();
 
     // Optionally, set an interval to update dynamic dots periodically (e.g., every 1 second)
-    setInterval(updateDynamicDots, 1000);
+    // setInterval(updateDynamicDots, 1000);
 </script>
 
 </body>

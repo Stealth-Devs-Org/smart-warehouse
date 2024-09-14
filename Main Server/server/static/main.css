@@ -1,0 +1,16 @@
+/* Basic grid styling */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(31, 20px);  /* 31 columns */
+    grid-template-rows: repeat(27, 20px);    /* 27 rows */
+    gap: 5px;
+    margin: 20px;
+}
+
+/* Dot styling */
+.dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;  /* Default color */
+}
