@@ -1,6 +1,7 @@
 import json
 
 from flask import Blueprint, jsonify, render_template, request
+
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     get_agvs_location_within_range,
@@ -90,7 +91,7 @@ def collision_avoidance(agvs_data):
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     print(agvs_data)
-    collision_avoidance(agvs_data)  # Not needed for now
+    collision_avoidance(agvs_data)
     save_agv_location(data)
 
 
