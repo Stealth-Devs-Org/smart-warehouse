@@ -56,7 +56,7 @@ def stop_agv(agv_id):
     topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": 1}
     message_json = json.dumps(message_dict)
-    mqtt_client.publish(topic, message_json, qos=1)
+    mqtt_client.publish(topic, message_json, qos=2)
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
@@ -65,7 +65,7 @@ def recalibrate_path(agv_id, segment):
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
     message_dict = {"interrupt": obstacles}
     message_json = json.dumps(message_dict)
-    mqtt_client.publish(topic, message_json, qos=1)
+    mqtt_client.publish(topic, message_json, qos=2)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
