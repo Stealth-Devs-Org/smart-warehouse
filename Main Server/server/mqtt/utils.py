@@ -26,3 +26,8 @@ def handle_mqtt_message(client, userdata, message):
         from server.agv.col_avoid import update_agv_location
 
         update_agv_location(data)
+
+    elif topic == "task_complete":
+        from server.agv.scheduler import task_complete
+
+        task_complete(data)
