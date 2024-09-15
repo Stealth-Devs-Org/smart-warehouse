@@ -104,7 +104,9 @@
 
         // Set the dynamic dots to blue based on the data received
         data.forEach(position => {
-            const [row, col] = position;
+            const [x, y] = position;
+            row = 26-(y-3);
+            col = x-9;
             let dotId = `dot-${row}-${col}`;
             document.getElementById(dotId).style.backgroundColor = 'blue';
         });
