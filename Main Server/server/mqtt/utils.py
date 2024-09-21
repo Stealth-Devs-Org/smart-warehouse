@@ -9,8 +9,8 @@ mqtt_client = Mqtt()
 def handle_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected successfully")
-        mqtt_client.subscribe("agv_location", qos=2)
-        print("Subscribed to agv_location")
+        mqtt_client.subscribe("agv/location", qos=2)
+        print("Subscribed to agv/location")
     else:
         print("Bad connection. Code:", rc)
 
