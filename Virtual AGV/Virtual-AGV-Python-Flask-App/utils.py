@@ -1,5 +1,5 @@
 import time
-from mqtt_handler import UpdateCurrentLocation
+from mqtt_handler import UpdateCurrentLocation, EndTask
 
 def CreateSegments(path):
     segments = []
@@ -53,6 +53,7 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
     elif action == 3:
         print(f"AGV {AGV_ID} started charging at {current_location}...")
         time.sleep(10)
+    EndTask(AGV_ID)
     UpdateCurrentLocation([current_location], AGV_ID, 0)
     return direction  
     

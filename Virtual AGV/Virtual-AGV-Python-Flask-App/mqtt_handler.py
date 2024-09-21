@@ -11,6 +11,7 @@ goal_lock = threading.Lock()
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 MQTT_LOCATION_TOPIC = "agv/location"
+MQTT_TASK_END_TOPIC = "agv/task_complete"
 
 mqtt_client = mqtt.Client()
 
@@ -97,6 +98,20 @@ def UpdateCurrentLocation(current_segment,AGV_ID,status):
             }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
         print(f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
+    except Exception as e:
+        print(f"Failed to publish to MQTT: {e}")
+
+def EndTask(AGV_ID):
+    try:
+        # Get the current time in a readable format
+        timestamp = datetime.datetime.now().isoformat()
+        
+        data = {
+            "agv_id": f"agv{AGV_ID}",
+            "timestamp": timestamp
+            }
+        mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data))
+        
     except Exception as e:
         print(f"Failed to publish to MQTT: {e}")
 
