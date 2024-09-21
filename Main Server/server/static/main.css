@@ -13,4 +13,9 @@
     height: 20px;
     border-radius: 50%;
     background-color: white;  /* Default color */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 6px;  /* Adjust font size as needed */
+    color: white;  /* Text color */
 }

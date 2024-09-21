@@ -34,6 +34,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
         for (let i of [9,10,23,24,37,38]) {
@@ -41,6 +42,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
         for (let i = 16; i < 32; i++) {
@@ -48,6 +50,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
         for (let i of [16,17,20,23,24,27,30,31]) {
@@ -55,6 +58,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
         for (let i = 32; i < 40; i++) {
@@ -62,6 +66,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
         for (let i = 36; i < 40; i++) {
@@ -69,6 +74,7 @@
                 row = 26-(j-3);
                 col = i-9;
                 document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
             }
         }
     }
@@ -90,26 +96,31 @@
                 reset();
 
                 // Set the dynamic dots to blue
-                data.forEach(position => {
-                    const [row, col] = position;
+                for (const [agv_id, agvData] of Object.entries(data)) {
+                    const [x, y] = agvData["location"];
+                    row = 26 - (y - 3);
+                    col = x - 9;
                     let dotId = `dot-${row}-${col}`;
                     document.getElementById(dotId).style.backgroundColor = 'blue';
-                });
+                    document.getElementById(dotId).innerText = agv_id;
+                }
             });
     }
 
     socket.on('agv_location', function(data) {
         // Reset all dots to default color
         reset();
+        data = data;
 
         // Set the dynamic dots to blue based on the data received
-        data.forEach(position => {
-            const [x, y] = position;
-            row = 26-(y-3);
-            col = x-9;
+        for (const [agv_id, agvData] of Object.entries(data)) {
+            const [x, y] = agvData["location"];
+            row = 26 - (y - 3);
+            col = x - 9;
             let dotId = `dot-${row}-${col}`;
             document.getElementById(dotId).style.backgroundColor = 'blue';
-        });
+            document.getElementById(dotId).innerText = agv_id;
+        }
     });
 
     // Run once to initialize dynamic dots
