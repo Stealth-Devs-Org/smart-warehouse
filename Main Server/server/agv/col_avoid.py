@@ -70,7 +70,7 @@ def recalibrate_path(agv_id, segment):
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance(agvs_data):
-    close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
+    close_agv_pairs = get_close_agv_pairs(agvs_data, 3)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             if is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]]):
@@ -87,7 +87,7 @@ def collision_avoidance(agvs_data):
 
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
-    socketio.emit("agv_location", get_agv_locations_array(agvs_data))
+    socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
     collision_avoidance(agvs_data)
     save_agv_location(data)

@@ -111,13 +111,12 @@ def assign_task_to_agv():
     agvs = list(agvs_data.keys())
     if not agvs:
         return None
-    agv_id = random.choice(agvs)
-    while agv_id in working_agvs.keys():
-        agvs.remove(agv_id)
-        if not agvs:
+    else:
+        available_agvs = [agv for agv in agvs if agv not in working_agvs.keys()]
+        if not available_agvs:
             return None
-        print("Available AGVs: " + str(agvs))
-        agv_id = random.choice(agvs)
+        print("Available AGVs: " + str(available_agvs))
+        agv_id = random.choice(available_agvs)
 
     task = generate_random_task()
     task["assigned_agv"] = agv_id
