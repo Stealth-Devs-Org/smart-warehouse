@@ -22,12 +22,12 @@ def handle_mqtt_message(client, userdata, message):
     payload = message.payload.decode()
     data = json.loads(payload)
 
-    if topic == "agv_location":
+    if topic == "agv/location":
         from server.agv.col_avoid import update_agv_location
 
         update_agv_location(data)
 
-    elif topic == "task_complete":
+    elif topic == "agv/task_complete":
         from server.agv.scheduler import task_complete
 
         task_complete(data)

@@ -98,11 +98,11 @@ def update_agv_location(data):
 #         del agv_locations[agv_id]
 
 
-@agv.route("/path_clearance")
+@agv.route("/path_clearance", methods=["POST"])
 def path_clearance():
     data = request.json
-    agv_id = data.get("agv_id")
-    segment = data.get("segment")
+    agv_id = data["agv_id"]
+    segment = data["segment"]
 
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 

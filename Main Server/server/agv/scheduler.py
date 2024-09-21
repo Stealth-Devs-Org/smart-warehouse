@@ -10,7 +10,7 @@ inbound_pallet_locations = {}
 outbound_pallet_locations = {}
 storage_pallet_locations = {}
 
-working_agvs = []
+working_agvs = {}
 
 # Assigning pallet locations with respective path location
 for y in range(5, 12):
@@ -72,6 +72,8 @@ def generate_random_task():
     end_pallet_location.append(random.choice([1, 5]))  # Randomly selecting the pallet height
 
     task = {
+        "halfway": False,
+        "assigned_agv": None,
         "start_pallet_location": start_pallet_location,
         "start_path_location": start_path_location,
         "end_pallet_location": end_pallet_location,
@@ -81,31 +83,59 @@ def generate_random_task():
     return task
 
 
+def task_divider(task):
+    # Dividing the task into smaller tasks
+    start_pallet_location = task["start_pallet_location"]
+    start_path_location = task["start_path_location"]
+    end_pallet_location = task["end_pallet_location"]
+    end_path_location = task["end_path_location"]
+
+    # Dividing the task into 2 (halfway)
+    if not task["halfway"]:
+        task = {
+            "destination": start_path_location,
+            "storage": start_pallet_location,
+            "action": 2,
+        }
+        return task
+    else:
+        task = {
+            "destination": end_path_location,
+            "storage": end_pallet_location,
+            "action": 3,
+        }
+        return task
+
+
 def assign_task_to_agv():
     agvs = list(agvs_data.keys())
     if not agvs:
         return None
     agv_id = random.choice(agvs)
-    while agv_id in working_agvs:
+    while agv_id in working_agvs.keys():
         agvs.remove(agv_id)
         if not agvs:
             return None
+        print("Available AGVs: " + str(agvs))
         agv_id = random.choice(agvs)
 
     task = generate_random_task()
-    working_agvs.append(agv_id)
+    task["assigned_agv"] = agv_id
+    working_agvs[agv_id] = task
+    sending_task = task_divider(task)
 
     topic = f"{agv_id}/goal"
-    message_dict = task
+    message_dict = sending_task
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
+    print("Loading task" + message_json + " assigned to " + agv_id)
 
 
+# Task scheduler to assign tasks to AGVs at regular intervals
 def run_task_scheduler(interval):
     def task_scheduler():
         while True:
             assign_task_to_agv()
-            print("Task assigned to AGV")
             time.sleep(interval)
 
     thread = threading.Thread(target=task_scheduler)
@@ -113,5 +143,19 @@ def run_task_scheduler(interval):
 
 
 def task_complete(data):
-    working_agvs.remove(data["agv_id"])
-    assign_task_to_agv()
+    agv_id = data["agv_id"]
+    if agv_id in working_agvs.keys():
+        task = working_agvs[agv_id]
+        if not task["halfway"]:
+            working_agvs[agv_id]["halfway"] = True
+            print("Loading task completed by " + agv_id)
+
+            sending_task = task_divider(task)
+            topic = f"{agv_id}/goal"
+            message_dict = sending_task
+            message_json = json.dumps(message_dict)
+            mqtt_client.publish(topic, message_json, qos=2)
+            print("Unloading task" + message_json + " assigned to " + agv_id)
+        else:
+            del working_agvs[agv_id]
+            print("Unloading task completed by " + agv_id)
