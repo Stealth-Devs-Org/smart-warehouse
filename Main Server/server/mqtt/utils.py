@@ -1,0 +1,33 @@
+import json
+
+from flask_mqtt import Mqtt
+
+mqtt_client = Mqtt()
+
+
+@mqtt_client.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected successfully")
+        mqtt_client.subscribe("agv/location", qos=2)
+        print("Subscribed to agv/location")
+    else:
+        print("Bad connection. Code:", rc)
+
+
+@mqtt_client.on_message()
+def handle_mqtt_message(client, userdata, message):
+
+    topic = message.topic
+    payload = message.payload.decode()
+    data = json.loads(payload)
+
+    if topic == "agv/location":
+        from server.agv.col_avoid import update_agv_location
+
+        update_agv_location(data)
+
+    elif topic == "agv/task_complete":
+        from server.agv.scheduler import task_complete
+
+        task_complete(data)

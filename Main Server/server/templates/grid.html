@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Grid</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    socket.on('connect', function() {
+        socket.emit('connected', {data: 'Web interface connected!'});
+    });
+</script>
+
+<h1>Main server AGV location tracker</h1>
+<div class="grid" id="grid">
+    <!-- Create 30x26 grid of dots -->
+    {% for row in range(27) %}
+        {% for col in range(31) %}
+            <div class="dot" id="dot-{{ row }}-{{ col }}"></div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+<script>
+    // Set static dots to red
+    function setStaticDots() {
+        for (let i = 9; i < 39; i++) {
+            for (let j of [15,16,19,22,25,28,29]) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+        for (let i of [9,10,23,24,37,38]) {
+            for (let j of [17,18,20,21,23,24,26,27]) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+        for (let i = 16; i < 32; i++) {
+            for (let j of [3,4,13,14]) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+        for (let i of [16,17,20,23,24,27,30,31]) {
+            for (let j = 5; j < 13; j++) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+        for (let i = 32; i < 40; i++) {
+            for (let j = 9; j < 13; j++) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+        for (let i = 36; i < 40; i++) {
+            for (let j = 13; j < 16; j++) {
+                row = 26-(j-3);
+                col = i-9;
+                document.getElementById(`dot-${row}-${col}`).style.backgroundColor = 'lightgray';
+                document.getElementById(`dot-${row}-${col}`).innerText = `${i},${j}`;
+            }
+        }
+    }
+
+    function reset() {
+        document.querySelectorAll('.dot').forEach(dot => {
+            dot.style.backgroundColor = 'white';
+        });
+        // Set static dots
+        setStaticDots();
+    }
+
+    // Fetch dynamic colors from the Flask server and update the grid
+    function updateDynamicDots() {
+        fetch('/get_dynamic_locations')
+            .then(response => response.json())
+            .then(data => {
+                // Reset all dots to default color
+                reset();
+
+                // Set the dynamic dots to blue
+                for (const [agv_id, agvData] of Object.entries(data)) {
+                    const [x, y] = agvData["location"];
+                    row = 26 - (y - 3);
+                    col = x - 9;
+                    let dotId = `dot-${row}-${col}`;
+                    document.getElementById(dotId).style.backgroundColor = 'blue';
+                    document.getElementById(dotId).innerText = agv_id;
+                }
+            });
+    }
+
+    socket.on('agv_location', function(data) {
+        // Reset all dots to default color
+        reset();
+        data = data;
+
+        // Set the dynamic dots to blue based on the data received
+        for (const [agv_id, agvData] of Object.entries(data)) {
+            const [x, y] = agvData["location"];
+            row = 26 - (y - 3);
+            col = x - 9;
+            let dotId = `dot-${row}-${col}`;
+            document.getElementById(dotId).style.backgroundColor = 'blue';
+            document.getElementById(dotId).innerText = agv_id;
+        }
+    });
+
+    // Run once to initialize dynamic dots
+    reset();
+
+    // Optionally, set an interval to update dynamic dots periodically (e.g., every 1 second)
+    // setInterval(updateDynamicDots, 1000);
+</script>
+
+</body>
+</html>
