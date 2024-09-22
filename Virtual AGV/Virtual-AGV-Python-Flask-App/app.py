@@ -7,9 +7,7 @@ from pathfinding import ReadGrid, CalculatePath, RecalculatePath
 from server_communication import RequestPathClearance, ObtainGoal
 from utils import CreateSegments, SimulateEndAction, SimulateTurning, EvalNewPath
 from mqtt_handler import ConnectMQTT, UpdateCurrentLocation, GetInterrupt, SetInterrupt, GetGoal, SetGoal
-from flask import Flask
 
-app = Flask(__name__)
 
 fixed_grid = None  # Global variable for the fixed grid
 global AGV_ID
@@ -189,7 +187,7 @@ if __name__ == '__main__':
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
 
-    port = config["port"]
+    
     AGV_ID = config["AGV_ID"]
     speed = config["speed"]  # Speed of the AGV
     cell_distance = config["cell_distance"]  # cell_distance between two cells

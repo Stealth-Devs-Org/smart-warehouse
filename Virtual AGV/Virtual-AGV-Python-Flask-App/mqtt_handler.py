@@ -8,7 +8,7 @@ goal = None  # Global goal variable
 interrupt_lock = threading.Lock()
 goal_lock = threading.Lock()
 
-MQTT_BROKER = "test.mosquitto.org"
+MQTT_BROKER = "host.docker.internal"
 MQTT_PORT = 1883
 MQTT_LOCATION_TOPIC = "agv/location"
 MQTT_TASK_END_TOPIC = "agv/task_complete"
