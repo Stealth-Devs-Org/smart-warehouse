@@ -80,4 +80,4 @@ def RecalculatePath(obstacles, current_node, goal, fixed_grid):
                 grid[node].remove(obs)
 
     new_path = CalculatePath(current_node, goal, grid)
-    return new_path, obstacles
+    return new_path

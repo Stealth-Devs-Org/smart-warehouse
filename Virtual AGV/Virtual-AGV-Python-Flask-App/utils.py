@@ -83,8 +83,9 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
     else:
         direction = "W"
 
-    print(f"Turning from {current_direction} to {direction}...")
-    print(time.time())
+    if current_direction != direction:
+        print(f"Turning from {current_direction} to {direction}...")
+        print(time.time())
     if current_direction == "N" and (direction == "E" or direction == "W"):
         time.sleep(turning_time)
         print(time.time())
