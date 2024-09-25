@@ -1,5 +1,6 @@
+import json
 import time
-from mqtt_handler import UpdateCurrentLocation, EndTask
+
 
 def CreateSegments(path):
     segments = []
@@ -10,7 +11,7 @@ def CreateSegments(path):
     direction = None
     for i in range(2, len(path)):
         if path[i][0] == current_segment[-1][0]:
-            new_direction = 'vertical'
+            new_direction = "vertical"
             if direction != new_direction:
                 if direction:
                     segments.append(current_segment[0:-1])
@@ -18,7 +19,7 @@ def CreateSegments(path):
                 direction = new_direction
             current_segment.append(path[i])
         elif path[i][1] == current_segment[-1][1]:
-            new_direction = 'horizontal'
+            new_direction = "horizontal"
             if direction != new_direction:
                 if direction:
                     segments.append(current_segment[0:-1])
@@ -27,6 +28,7 @@ def CreateSegments(path):
             current_segment.append(path[i])
     segments.append(current_segment)
     return segments
+
 
 def LoadUnload(storage_level):
     if storage_level == 1:
@@ -38,12 +40,18 @@ def LoadUnload(storage_level):
     elif storage_level == 4:
         return 4
     else:
-        return 5 
+        return 5
+
 
 def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
-    UpdateCurrentLocation([current_location], AGV_ID, action)
+    with open("agv_status.json", "r") as f:
+        agv_status = json.load(f)
+        action = agv_status["status"]
+
     if action == 1 or action == 2:
-        direction = SimulateTurning(current_location, (storage[0],storage[1]), direction, turning_time)
+        direction = SimulateTurning(
+            current_location, (storage[0], storage[1]), direction, turning_time
+        )
         duration = LoadUnload(storage[2])
         if action == 1:
             print(f"AGV {AGV_ID} started loading at {current_location}...")
@@ -53,14 +61,19 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
     elif action == 3:
         print(f"AGV {AGV_ID} started charging at {current_location}...")
         time.sleep(10)
-    EndTask(AGV_ID)
-    UpdateCurrentLocation([current_location], AGV_ID, 0)
-    return direction  
-    
-    
+
+    from mqtt_handler import EndTask
+
+    EndTask()
+
+    agv_status["status"] = 0
+    with open("agv_status.json", "w") as f:
+        json.dump(agv_status, f)
+    return direction
+
 
 def SimulateTurning(current_location, next_location, current_direction, turning_time):
-    
+
     if current_location[0] == next_location[0] and current_location[1] < next_location[1]:
         direction = "N"
     elif current_location[0] == next_location[0] and current_location[1] > next_location[1]:
@@ -84,28 +97,53 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
     elif current_direction == "W" and (direction == "N" or direction == "S"):
         time.sleep(turning_time)
         print(time.time())
-    elif (current_direction == "N" and direction == "S") or (current_direction == "S" and direction == "N") or (current_direction == "E" and direction == "W") or (current_direction == "W" and direction == "E"):
-        time.sleep(turning_time*2)
+    elif (
+        (current_direction == "N" and direction == "S")
+        or (current_direction == "S" and direction == "N")
+        or (current_direction == "E" and direction == "W")
+        or (current_direction == "W" and direction == "E")
+    ):
+        time.sleep(turning_time * 2)
         print(time.time())
 
     return direction
 
 
-def EvalNewPath(new_segments, obstacles, remain_path,cell_time,turning_time):
+def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     # Find the farthest obstacle from the start of the remaining path
     start_point = remain_path[0][0]  # First point in the remaining path
-    farthest_obstacle_distance = max(abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1]) 
-                                     for obstacle in obstacles)
+    farthest_obstacle_distance = max(
+        abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1])
+        for obstacle in obstacles
+    )
 
     # Calculate total time for remaining path and new path
-    time_to_remain_path = (farthest_obstacle_distance + sum(len(segment) for segment in remain_path)) * cell_time + len(remain_path) * turning_time
-    time_to_new_path = sum(len(segment) for segment in new_segments)  * cell_time + len(new_segments)* turning_time
+    time_to_remain_path = (
+        farthest_obstacle_distance + sum(len(segment) for segment in remain_path)
+    ) * cell_time + len(remain_path) * turning_time
+    time_to_new_path = (
+        sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
+    )
 
-    print("time to remain_path",time_to_remain_path)
-    print("time to new_path",time_to_new_path)
+    print("time to remain_path", time_to_remain_path)
+    print("time to new_path", time_to_new_path)
 
     # Compare the times to decide whether the new path is better
     is_new_path_efficient = time_to_remain_path > time_to_new_path
     waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
     return is_new_path_efficient, waiting_time
 
+
+def Update_agv_json(object):
+    with open("agv_status.json", "r") as f:
+        agv_status = json.load(f)
+
+    for key in object:
+        agv_status[key] = object[key]
+
+    with open("agv_status.json", "w") as f:
+        json.dump(agv_status, f)
+
+    from mqtt_handler import UpdateCurrentLocation
+
+    return UpdateCurrentLocation()
