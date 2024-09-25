@@ -11,6 +11,8 @@ def handle_connect(client, userdata, flags, rc):
         print("Connected successfully")
         mqtt_client.subscribe("agv/location", qos=2)
         print("Subscribed to agv/location")
+        mqtt_client.subscribe("agv/task_complete", qos=2)
+        print("Subscribed to agv/task_complete")
     else:
         print("Bad connection. Code:", rc)
 
