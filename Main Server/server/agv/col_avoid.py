@@ -70,7 +70,7 @@ def recalibrate_path(agv_id, segment):
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance(agvs_data):
-    close_agv_pairs = get_close_agv_pairs(agvs_data, 3)
+    close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             if is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]]):
