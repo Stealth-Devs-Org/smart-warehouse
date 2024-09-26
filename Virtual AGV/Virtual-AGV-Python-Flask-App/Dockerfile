@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim
+FROM python:3.12.6-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install pyyaml
 
 # Make port 5001 available to the world outside this container
-EXPOSE 5001
+# EXPOSE 5001
 
 # Run the Flask app
 CMD ["python", "app.py"]
