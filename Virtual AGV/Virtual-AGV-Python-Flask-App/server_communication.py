@@ -1,7 +1,7 @@
 import requests
 
-# MAIN_SERVER_URL = "http://127.0.0.1:5000"
-MAIN_SERVER_URL = "http://host.docker.internal:5000"
+MAIN_SERVER_URL = "http://127.0.0.1:5000"
+# MAIN_SERVER_URL = "http://host.docker.internal:5000"
 
 
 def RequestPathClearance(AGV_ID, segment):
