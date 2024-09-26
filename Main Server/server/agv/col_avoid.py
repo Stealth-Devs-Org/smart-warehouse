@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 
 from flask import Blueprint, jsonify, render_template, request
 
@@ -68,8 +70,8 @@ def recalibrate_path(agv_id, segment):
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
-def collision_avoidance(agvs_data):
-    close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
+def collision_avoidance():
+    close_agv_pairs = get_close_agv_pairs(agvs_data, 3)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             if is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]]):
@@ -84,6 +86,17 @@ def collision_avoidance(agvs_data):
                     pass
 
 
+def run_collision_avoidance(interval):
+    def start():
+        print("Collision monitoring started")
+        while True:
+            collision_avoidance()
+            time.sleep(interval)
+
+    thread = threading.Thread(target=start)
+    thread.start()
+
+
 from server.websocket.utils import socketio
 
 
@@ -91,7 +104,7 @@ def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
-    collision_avoidance(agvs_data)
+    # collision_avoidance()
     save_agv_location(data)
 
 
