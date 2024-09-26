@@ -134,6 +134,7 @@ def assign_task_to_agv():
 # Task scheduler to assign tasks to AGVs at regular intervals
 def run_task_scheduler(interval):
     def task_scheduler():
+        print("Task scheduler started")
         while True:
             assign_task_to_agv()
             time.sleep(interval)
