@@ -12,7 +12,6 @@ from server.agv.utils import (
     is_path_crossing,
     is_segment_occupied,
 )
-from server.websocket.utils import socketio
 
 agv = Blueprint("agv", __name__)
 
@@ -85,6 +84,9 @@ def collision_avoidance(agvs_data):
                     pass
 
 
+from server.websocket.utils import socketio
+
+
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     socketio.emit("agv_location", agvs_data)
@@ -121,8 +123,8 @@ def index():
     return render_template("grid.html")
 
 
-# @agv.route("/get_dynamic_locations")
-# def get_dynamic_locations():
-#     agv_locations = get_agv_locations_array(agvs_data)
-#     # Return the dynamic dot color data
-#     return jsonify(agv_locations)
+@agv.route("/get_dynamic_locations")
+def get_dynamic_locations():
+    # agv_locations = get_agv_locations_array(agvs_data)
+    # Return the dynamic dot color data
+    return jsonify(agvs_data)
