@@ -1,3 +1,4 @@
+import concurrent.futures
 import json
 
 from flask import Blueprint, jsonify, render_template, request
@@ -91,7 +92,12 @@ def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
-    collision_avoidance(agvs_data)
+
+    # Use multiprocessing for CPU-bound collision avoidance
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.submit(collision_avoidance, agvs_data)
+
+    # collision_avoidance(agvs_data)
     save_agv_location(data)
 
 
