@@ -1,0 +1,16 @@
+services:
+  agv_instance_1:
+    build: .
+    environment:
+      - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=0
+    ports:
+      - "5001:5001"
+
+  agv_instance_2:
+    build: .
+    environment:
+      - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=1
+    ports:
+      - "5002:5002"
