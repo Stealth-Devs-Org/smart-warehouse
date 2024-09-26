@@ -1,3 +1,4 @@
+import concurrent.futures
 import json
 import random
 import threading
@@ -137,8 +138,11 @@ def run_task_scheduler(interval):
             assign_task_to_agv()
             time.sleep(interval)
 
-    thread = threading.Thread(target=task_scheduler)
-    thread.start()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(task_scheduler)
+
+    # thread = threading.Thread(target=task_scheduler)
+    # thread.start()
 
 
 def task_complete(data):
