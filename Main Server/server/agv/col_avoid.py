@@ -58,6 +58,7 @@ def stop_agv(agv_id):
     message_dict = {"interrupt": 1}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
+    print(f"Sent stop signal to AGV {agv_id}")
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
@@ -67,6 +68,7 @@ def recalibrate_path(agv_id, segment):
     message_dict = {"interrupt": obstacles}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
+    print(f"Sent recalibrate signal to AGV {agv_id}")
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
@@ -75,6 +77,7 @@ def collision_avoidance():
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             if is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]]):
+                print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]}")
                 if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
                     stop_agv(agv_pair[0])
                     recalibrate_path(agv_pair[1], agvs_data[agv_pair[1]]["segment"])
