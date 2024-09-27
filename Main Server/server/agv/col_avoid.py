@@ -125,6 +125,7 @@ def path_clearance():
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 
     if not obstacles:
+        agvs_data[agv_id]["segment"] = segment
         message_dict = {"result": 1}
         message_json = json.dumps(message_dict)
         return message_json
