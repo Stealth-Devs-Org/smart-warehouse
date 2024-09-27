@@ -195,6 +195,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
     current_direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
+    status = 0
     time.sleep(cell_time)
     return current_location, current_direction
 
