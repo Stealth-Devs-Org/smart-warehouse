@@ -41,17 +41,18 @@ def LoadUnload(storage_level):
         return 5 
 
 def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
-    UpdateCurrentLocation([current_location], AGV_ID, action)
     if action == 1 or action == 2:
-        direction = SimulateTurning(current_location, (storage[0],storage[1]), direction, turning_time)
+        direction = SimulateTurning(AGV_ID, current_location, (storage[0],storage[1]), direction, turning_time)
         duration = LoadUnload(storage[2])
         if action == 1:
             print(f"AGV {AGV_ID} started loading at {current_location}...")
         else:
             print(f"AGV {AGV_ID} started unloading at {current_location}...")
+        UpdateCurrentLocation([current_location], AGV_ID, action)
         time.sleep(duration)
     elif action == 3:
         print(f"AGV {AGV_ID} started charging at {current_location}...")
+        UpdateCurrentLocation([current_location], AGV_ID, action)
         time.sleep(10)
     EndTask(AGV_ID)
     UpdateCurrentLocation([current_location], AGV_ID, 0)
@@ -59,7 +60,7 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
     
     
 
-def SimulateTurning(current_location, next_location, current_direction, turning_time):
+def SimulateTurning(AGV_ID, current_location, next_location, current_direction, turning_time):
     
     if current_location[0] == next_location[0] and current_location[1] < next_location[1]:
         direction = "N"
@@ -72,22 +73,16 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
 
     print(f"Turning from {current_direction} to {direction}...")
     print(time.time())
-    if current_direction == "N" and (direction == "E" or direction == "W"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "S" and (direction == "E" or direction == "W"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "E" and (direction == "N" or direction == "S"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "W" and (direction == "N" or direction == "S"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif (current_direction == "N" and direction == "S") or (current_direction == "S" and direction == "N") or (current_direction == "E" and direction == "W") or (current_direction == "W" and direction == "E"):
-        time.sleep(turning_time*2)
-        print(time.time())
-
+    if (current_direction == "N" and direction == "E")or (current_direction == "S" and direction == "W") or (current_direction == "E" and direction == "S") or (current_direction == "W" and direction == "N"):
+        status = 5 # Turning right
+    elif (current_direction == "N" and direction == "W")or (current_direction == "S" and direction == "E") or (current_direction == "E" and direction == "N") or (current_direction == "W" and direction == "S"):
+        status = 6 # Turning left
+    else:
+        status = 7 # Turning back
+        turning_time*=2
+    UpdateCurrentLocation([current_location], AGV_ID, status)
+    time.sleep(turning_time)
+    UpdateCurrentLocation([current_location], AGV_ID, 8) # END Turning
     return direction
 
 

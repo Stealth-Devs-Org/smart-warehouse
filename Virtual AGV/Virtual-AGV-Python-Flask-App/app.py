@@ -32,13 +32,13 @@ def ObtainGoal(idle_location):
     else:
         destination = idle_location
         storage = None
-        action = 4
+        action = 0
     print("Returning goal...", destination, storage, action)
     return destination, storage, action
 
 
 def InteractivePathDisplay(segments_list, current_location, destination, direction, storage, action):
-    previous_obstacles = None
+    previous_obstacles = None # Store obstcles if the AGV recieve a obstacle list for path clearance request
     cell_time = cell_distance / speed
     current_direction = direction
     
@@ -55,11 +55,12 @@ def InteractivePathDisplay(segments_list, current_location, destination, directi
                 previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 if segment == segments[0]:
-                    current_direction = SimulateTurning(current_location, segment[0], current_direction, turning_time)
+                    current_direction = SimulateTurning(AGV_ID, current_location, segment[0], current_direction, turning_time)
+                    UpdateCurrentLocation([current_location],AGV_ID,1)
                 for cell in segment:
                     if segment != segments[0] and len(segment)>1 and cell == segment[1]:
                         print(f"Current location: {current_location}, next location: {segment[1]}")
-                        current_direction = SimulateTurning(current_location, segment[1], current_direction, turning_time)
+                        current_direction = SimulateTurning(AGV_ID, current_location, segment[1], current_direction, turning_time)
                     
                     movement_time = 0
                     is_path_correct = 1
@@ -71,15 +72,18 @@ def InteractivePathDisplay(segments_list, current_location, destination, directi
                             if interrupt_value == 0:
                                 break
                             elif interrupt_value == 1:
+                                # Stopping AGV for predefined time period and request path clearance for the rest of the path
+                                UpdateCurrentLocation([current_location],AGV_ID,0)
+
                                 time.sleep(cell_time*3)
-                                print("Stop signal received! Halting AGV.")
+
                                 if current_location in segment:
                                     current_segment = segment[segment.index(current_location)+1:]
                                     new_path_clearance = RequestPathClearance(AGV_ID, current_segment)
                                 else:
                                     new_path_clearance = RequestPathClearance(AGV_ID, segment)
                                 if (new_path_clearance) == 1:
-                                    SetInterrupt(0)
+                                    SetInterrupt(0) # Reset Interrupt Value
                                     break
                                 else:
                                     SetInterrupt(new_path_clearance)
@@ -91,10 +95,12 @@ def InteractivePathDisplay(segments_list, current_location, destination, directi
                                     obstacles = [tuple(obstacle) for obstacle in interrupt_value]
                                     current_location_index = segment.index(current_location)
                                     if segment[current_location_index+1] not in obstacles:
+                                        UpdateCurrentLocation([current_location],AGV_ID,1)
                                         time.sleep(cell_time/2) # move forward for half the cell time
                                         movement_time += cell_time/2
                                         current_location = cell
                                     else:
+                                        UpdateCurrentLocation([current_location],AGV_ID,9) 
                                         time.sleep(cell_time/2) # move reverse for half the cell time
                                         movement_time += cell_time/2
                                 new_path, obstacles = RecalculatePath(interrupt_value, current_location, destination, fixed_grid)
