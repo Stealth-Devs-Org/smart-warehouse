@@ -136,7 +136,7 @@ def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
     socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
-    collision_avoidance()
+    # collision_avoidance()
 
     # Remove the interrupt if the AGV has moved from the location
     if (
