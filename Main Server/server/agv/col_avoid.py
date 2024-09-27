@@ -21,6 +21,8 @@ agvs_data = {}
 
 sent_interrupts = {}
 
+timeout_segments = {}
+
 
 # This function returns the current locations of the AGVs as an array of cordinates.
 def get_agv_locations_array(agvs_data):
@@ -154,16 +156,38 @@ def update_agv_location(data):
 #         del agv_locations[agv_id]
 
 
+def timeout_segment_manager():
+    global timeout_segments
+    while True:
+        for segment in list(timeout_segments):
+            if time.time() - timeout_segments[segment] > 1:
+                del timeout_segments[segment]
+        time.sleep(1)
+
+
+def start_timeout_segment_manager():
+    thread = threading.Thread(target=timeout_segment_manager)
+    thread.daemon = True
+    thread.start()
+
+
+start_timeout_segment_manager()
+
+
 @agv.route("/path_clearance", methods=["POST"])
 def path_clearance():
     data = request.json
     agv_id = data["agv_id"]
     segment = data["segment"]
 
-    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    if tuple(segment) in timeout_segments:
+        obstacles = [segment[0]]
+    else:
+        obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 
     if not obstacles:
         agvs_data[agv_id]["segment"] = segment
+        timeout_segments[tuple(segment)] = time.time()
         message_dict = {"result": 1}
         message_json = json.dumps(message_dict)
         return message_json
