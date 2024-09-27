@@ -208,6 +208,20 @@ def InteractivePathDisplay(
     return current_location, direction
 
 
+def send_keep_alive():
+    global current_location, status
+    while True:
+        time.sleep(10)
+        print("Sending keep alive")
+        UpdateCurrentLocation([current_location], AGV_ID, status)
+
+
+# Start the keep-alive thread
+keep_alive_thread = threading.Thread(target=send_keep_alive)
+keep_alive_thread.daemon = True
+keep_alive_thread.start()
+
+
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
