@@ -83,8 +83,8 @@ def stop_agv(agv_id):
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
     topic = f"{agv_id}/interrupt"
-    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
-    obstacles = []
+    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    # obstacles = []
     if agv_id in sent_interrupts and sent_interrupts[agv_id]["interrupt"] == obstacles:
         return
     message_dict = {"interrupt": obstacles}
