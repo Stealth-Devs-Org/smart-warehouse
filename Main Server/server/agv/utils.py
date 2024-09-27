@@ -174,8 +174,11 @@ def is_path_crossing(agv_1, agv_2):
     if loc_1 in path_2 or loc_2 in path_1:
         return True
     else:
-        for i in range(len(path_1) - 1):
+        for i in range(len(path_1)):
             if path_1[i] in path_2:
+                return True
+        for i in range(len(path_2)):
+            if path_2[i] in path_1:
                 return True
 
     return False
