@@ -26,11 +26,11 @@ wss.on('connection', (ws) => {
 
   ws.send('Welcome');
 
-  // AGV data every 5 seconds
+  // AGV data every 10 mil seconds
   const interval = setInterval(() => {
     const agvData = generateRandomAGVData();
     ws.send(JSON.stringify(agvData));  
-  }, 5000);
+  }, 10);
 
 
   ws.on('message', (message) => {
