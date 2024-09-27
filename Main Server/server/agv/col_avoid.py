@@ -45,6 +45,7 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
             agvs_data, agv_id, furthest_obstacle_distance
         )
         obstacles = obstacles + obstacles_within_range
+        obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
     return obstacles
 
