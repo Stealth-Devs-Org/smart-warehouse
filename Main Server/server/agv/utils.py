@@ -103,12 +103,13 @@ def get_agvs_location_within_range(agvs_data, agv_id, threshold):
     list: A list of AGV IDs that are within the threshold distance from the given AGV.
     """
     distances = calculate_agv_distances(agvs_data)
-    agv_ids = list(agvs_data.keys())
-    agvs_within_range = [
-        agvs_data[agv_id2]["location"]
-        for (agv_id1, agv_id2), distance in distances.items()
-        if agv_id1 == agv_id and distance < threshold
-    ]
+    agvs_within_range = []
+    for (agv_id1, agv_id2), distance in distances.items():
+        if (agv_id1 == agv_id or agv_id2 == agv_id) and distance <= threshold:
+            if agv_id1 != agv_id:
+                agvs_within_range.append(agvs_data[agv_id1]["location"])
+            if agv_id2 != agv_id:
+                agvs_within_range.append(agvs_data[agv_id2]["location"])
 
     return agvs_within_range
 
