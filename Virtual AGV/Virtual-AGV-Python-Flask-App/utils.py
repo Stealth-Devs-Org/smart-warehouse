@@ -8,9 +8,12 @@ def CreateSegments(path):
     if not path:
         return segments
 
-    current_segment = [path[1]]
+    # if len(path) == 1:
+    #     return [[path[0]]]
+
+    current_segment = [path[0]]
     direction = None
-    for i in range(2, len(path)):
+    for i in range(1, len(path)):
         if path[i][0] == current_segment[-1][0]:
             new_direction = "vertical"
             if direction != new_direction:

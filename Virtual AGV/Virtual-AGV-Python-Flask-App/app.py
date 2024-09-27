@@ -18,8 +18,9 @@ from server_communication import ObtainGoal, RequestPathClearance
 from utils import CreateSegments, EvalNewPath, SimulateEndAction, SimulateTurning
 
 fixed_grid = None  # Global variable for the fixed grid
-global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location
+global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location, status, current_segment
 current_location = None
+status = 0
 
 
 def read_config(config_path):
@@ -48,7 +49,7 @@ def ObtainGoal(idle_location):
 
 
 def InteractivePathDisplay(segments_list, destination, direction, storage, action):
-    global status, current_direction, current_location
+    global status, current_direction, current_location, current_segment
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
@@ -89,9 +90,9 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 break
                             elif interrupt_value == 1:
                                 print("Stop signal received! Halting AGV.")
-                                time.sleep(cell_time * 3)
+                                time.sleep(cell_time * 5)
                                 if current_location in segment:
-                                    current_segment = segment[segment.index(current_location) + 1 :]
+                                    current_segment = segment[segment.index(current_location) :]
                                     new_path_clearance = RequestPathClearance(
                                         AGV_ID, current_segment
                                     )
@@ -108,13 +109,13 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 is_path_correct = 0
                                 if movement_time > 0:
                                     obstacles = [tuple(obstacle) for obstacle in interrupt_value]
-                                    current_location_index = segment.index(current_location)
-                                    if segment[current_location_index + 1] not in obstacles:
+                                    if cell not in obstacles:
                                         time.sleep(
                                             cell_time / 2
                                         )  # move forward for half the cell time
                                         movement_time += cell_time / 2
                                         current_location = cell
+                                        current_segment = segment[segment.index(current_location) :]
                                     else:
                                         time.sleep(
                                             cell_time / 2
@@ -125,7 +126,8 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 )
                                 if not new_path:
                                     print("No valid path found after recalculation.")
-                                    break
+                                    SetInterrupt(0)
+                                    return current_location, current_direction
                                 else:
                                     print("New path:", new_path)
                                     print("Obstacles:", obstacles)
@@ -147,12 +149,13 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                         break
                     current_location = cell
                     current_location_index = segment.index(current_location)
+                    current_segment = segment[current_location_index:]
                     if current_location == destination:
                         status = 0
-                        UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 0)
+                        UpdateCurrentLocation(current_segment, AGV_ID, 0)
                     else:
                         status = 1
-                        UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 1)
+                        UpdateCurrentLocation(current_segment, AGV_ID, 1)
 
                 else:
                     index += 1
@@ -166,7 +169,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                     )
                     if not new_path:
                         print("No valid path found after recalculation.")
-                        break
+                        return current_location, current_direction
                     else:
                         recal_path = 0
                         print("New path:", new_path)
@@ -207,16 +210,15 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
     status = 0
-    time.sleep(cell_time)
     return current_location, direction
 
 
 def send_keep_alive():
-    global current_location, status
+    global current_location, status, current_segment
     while True:
         time.sleep(10)
         print("Sending keep alive")
-        UpdateCurrentLocation([current_location], AGV_ID, status)
+        UpdateCurrentLocation(current_segment, AGV_ID, status)
 
 
 # Start the keep-alive thread
@@ -241,6 +243,7 @@ if __name__ == "__main__":
     direction = config["direction"]  # Initial direction of the AGV
     current_location = tuple(config["current_location"])
     idle_location = tuple(config["idle_location"])
+    current_segment = [current_location]
 
     """port = 501
     AGV_ID = 1
@@ -262,7 +265,7 @@ if __name__ == "__main__":
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
 
-    UpdateCurrentLocation([current_location], AGV_ID, 0)
+    UpdateCurrentLocation(current_segment, AGV_ID, 0)
 
     while True:
         idle_time = 0
@@ -274,6 +277,7 @@ if __name__ == "__main__":
             time.sleep(0.5)
 
         print("Destination:", destination, "Storage:", storage, "Action:", action)
+        print("Current location:", current_location)
         if (idle_location != current_location) or (destination != current_location):
             print("Current location is not the destination")
 
@@ -292,3 +296,5 @@ if __name__ == "__main__":
         else:
             print("AGV is already at the destination")
             time.sleep(5)
+
+        time.sleep(1)
