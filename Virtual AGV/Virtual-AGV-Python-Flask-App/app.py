@@ -89,8 +89,8 @@ def InteractivePathDisplay(
                             if interrupt_value == 0:
                                 break
                             elif interrupt_value == 1:
-                                time.sleep(cell_time * 3)
                                 print("Stop signal received! Halting AGV.")
+                                time.sleep(cell_time * 3)
                                 if current_location in segment:
                                     current_segment = segment[segment.index(current_location) + 1 :]
                                     new_path_clearance = RequestPathClearance(
