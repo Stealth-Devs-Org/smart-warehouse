@@ -85,7 +85,7 @@ def get_close_agv_pairs(agvs_data, threshold):
     list: A list of tuples representing AGV pairs that are closer than the threshold distance.
     """
     distances = calculate_agv_distances(agvs_data)
-    close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance < threshold]
+    close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
 
     return close_pairs
 
@@ -171,14 +171,16 @@ def is_path_crossing(agv_1, agv_2):
     path_1 = agv_1["segment"]
     path_2 = agv_2["segment"]
 
-    if loc_1 in path_2 or loc_2 in path_1:
-        return True
-    else:
-        for i in range(len(path_1)):
-            if path_1[i] in path_2:
-                return True
-        for i in range(len(path_2)):
-            if path_2[i] in path_1:
-                return True
+    obstacles = []
 
-    return False
+    for i in range(len(path_1)):
+        if path_1[i] in path_2:
+            obstacles.append(path_1[i])
+    for i in range(len(path_2)):
+        if path_2[i] in path_1:
+            obstacles.append(path_2[i])
+
+    if obstacles:
+        obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
+
+    return obstacles
