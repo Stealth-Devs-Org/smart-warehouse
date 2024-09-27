@@ -18,7 +18,7 @@ from server_communication import ObtainGoal, RequestPathClearance
 from utils import CreateSegments, EvalNewPath, SimulateEndAction, SimulateTurning
 
 fixed_grid = None  # Global variable for the fixed grid
-global AGV_ID
+global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location
 current_location = None
 
 
@@ -47,9 +47,8 @@ def ObtainGoal(idle_location):
     return destination, storage, action
 
 
-def InteractivePathDisplay(
-    segments_list, current_location, destination, direction, storage, action
-):
+def InteractivePathDisplay(segments_list, destination, direction, storage, action):
+    global status, current_direction, current_location
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
@@ -149,8 +148,10 @@ def InteractivePathDisplay(
                     current_location = cell
                     current_location_index = segment.index(current_location)
                     if current_location == destination:
+                        status = 0
                         UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 0)
                     else:
+                        status = 1
                         UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 1)
 
                 else:
@@ -201,9 +202,11 @@ def InteractivePathDisplay(
 
     print("End of path reached")
     SetGoal(None)
+    status = action
     direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
+    status = 0
     time.sleep(cell_time)
     return current_location, direction
 
@@ -225,7 +228,7 @@ keep_alive_thread.start()
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "0"))
+    instance_id = int(os.getenv("INSTANCE_ID", "2"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
@@ -262,7 +265,14 @@ if __name__ == "__main__":
     UpdateCurrentLocation([current_location], AGV_ID, 0)
 
     while True:
-        destination, storage, action = ObtainGoal(idle_location)
+        idle_time = 0
+        while idle_time < 10:
+            destination, storage, action = ObtainGoal(idle_location)
+            if destination != idle_location:
+                break
+            idle_time += 0.5
+            time.sleep(0.5)
+
         print("Destination:", destination, "Storage:", storage, "Action:", action)
         if (idle_location != current_location) or (destination != current_location):
             print("Current location is not the destination")
@@ -277,7 +287,7 @@ if __name__ == "__main__":
 
             # Display the path interactively
             current_location, direction = InteractivePathDisplay(
-                segments, current_location, destination, direction, storage, action
+                segments, destination, direction, storage, action
             )
         else:
             print("AGV is already at the destination")
