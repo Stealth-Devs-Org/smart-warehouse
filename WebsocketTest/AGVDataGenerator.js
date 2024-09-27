@@ -5,16 +5,16 @@ const port = process.env.PORT || 8080;
 const wss = new WebSocket.Server({ port });
 
 
-function generateRandomAGVData() {                            //generate random AGV data
+function generateRandomAGVData() {
   const agv = {
     agv_id: Math.floor(Math.random() * 100),  
-    location: {
-      x: Math.floor(Math.random() * 10),    
-      y: Math.floor(Math.random() * 10),    
-    },
+    location: [
+      Math.floor(Math.random() * 10),        
+      Math.floor(Math.random() * 10)         
+    ],
     segment: Math.floor(Math.random() * 5),   
-    status: Math.floor(Math.random() * 4),    // 0: idle, 1: moving, 2: loading, 3: unloading
-    timestamp: new Date().toISOString()      
+    status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
+    timestamp: new Date().toISOString()       
   };
   return agv;
 }
@@ -26,22 +26,21 @@ wss.on('connection', (ws) => {
 
   ws.send('Welcome');
 
-  // AGV data every 10 mil seconds
+  // Send data every 100 mil seconds
   const interval = setInterval(() => {
     const agvData = generateRandomAGVData();
-    ws.send(JSON.stringify(agvData));  
-  }, 10);
+    ws.send(JSON.stringify(agvData));  // Send
+  }, 100);
 
-
+  
   ws.on('message', (message) => {
     console.log(`Received from client: ${message}`);
     ws.send(`You said: ${message}`);
   });
 
-
   ws.on('close', () => {
     console.log('Client disconnected');
-    clearInterval(interval);  
+    clearInterval(interval)
   });
 });
 
