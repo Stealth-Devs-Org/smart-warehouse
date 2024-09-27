@@ -199,6 +199,20 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
     return current_location, current_direction
 
 
+def send_keep_alive():
+    global current_location, status
+    while True:
+        time.sleep(10)
+        print("Sending keep alive")
+        UpdateCurrentLocation([current_location], AGV_ID, status)
+
+
+# Start the keep-alive thread
+keep_alive_thread = threading.Thread(target=send_keep_alive)
+keep_alive_thread.daemon = True
+keep_alive_thread.start()
+
+
 if __name__ == "__main__":
     StartTask()
     try:

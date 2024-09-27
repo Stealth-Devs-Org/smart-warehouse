@@ -31,9 +31,16 @@ def get_agv_locations_array(agvs_data):
     return values
 
 
+from server.agv.keep_alive import permanent_obstacles, remove_from_permanent_obstacles
+
+
 # This function returns the current obstacles in a segment of the path as an array of cordinates.
 def find_obstacles_in_segment(agvs_data, agv_id, segment):
     obstacles = get_common_elements(get_agv_locations_array(agvs_data), segment)
+
+    # Add permanent obstacles to the list
+    if permanent_obstacles:
+        obstacles = obstacles + get_common_elements(permanent_obstacles.values(), segment)
 
     cur_agv_loc = agvs_data[agv_id]["location"]
     if cur_agv_loc in obstacles:
@@ -135,6 +142,9 @@ def update_agv_location(data):
         and sent_interrupts[data["agv_id"]]["location"] != data["location"]
     ):
         del sent_interrupts[data["agv_id"]]
+
+    # Remove the AGV location from permanent obstacles if it is back alive
+    remove_from_permanent_obstacles(data["agv_id"])
 
     save_agv_location(data)
 
