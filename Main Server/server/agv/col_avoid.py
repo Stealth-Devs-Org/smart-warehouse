@@ -19,6 +19,8 @@ agv = Blueprint("agv", __name__)
 
 agvs_data = {}
 
+sent_interrupts = {}
+
 
 # This function returns the current locations of the AGVs as an array of cordinates.
 def get_agv_locations_array(agvs_data):
@@ -55,21 +57,36 @@ from server.mqtt.utils import mqtt_client
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id):
+    if agv_id in sent_interrupts and sent_interrupts[agv_id]["interrupt"] == 1:
+        return
     topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": 1}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
     print(f"Sent stop signal to AGV {agv_id}")
 
+    if agv_id not in sent_interrupts:
+        sent_interrupts[agv_id] = {}
+    sent_interrupts[agv_id]["interrupt"] = 1
+    sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
+
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment):
     topic = f"{agv_id}/interrupt"
-    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    obstacles = []
+    if agv_id in sent_interrupts and sent_interrupts[agv_id]["interrupt"] == obstacles:
+        return
     message_dict = {"interrupt": obstacles}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
     print(f"Sent recalibrate signal to AGV {agv_id}")
+
+    if agv_id not in sent_interrupts:
+        sent_interrupts[agv_id] = {}
+    sent_interrupts[agv_id]["interrupt"] = obstacles
+    sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
@@ -83,8 +100,10 @@ def collision_avoidance():
                     stop_agv(agv_pair[0])
                     recalibrate_path(agv_pair[1], agvs_data[agv_pair[1]]["segment"])
                 elif agvs_data[agv_pair[0]]["status"] == 1:
+                    stop_agv(agv_pair[1])
                     recalibrate_path(agv_pair[0], agvs_data[agv_pair[0]]["segment"])
                 elif agvs_data[agv_pair[1]]["status"] == 1:
+                    stop_agv(agv_pair[0])
                     recalibrate_path(agv_pair[1], agvs_data[agv_pair[1]]["segment"])
                 else:
                     pass
@@ -109,6 +128,14 @@ def update_agv_location(data):
     socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
     collision_avoidance()
+
+    # Remove the interrupt if the AGV has moved from the location
+    if (
+        data["agv_id"] in sent_interrupts.keys()
+        and sent_interrupts[data["agv_id"]]["location"] != data["location"]
+    ):
+        del sent_interrupts[data["agv_id"]]
+
     save_agv_location(data)
 
 
