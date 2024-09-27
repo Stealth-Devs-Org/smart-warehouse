@@ -179,15 +179,16 @@ def path_clearance():
     data = request.json
     agv_id = data["agv_id"]
     segment = data["segment"]
+    segment_tuple = tuple(tuple(inner) for inner in segment)
 
-    if tuple(segment) in timeout_segments:
+    if segment_tuple in timeout_segments:
         obstacles = [segment[0]]
     else:
         obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 
     if not obstacles:
         agvs_data[agv_id]["segment"] = segment
-        timeout_segments[tuple(segment)] = time.time()
+        timeout_segments[segment_tuple] = time.time()
         message_dict = {"result": 1}
         message_json = json.dumps(message_dict)
         return message_json
