@@ -18,7 +18,7 @@ from utils import (
 
 # Read configuration file
 config_path = os.getenv("CONFIG_PATH", "config.yaml")
-instance_id = int(os.getenv("INSTANCE_ID", "3"))
+instance_id = int(os.getenv("INSTANCE_ID", "0"))
 
 
 def read_config(config_path):
@@ -59,7 +59,6 @@ def StartTask():
     file_name = f"agv{AGV_ID}_status.json"
     agv_state = Get_values_from_agv_json(file_name, 
         [
-            "agv_id",
             "current_location",
             "current_segment",
             "current_status",
@@ -80,6 +79,7 @@ def StartTask():
     # Create a copy of the fixed grid
     grid = ReadGrid(grid_path)
 
+    destination = None
     goal = agv_state["goal"]
     if goal:
         destination = tuple(map(int, goal.get("destination")))
@@ -96,24 +96,26 @@ def StartTask():
         action = 4
 
     current_location_tuple = tuple(current_location)
-    if destination != current_location_tuple:
+    interrupt = 0
+    while interrupt == 0:
+        if destination != current_location_tuple:
 
-        # Compute the path using D* Lite
-        path = CalculatePath(current_location_tuple, destination, grid)
-        print("Path:", path)
+            # Compute the path using D* Lite
+            path = CalculatePath(current_location_tuple, destination, grid)
+            print("Path:", path)
 
-        # Break the path into straight-line segments
-        segments = CreateSegments(path)
-        print("segments:", segments)
+            # Break the path into straight-line segments
+            segments = CreateSegments(path)
+            print("segments:", segments)
 
-        agv_state["current_location"], agv_state["current_direction"] = InteractivePathDisplay(
-            segments, destination, storage, action, grid
-        )
-        
-        file_name = f"agv{AGV_ID}_status.json"
-        Update_agv_json(file_name, agv_state)
-    else:
-        print("AGV is already at the destination")
+            current_location, current_direction, interrupt = InteractivePathDisplay(
+                segments, destination, storage, action, grid
+            )
+            
+            current_location_tuple = tuple(current_location)
+        else:
+            print("AGV is already at the destination")
+            break
 
 
 def StartTaskInThread():
@@ -130,7 +132,6 @@ def InteractivePathDisplay(segments_list, destination, storage, action, grid):
     file_name = f"agv{AGV_ID}_status.json"
     agv_state = Get_values_from_agv_json(file_name, 
         [
-            "agv_id",
             "speed",
             "cell_distance",
             "turning_time",
@@ -174,13 +175,13 @@ def InteractivePathDisplay(segments_list, destination, storage, action, grid):
 
                     # Interrupt check
                     move_time = cell_time
-                    check_intervals = 100
+                    check_intervals = 1000
                     sleep_time = move_time / check_intervals
                     while move_time > 0:
                         interrupt = Get_values_from_agv_json(file_name, ["interrupt"]).get("interrupt")
                         if interrupt == 1:
                             print("Interrupted!")
-                            return current_location, current_direction
+                            return current_location, current_direction, 1
                         time.sleep(sleep_time)
                         move_time -= sleep_time
 
@@ -210,7 +211,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action, grid):
                 )
                 if not new_path:
                     print("No valid path found after recalculation.")
-                    return current_location, current_direction
+                    return current_location, current_direction, 0
                 else:
                     recal_path = 0
                     print("New path:", new_path)
@@ -239,7 +240,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action, grid):
                         segments = new_segments
                         index = 0
                         break
-        time.sleep(0.25)
+        time.sleep(0.5)
 
     print("End of path reached")
     agv_state["goal"] = None
@@ -259,7 +260,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action, grid):
     Update_agv_json(file_name, agv_state)
 
     # time.sleep(cell_time)
-    return current_location, current_direction
+    return current_location, current_direction, 0
 
 
 def send_keep_alive():
@@ -294,7 +295,6 @@ if __name__ == "__main__":
     agv_state["goal"] = None
 
     file_name = f"agv{AGV_ID}_status.json"
-
     with open(file_name, "w") as f:
         json.dump({}, f)
 

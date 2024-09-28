@@ -33,7 +33,7 @@ def on_message(client, userdata, message):
         interrupt_value = data.get("interrupt")
         if interrupt_value == 1:
             print("Received 'Stop' interrupt. Stopping AGV.")
-            StopTask(5)
+            StopTask(7)
             # time.sleep(3)
 
         else:

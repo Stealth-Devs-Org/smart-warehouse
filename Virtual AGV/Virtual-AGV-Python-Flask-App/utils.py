@@ -132,10 +132,6 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
 
 
 def Update_agv_json(file_name, object):
-    if not os.path.exists(file_name):
-        with open("agv_status.json", "w") as f:
-            json.dump({}, f)
-
     with open(file_name, "r") as f:
         agv_status = json.load(f)
 
