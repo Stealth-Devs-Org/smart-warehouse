@@ -7,7 +7,7 @@ const wss = new WebSocket.Server({ port });
 
 function generateRandomAGVData() {
   const agv = {
-    agv_id: Math.floor(Math.random() * 100),  
+    agv_id: 1,  
     location: [
       Math.floor(Math.random() * 10),        
       Math.floor(Math.random() * 10)         
@@ -30,7 +30,7 @@ wss.on('connection', (ws) => {
   const interval = setInterval(() => {
     const agvData = generateRandomAGVData();
     ws.send(JSON.stringify(agvData));  // Send
-  }, 100);
+  }, 1000);
 
   
   ws.on('message', (message) => {
