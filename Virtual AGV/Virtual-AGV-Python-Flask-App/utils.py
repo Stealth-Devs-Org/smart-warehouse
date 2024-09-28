@@ -152,5 +152,5 @@ def Get_values_from_agv_json(file_name, key_list):
         except json.JSONDecodeError:
             agv_status = {}
 
-    values = {key: agv_status[key] for key in key_list}
+    values = {key: agv_status.get(key, 0) for key in key_list}
     return values
