@@ -11,6 +11,9 @@ services:
         target: /app/config.yaml
     # ports:
     #   - "5001:5001"
+    networks:
+      default:
+        ipv4_address: 172.16.0.2
 
   agv_instance_2:
     build: .
@@ -24,6 +27,9 @@ services:
         target: /app/config.yaml
     # ports:
     #   - "5002:5001"
+    networks:
+      default:
+        ipv4_address: 172.16.0.3
 
   agv_instance_3:
     build: .
@@ -35,6 +41,9 @@ services:
       - type: bind
         source: ./config.yaml
         target: /app/config.yaml
+    networks:
+      default:
+        ipv4_address: 172.16.0.4
   
   agv_instance_4:
     build: .
@@ -46,6 +55,9 @@ services:
       - type: bind
         source: ./config.yaml
         target: /app/config.yaml
+    networks:
+      default:
+        ipv4_address: 172.16.0.5
 
   agv_instance_5:
     build: .
@@ -90,3 +102,12 @@ services:
       - type: bind
         source: ./config.yaml
         target: /app/config.yaml
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24
+    
+  
