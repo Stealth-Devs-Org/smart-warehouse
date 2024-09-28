@@ -78,17 +78,19 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                         )
 
                     movement_time = 0
+                    interrupt_check_intervals = 1000
+                    movement_interval = cell_time / interrupt_check_intervals
                     is_path_correct = 1
                     while movement_time < cell_time:
                         while True:
                             interrupt_value = (
                                 GetInterrupt()
                             )  # Fetch interrupt value using thread-safe method
-                            print(f"Current interrupt value: {interrupt_value}")
 
                             if interrupt_value == 0:
                                 break
                             elif interrupt_value == 1:
+                                print(f"Interrupt value:: {interrupt_value}")
                                 print("Stop signal received! Halting AGV.")
                                 time.sleep(cell_time * 5)
                                 if current_location in segment:
@@ -107,20 +109,20 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 print("Recalculating path...")
                                 print("Interrupt value:", interrupt_value)
                                 is_path_correct = 0
-                                if movement_time > 0:
-                                    obstacles = [tuple(obstacle) for obstacle in interrupt_value]
-                                    if cell not in obstacles:
-                                        time.sleep(
-                                            cell_time / 2
-                                        )  # move forward for half the cell time
-                                        movement_time += cell_time / 2
-                                        current_location = cell
-                                        current_segment = segment[segment.index(current_location) :]
-                                    else:
-                                        time.sleep(
-                                            cell_time / 2
-                                        )  # move reverse for half the cell time
-                                        movement_time += cell_time / 2
+                                # if movement_time > 0:
+                                #     obstacles = [tuple(obstacle) for obstacle in interrupt_value]
+                                #     if cell not in obstacles:
+                                #         time.sleep(
+                                #             cell_time / 2
+                                #         )  # move forward for half the cell time
+                                #         movement_time += cell_time / 2
+                                #         current_location = cell
+                                #         current_segment = segment[segment.index(current_location) :]
+                                #     else:
+                                #         time.sleep(
+                                #             cell_time / 2
+                                #         )  # move reverse for half the cell time
+                                #         movement_time += cell_time / 2
                                 new_path, obstacles = RecalculatePath(
                                     interrupt_value, current_location, destination, fixed_grid
                                 )
@@ -142,8 +144,8 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                     break
                         if not is_path_correct:
                             break
-                        time.sleep(cell_time / 2)
-                        movement_time += cell_time / 2
+                        time.sleep(movement_interval)
+                        movement_time += movement_interval
                     if not is_path_correct:
                         is_path_correct = 1
                         break
@@ -230,7 +232,7 @@ keep_alive_thread.start()
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "2"))
+    instance_id = int(os.getenv("INSTANCE_ID", "0"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]

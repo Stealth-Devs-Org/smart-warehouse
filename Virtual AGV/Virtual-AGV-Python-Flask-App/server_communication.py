@@ -6,7 +6,7 @@ MAIN_SERVER_URL = "http://127.0.0.1:5000"
 
 def RequestPathClearance(AGV_ID, segment):
     url = MAIN_SERVER_URL + "/path_clearance"
-    payload = {"agv_id": f"agv{AGV_ID}", "segment": [segment[0], segment[-1]]}
+    payload = {"agv_id": f"agv{AGV_ID}", "segment": segment}
 
     print(f"Requesting path clearance from {segment[0]} to {segment[-1]}...")
 
