@@ -3,7 +3,7 @@ import random
 import threading
 import time
 
-from server.agv.col_avoid import agvs_data
+from server.agv.utils import Get_values_from_agv_json
 from server.mqtt.utils import mqtt_client
 
 inbound_pallet_locations = {}
@@ -108,6 +108,7 @@ def task_divider(task):
 
 
 def assign_task_to_agv():
+    agvs_data = Get_values_from_agv_json()
     agvs = list(agvs_data.keys())
     if not agvs:
         return None

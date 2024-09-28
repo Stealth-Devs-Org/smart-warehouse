@@ -1,5 +1,7 @@
 import math
 
+import ujson as json
+
 
 def get_common_elements(array1, array2):
     set1 = set(tuple(x) for x in array1)
@@ -184,3 +186,67 @@ def is_path_crossing(agv_1, agv_2):
         obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
     return obstacles
+
+
+def Update_agv_json(object):
+    with open("server/agv/agv_data.json", "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in agv_status:
+                del agv_status[key]
+        else:
+            agv_status[key] = object[key]
+
+    with open("server/agv/agv_data.json", "w") as f:
+        json.dump(agv_status, f)
+
+
+def Get_values_from_agv_json(key_list="all"):
+    with open("server/agv/agv_data.json", "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    if key_list == "all":
+        return agv_status
+
+    values = {key: agv_status[key] for key in key_list}
+    return values
+
+
+def Update_sent_interrupt_json(object):
+    with open("server/agv/sent_interrupts.json", "r") as f:
+        try:
+            sent_interrupts = json.load(f)
+        except json.JSONDecodeError:
+            sent_interrupts = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in sent_interrupts:
+                del sent_interrupts[key]
+        else:
+            sent_interrupts[key] = object[key]
+
+    with open("server/agv/sent_interrupts.json", "w") as f:
+        json.dump(sent_interrupts, f)
+
+
+def Get_values_from_sent_interrupt_json(key_list="all"):
+    with open("server/agv/sent_interrupts.json", "r") as f:
+        try:
+            sent_interrupts = json.load(f)
+        except json.JSONDecodeError:
+            sent_interrupts = {}
+
+    if key_list == "all":
+        return sent_interrupts
+
+    values = {key: sent_interrupts[key] for key in key_list}
+    return values
