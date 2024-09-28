@@ -65,7 +65,7 @@ def ConnectToMQTT(agv_id):
 
 
 def UpdateCurrentLocation(AGV_ID, current_location, current_segment, status):
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     location_data = {
         "agv_id": f"agv{AGV_ID}",

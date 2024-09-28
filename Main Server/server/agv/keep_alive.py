@@ -1,6 +1,6 @@
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from server.agv.scheduler import working_agvs
 from server.agv.utils import (
@@ -20,8 +20,10 @@ def remove_timeout_agvs():
             agvs_data = Get_values_from_agv_json()
             sent_interrupts = Get_values_from_sent_interrupt_json()
             for agv_id in list(agvs_data.keys()):
-                timestamp = datetime.fromisoformat(agvs_data[agv_id]["timestamp"])
-                if timestamp < datetime.now() - timedelta(seconds=15):
+                timestamp = datetime.fromisoformat(agvs_data[agv_id]["timestamp"]).replace(
+                    tzinfo=timezone.utc
+                )
+                if timestamp < datetime.now(timezone.utc) - timedelta(seconds=15):
                     permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
                     agvs_data[agv_id] = None
                     if agv_id in sent_interrupts.keys():
