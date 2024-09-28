@@ -45,6 +45,7 @@ def StopTask(wait_time=0):
     agv_state["status"] = 0
     Update_agv_json(file_name, agv_state)
 
+    global task_thread
     task_thread.join()
     time.sleep(wait_time)
     agv_state["interrupt"] = 0

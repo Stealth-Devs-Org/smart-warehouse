@@ -239,6 +239,7 @@ def path_clearance():
             return message_json
     else:
         print(f"AGV with id {agv_id} not found")
+        return "AGV not found"
 
 
 @agv.route("/")

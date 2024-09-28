@@ -133,7 +133,10 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
 
 def Update_agv_json(file_name, object):
     with open(file_name, "r") as f:
-        agv_status = json.load(f)
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
 
     for key in object:
         agv_status[key] = object[key]
@@ -144,7 +147,10 @@ def Update_agv_json(file_name, object):
 
 def Get_values_from_agv_json(file_name, key_list):
     with open(file_name, "r") as f:
-        agv_status = json.load(f)
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
 
     values = {key: agv_status[key] for key in key_list}
     return values
