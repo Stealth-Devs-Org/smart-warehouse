@@ -18,7 +18,7 @@ from utils import (
 
 # Read configuration file
 config_path = os.getenv("CONFIG_PATH", "config.yaml")
-instance_id = int(os.getenv("INSTANCE_ID", "0"))
+instance_id = int(os.getenv("INSTANCE_ID", "1"))
 
 
 def read_config(config_path):
@@ -45,8 +45,6 @@ def StopTask(wait_time=0):
     agv_state["status"] = 0
     Update_agv_json(file_name, agv_state)
 
-    global task_thread
-    task_thread.join()
     time.sleep(wait_time)
     agv_state["interrupt"] = 0
     Update_agv_json(file_name, agv_state)
@@ -121,6 +119,12 @@ def StartTask():
 
 def StartTaskInThread():
     global task_thread
+
+    if 'task_thread' in globals() and task_thread.is_alive():
+        print("Task is already running.")
+        task_thread.join()
+        return
+
     task_thread = threading.Thread(target=StartTask)
     task_thread.start()
 
