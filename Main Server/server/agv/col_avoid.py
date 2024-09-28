@@ -3,7 +3,6 @@ import threading
 import time
 
 from flask import Blueprint, jsonify, render_template, request
-
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     get_agvs_location_within_range,
@@ -21,7 +20,7 @@ agvs_data = {}
 
 sent_interrupts = {}
 
-timeout_segments = {}
+# timeout_segments = {}
 
 
 # This function returns the current locations of the AGVs as an array of cordinates.
@@ -83,11 +82,12 @@ def stop_agv(agv_id):
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment, crossing_segment=[]):
     topic = f"{agv_id}/interrupt"
-    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
-    # obstacles = []
-    obstacles = obstacles + crossing_segment
-    if obstacles:
-        obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
+    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    obstacles = []
+    # obstacles = obstacles + crossing_segment
+    # if obstacles:
+    #     obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
+
     if agv_id in sent_interrupts and (
         sent_interrupts[agv_id]["interrupt"] == 1
         or sent_interrupts[agv_id]["interrupt"] == obstacles
@@ -106,7 +106,7 @@ def recalibrate_path(agv_id, segment, crossing_segment=[]):
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
-    close_agv_pairs = get_close_agv_pairs(agvs_data, 3)
+    close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
@@ -192,16 +192,18 @@ def path_clearance():
     data = request.json
     agv_id = data["agv_id"]
     segment = data["segment"]
-    segment_tuple = tuple(tuple(inner) for inner in segment)
+    # segment_tuple = tuple(tuple(inner) for inner in segment)
 
-    if segment_tuple in timeout_segments:
-        obstacles = [segment[0]]
-    else:
-        obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    # if segment_tuple in timeout_segments:
+    #     obstacles = [segment[0]]
+    # else:
+    #     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+
+    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
 
     if not obstacles:
         agvs_data[agv_id]["segment"] = segment
-        timeout_segments[segment_tuple] = time.time()
+        # timeout_segments[segment_tuple] = time.time()
         message_dict = {"result": 1}
         message_json = json.dumps(message_dict)
         return message_json
