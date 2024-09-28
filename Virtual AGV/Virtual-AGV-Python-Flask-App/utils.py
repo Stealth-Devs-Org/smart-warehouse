@@ -1,5 +1,7 @@
-import json
+import os
 import time
+
+import ujson as json
 
 
 def CreateSegments(path):
@@ -44,9 +46,6 @@ def LoadUnload(storage_level):
 
 
 def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
-    with open("agv_status.json", "r") as f:
-        agv_status = json.load(f)
-        action = agv_status["status"]
 
     if action == 1 or action == 2:
         direction = SimulateTurning(
@@ -64,11 +63,8 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
 
     from mqtt_handler import EndTask
 
-    EndTask()
+    EndTask(AGV_ID)
 
-    agv_status["status"] = 0
-    with open("agv_status.json", "w") as f:
-        json.dump(agv_status, f)
     return direction
 
 
@@ -135,16 +131,24 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     return is_new_path_efficient, waiting_time
 
 
-def Update_agv_json(object):
-    with open("agv_status.json", "r") as f:
+def Update_agv_json(file_name, object):
+    if not os.path.exists(file_name):
+        with open("agv_status.json", "w") as f:
+            json.dump({}, f)
+
+    with open(file_name, "r") as f:
         agv_status = json.load(f)
 
     for key in object:
         agv_status[key] = object[key]
 
-    with open("agv_status.json", "w") as f:
+    with open(file_name, "w") as f:
         json.dump(agv_status, f)
 
-    from mqtt_handler import UpdateCurrentLocation
 
-    return UpdateCurrentLocation()
+def Get_values_from_agv_json(file_name, key_list):
+    with open(file_name, "r") as f:
+        agv_status = json.load(f)
+
+    values = {key: agv_status[key] for key in key_list}
+    return values

@@ -162,3 +162,10 @@ cython_debug/
 
 # MongoDB data files
 Main Server/mongoDB/data/
+
+# AGV state files
+Virtual AGV/Virtual-AGV-Python-Flask-App/agv4_status.json
+Virtual AGV/Virtual-AGV-Python-Flask-App/agv3_status.json
+Virtual AGV/Virtual-AGV-Python-Flask-App/agv2_status.json
+Virtual AGV/Virtual-AGV-Python-Flask-App/agv1_status.json
+Virtual AGV/Virtual-AGV-Python-Flask-App/agv_status.json

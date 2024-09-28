@@ -1,15 +1,16 @@
-import copy
-import ctypes
 import os
 import threading
 import time
 
+import ujson as json
 import yaml
 
+from mqtt_handler import ConnectToMQTT, UpdateCurrentLocation
 from pathfinding import ReadGrid
 from utils import (
     CreateSegments,
     EvalNewPath,
+    Get_values_from_agv_json,
     SimulateEndAction,
     SimulateTurning,
     Update_agv_json,
@@ -17,7 +18,7 @@ from utils import (
 
 # Read configuration file
 config_path = os.getenv("CONFIG_PATH", "config.yaml")
-instance_id = int(os.getenv("INSTANCE_ID", "2"))
+instance_id = int(os.getenv("INSTANCE_ID", "3"))
 
 
 def read_config(config_path):
@@ -28,49 +29,58 @@ def read_config(config_path):
 # Load configurations
 config = read_config(config_path)["instances"][instance_id]
 
-AGV_ID = config["AGV_ID"]
-speed = config["speed"]  # Speed of the AGV
-cell_distance = config["cell_distance"]  # cell_distance between two cells
-turning_time = config["turning_time"]  # Time taken to turn the AGV in 45 degrees
-current_direction = config["direction"]  # Initial direction of the AGV
-current_location = tuple(config["current_location"])
-status = 0
-current_segment = current_location
-idle_location = tuple(config["idle_location"])
-previous_obstacles = []
-interrupt = 0
-goal = None
-
-grid_path = config["grid_path"]
-fixed_grid = ReadGrid(grid_path)
-
-from mqtt_handler import UpdateCurrentLocation
-
 
 def SetGoal(goal_local):
-    global goal
-    goal = goal_local
+    file_name = f"agv{config["AGV_ID"]}_status.json"
+    agv_state = {}
+    agv_state["goal"] = goal_local
+    Update_agv_json(file_name, agv_state)
 
 
-def StopTask():
+def StopTask(wait_time=0):
     print("Stopping task...")
-    global interrupt, status
-    interrupt = 1
-    status = 0
+    file_name = f"agv{config["AGV_ID"]}_status.json"
+    agv_state = {}
+    agv_state["interrupt"] = 1
+    agv_state["status"] = 0
+    Update_agv_json(file_name, agv_state)
+
+    task_thread.join()
+    time.sleep(wait_time)
+    agv_state["interrupt"] = 0
+    Update_agv_json(file_name, agv_state)
+    StartTaskInThread()
 
 
 def StartTask():
     print("Starting task...")
+
+    AGV_ID = config["AGV_ID"]
+    file_name = f"agv{AGV_ID}_status.json"
+    agv_state = Get_values_from_agv_json(file_name, 
+        [
+            "agv_id",
+            "current_location",
+            "current_segment",
+            "current_status",
+            "goal",
+            "idle_location",
+        ]
+    )
+    current_location = agv_state["current_location"]
+    current_segment = agv_state["current_segment"]
+    current_status = agv_state["current_status"]
+
+    grid_path = config["grid_path"]
+
     from pathfinding import CalculatePath
 
-    global current_location, status
-
-    UpdateCurrentLocation(AGV_ID, current_location, [current_location], status)
+    UpdateCurrentLocation(AGV_ID, current_location, current_segment, current_status)
 
     # Create a copy of the fixed grid
-    grid = copy.deepcopy(fixed_grid)
+    grid = ReadGrid(grid_path)
 
-    global goal
+    goal = agv_state["goal"]
     if goal:
         destination = tuple(map(int, goal.get("destination")))
         if goal.get("storage"):
@@ -80,38 +90,67 @@ def StartTask():
 
         action = goal.get("action")  # 0: idle, 2: load, 3: unload, 4: charge
     else:
-        destination = idle_location
+        idle_location_tuple = tuple(agv_state["idle_location"])
+        destination = idle_location_tuple
         storage = None
         action = 4
 
-    if destination != current_location:
+    current_location_tuple = tuple(current_location)
+    if destination != current_location_tuple:
 
         # Compute the path using D* Lite
-        path = CalculatePath(current_location, destination, grid)
+        path = CalculatePath(current_location_tuple, destination, grid)
         print("Path:", path)
 
         # Break the path into straight-line segments
         segments = CreateSegments(path)
         print("segments:", segments)
 
-        global current_direction
-        current_location, current_direction = InteractivePathDisplay(
-            segments, destination, storage, action
+        agv_state["current_location"], agv_state["current_direction"] = InteractivePathDisplay(
+            segments, destination, storage, action, grid
         )
+        
+        file_name = f"agv{AGV_ID}_status.json"
+        Update_agv_json(file_name, agv_state)
     else:
         print("AGV is already at the destination")
 
 
 def StartTaskInThread():
+    global task_thread
     task_thread = threading.Thread(target=StartTask)
     task_thread.start()
 
 
-def InteractivePathDisplay(segments_list, destination, storage, action):
+def InteractivePathDisplay(segments_list, destination, storage, action, grid):
     from pathfinding import RecalculatePath
     from server_communication import RequestPathClearance
 
-    global previous_obstacles, current_direction, current_location, interrupt, goal, status
+    AGV_ID = config["AGV_ID"]
+    file_name = f"agv{AGV_ID}_status.json"
+    agv_state = Get_values_from_agv_json(file_name, 
+        [
+            "agv_id",
+            "speed",
+            "cell_distance",
+            "turning_time",
+            "current_location",
+            "current_segment",
+            "current_direction",
+            "previous_obstacles",
+            "interrupt",
+        ]
+    )
+    speed = agv_state["speed"]
+    cell_distance = agv_state["cell_distance"]
+    turning_time = agv_state["turning_time"]
+    current_location = agv_state["current_location"]
+    current_segment = agv_state["current_segment"]
+    current_direction = agv_state["current_direction"]
+    previous_obstacles = agv_state["previous_obstacles"]
+    interrupt = agv_state["interrupt"]
+    FIXED_GRID = grid
+    file_name = f"agv{AGV_ID}_status.json"
 
     cell_time = cell_distance / speed
 
@@ -125,29 +164,38 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
             path_clearance = RequestPathClearance(AGV_ID, segment)
 
             if (path_clearance) == 1:
-                previous_obstacles = None
+                agv_state["previous_obstacles"] = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 for cell in segment:
                     print(f"Current location: {current_location}, next location: {cell}")
                     current_direction = SimulateTurning(
                         current_location, cell, current_direction, turning_time
                     )
-                    if interrupt == 1:
-                        time.sleep(cell_time * 3)
-                        return current_location, current_direction
-                    time.sleep(cell_time)  # This is the time taken to move from one cell to another
+
+                    # Interrupt check
+                    move_time = cell_time
+                    check_intervals = 100
+                    sleep_time = move_time / check_intervals
+                    while move_time > 0:
+                        interrupt = Get_values_from_agv_json(file_name, ["interrupt"]).get("interrupt")
+                        if interrupt == 1:
+                            print("Interrupted!")
+                            return current_location, current_direction
+                        time.sleep(sleep_time)
+                        move_time -= sleep_time
+
                     current_location = cell
                     current_location_index = segment.index(current_location)
+                    current_segment = segment[current_location_index:]
                     if current_location == destination:
-                        status = 0
-                        UpdateCurrentLocation(
-                            AGV_ID, current_location, segment[current_location_index:], status
-                        )
+                        current_status = 0
                     else:
-                        status = 1
-                        UpdateCurrentLocation(
-                            AGV_ID, current_location, segment[current_location_index:], status
-                        )
+                        current_status = 1
+                    UpdateCurrentLocation(AGV_ID, current_location, current_segment, current_status)
+                    agv_state["current_location"] = current_location
+                    agv_state["current_segment"] = current_segment
+                    agv_state["current_status"] = current_status
+                    Update_agv_json(file_name, agv_state)
 
                 else:
                     index += 1
@@ -156,10 +204,13 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
             else:
                 print("obstacle*", path_clearance)
                 obstacles = path_clearance
-                new_path = RecalculatePath(obstacles, current_location, destination, fixed_grid)
+                current_location_tuple = tuple(current_location)
+                new_path = RecalculatePath(
+                    obstacles, current_location_tuple, destination, FIXED_GRID
+                )
                 if not new_path:
                     print("No valid path found after recalculation.")
-                    break
+                    return current_location, current_direction
                 else:
                     recal_path = 0
                     print("New path:", new_path)
@@ -188,36 +239,81 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         segments = new_segments
                         index = 0
                         break
-        time.sleep(1)
+        time.sleep(0.25)
 
     print("End of path reached")
-    goal = None
+    agv_state["goal"] = None
+
+    current_status = action
+    UpdateCurrentLocation(AGV_ID, current_location, current_segment, current_status)
+    agv_state["current_status"] = current_status
+    Update_agv_json(file_name, agv_state)
+
     current_direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
-    status = 0
-    time.sleep(cell_time)
+
+    current_status = 0
+    UpdateCurrentLocation(AGV_ID, current_location, current_segment, current_status)
+    agv_state["current_status"] = current_status
+    Update_agv_json(file_name, agv_state)
+
+    # time.sleep(cell_time)
     return current_location, current_direction
 
 
 def send_keep_alive():
-    global current_location, status
     while True:
         time.sleep(10)
         print("Sending keep alive")
-        UpdateCurrentLocation([current_location], AGV_ID, status)
-
-
-# Start the keep-alive thread
-keep_alive_thread = threading.Thread(target=send_keep_alive)
-keep_alive_thread.daemon = True
-keep_alive_thread.start()
+        file_name = f"agv{config["AGV_ID"]}_status.json"
+        agv_state = Get_values_from_agv_json(file_name, 
+            ["current_location", "current_segment", "current_status", "goal"]
+        )
+        current_location = agv_state["current_location"]
+        current_segment = agv_state["current_segment"]
+        current_status = agv_state["current_status"]
+        UpdateCurrentLocation(AGV_ID, current_location, current_segment, current_status)
 
 
 if __name__ == "__main__":
+
+    agv_state = {}
+    AGV_ID = config["AGV_ID"]
+    agv_state["agv_id"] = AGV_ID
+    agv_state["speed"] = config["speed"]  # Speed of the AGV
+    agv_state["cell_distance"] = config["cell_distance"]  # cell_distance between two cells
+    agv_state["turning_time"] = config["turning_time"]  # Time taken to turn the AGV in 45 degrees
+    agv_state["current_direction"] = config["direction"]  # Initial direction of the AGV
+    agv_state["current_location"] = config["current_location"]
+    agv_state["current_status"] = 0
+    agv_state["current_segment"] = [agv_state["current_location"]]
+    agv_state["idle_location"] = config["idle_location"]
+    agv_state["previous_obstacles"] = []
+    agv_state["interrupt"] = 0
+    agv_state["goal"] = None
+
+    file_name = f"agv{AGV_ID}_status.json"
+
+    with open(file_name, "w") as f:
+        json.dump({}, f)
+
+    Update_agv_json(file_name, agv_state)
+
+    ConnectToMQTT(AGV_ID)
     StartTask()
+
+    # Start the keep-alive thread
+    keep_alive_thread = threading.Thread(target=send_keep_alive)
+    keep_alive_thread.daemon = True
+    keep_alive_thread.start()
+
     try:
         while True:
             time.sleep(1)
+            # current_location = Get_values_from_agv_json(["current_location"]).get(
+            #     "current_location"
+            # )
+            # print("Current location:", current_location)
     except KeyboardInterrupt:
         print("Program terminated by user.")
