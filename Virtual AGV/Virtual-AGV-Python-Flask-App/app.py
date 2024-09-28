@@ -1,31 +1,28 @@
-import copy
-import os
-import threading
-import time
-
 import yaml
-
+import threading
+import copy
+import time
+import os
+from pathfinding import ReadGrid, CalculatePath, RecalculatePath
+from server_communication import RequestPathClearance, ObtainGoal 
+from utils import CreateSegments, SimulateEndAction, SimulateTurning, EvalNewPath, SetStatus, GetStatus
 from mqtt_handler import (
     ConnectMQTT,
-    GetGoal,
-    GetInterrupt,
-    SetGoal,
-    SetInterrupt,
     UpdateCurrentLocation,
+    GetInterrupt,
+    SetInterrupt,
+    GetGoal,
+    SetGoal 
 )
-from pathfinding import CalculatePath, ReadGrid, RecalculatePath
-from server_communication import ObtainGoal, RequestPathClearance
-from utils import CreateSegments, EvalNewPath, SimulateEndAction, SimulateTurning
+#import sys
 
 fixed_grid = None  # Global variable for the fixed grid
 global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location
 current_location = None
 
-
 def read_config(config_path):
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
-
 
 def ObtainGoal(idle_location):
     print("Obtaining goal...")
@@ -42,13 +39,13 @@ def ObtainGoal(idle_location):
     else:
         destination = idle_location
         storage = None
-        action = 4
+        action = 0
     print("Returning goal...", destination, storage, action)
     return destination, storage, action
 
 
 def InteractivePathDisplay(segments_list, destination, direction, storage, action):
-    global status, current_direction, current_location
+    global current_direction, current_location
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
@@ -65,31 +62,35 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
             if (path_clearance) == 1:
                 previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
-                if segment == segments[0]:
-                    current_direction = SimulateTurning(
-                        current_location, segment[0], current_direction, turning_time
+                current_direction = SimulateTurning(
+                        AGV_ID, current_location, segment[0], current_direction, turning_time
                     )
+                SetStatus(1)
+                UpdateCurrentLocation([current_location],AGV_ID,1)
                 for cell in segment:
-                    if segment != segments[0] and len(segment) > 1 and cell == segment[1]:
-                        print(f"Current location: {current_location}, next location: {segment[1]}")
+                    if len(segment) > 1 and cell == segment[1]:
+                        print(f"Current location: {current_location}, next location: {cell}")
                         current_direction = SimulateTurning(
-                            current_location, segment[1], current_direction, turning_time
+                            AGV_ID, current_location, cell, current_direction, turning_time
                         )
-
+                        SetStatus(1)
+                        UpdateCurrentLocation([current_location],AGV_ID,1)
                     movement_time = 0
                     is_path_correct = 1
                     while movement_time < cell_time:
                         while True:
-                            interrupt_value = (
-                                GetInterrupt()
-                            )  # Fetch interrupt value using thread-safe method
+                            interrupt_value = GetInterrupt() # Fetch interrupt value using thread-safe method
                             print(f"Current interrupt value: {interrupt_value}")
 
                             if interrupt_value == 0:
                                 break
                             elif interrupt_value == 1:
-                                print("Stop signal received! Halting AGV.")
-                                time.sleep(cell_time * 3)
+                                # Stopping AGV for predefined time period and request path clearance for the rest of the path
+                                SetStatus(0)
+                                UpdateCurrentLocation([current_location],AGV_ID,0)
+
+                                time.sleep(cell_time * 5)
+
                                 if current_location in segment:
                                     current_segment = segment[segment.index(current_location) + 1 :]
                                     new_path_clearance = RequestPathClearance(
@@ -103,22 +104,24 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 else:
                                     SetInterrupt(new_path_clearance)
                             else:
-                                print("Recalculating path...")
-                                print("Interrupt value:", interrupt_value)
+                                print("Recalculating path...Interrupt value:", interrupt_value)
                                 is_path_correct = 0
                                 if movement_time > 0:
                                     obstacles = [tuple(obstacle) for obstacle in interrupt_value]
-                                    current_location_index = segment.index(current_location)
+                                    if current_location in segment:
+                                        current_location_index = segment.index(current_location)
+                                    else:
+                                        current_location_index = -1
                                     if segment[current_location_index + 1] not in obstacles:
-                                        time.sleep(
-                                            cell_time / 2
-                                        )  # move forward for half the cell time
+                                        SetStatus(1)
+                                        UpdateCurrentLocation([current_location],AGV_ID,1)
+                                        time.sleep(cell_time / 2)  # move forward for half the cell time
                                         movement_time += cell_time / 2
                                         current_location = cell
                                     else:
-                                        time.sleep(
-                                            cell_time / 2
-                                        )  # move reverse for half the cell time
+                                        SetStatus(9)
+                                        UpdateCurrentLocation([current_location],AGV_ID,9) 
+                                        time.sleep(cell_time / 2)  # move reverse for half the cell time
                                         movement_time += cell_time / 2
                                 new_path, obstacles = RecalculatePath(
                                     interrupt_value, current_location, destination, fixed_grid
@@ -131,6 +134,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                     print("Obstacles:", obstacles)
 
                                     new_segments = CreateSegments(new_path)
+                                    SetStatus(0)
                                     UpdateCurrentLocation([current_location], AGV_ID, 0)
 
                                     segments = new_segments
@@ -148,10 +152,10 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                     current_location = cell
                     current_location_index = segment.index(current_location)
                     if current_location == destination:
-                        status = 0
+                        SetStatus(0)
                         UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 0)
                     else:
-                        status = 1
+                        SetStatus(1)
                         UpdateCurrentLocation(segment[current_location_index:], AGV_ID, 1)
 
                 else:
@@ -202,21 +206,21 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
 
     print("End of path reached")
     SetGoal(None)
-    status = action
     direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
-    status = 0
+    SetStatus(0)
     time.sleep(cell_time)
     return current_location, direction
 
 
 def send_keep_alive():
-    global current_location, status
+    global current_location
     while True:
         time.sleep(10)
         print("Sending keep alive")
-        UpdateCurrentLocation([current_location], AGV_ID, status)
+        current_status = GetStatus()
+        UpdateCurrentLocation([current_location], AGV_ID, current_status)
 
 
 # Start the keep-alive thread
@@ -241,27 +245,36 @@ if __name__ == "__main__":
     direction = config["direction"]  # Initial direction of the AGV
     current_location = tuple(config["current_location"])
     idle_location = tuple(config["idle_location"])
+    grid_path = config["grid_path"]
+    
 
-    """port = 501
-    AGV_ID = 1
+    '''if len(sys.argv) != 4:
+        print("Usage: python agv_simulation.py <AGV_ID> <current_location> <idle_location>")
+        sys.exit(1)
+
+    # Parse command-line arguments
+    AGV_ID = int(sys.argv[1])
+    current_location = tuple(map(int, sys.argv[2].strip("()").split(',')))
+    idle_location = tuple(map(int, sys.argv[3].strip("()").split(',')))
+
     speed = 2  # Speed of the AGV
     cell_distance = 2  # cell_distance between two cells
     turning_time = 2  # Time taken to turn the AGV in 45 degrees
     direction = "N"  # Initial direction of the AGV
-    current_location = (36, 13)
-    idle_location = (36, 13)
-    threading.Thread(target=lambda: app.run(port=port)).start()"""
+    # current_location = (36, 13)
+    # idle_location = (36, 13)'''
+    
 
     ConnectMQTT(AGV_ID)
 
     # Read the grid from the Excel file
-    grid_path = config["grid_path"]
+    grid_path = "grid.xlsx"
     grid_size = 40  # Default grid size
     fixed_grid = ReadGrid(grid_path)
 
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
-
+    SetStatus(0)
     UpdateCurrentLocation([current_location], AGV_ID, 0)
 
     while True:

@@ -1,7 +1,6 @@
 import datetime
 import json
 import threading
-
 import paho.mqtt.client as mqtt
 
 interrupt = 0  # Global interrupt variable
@@ -97,12 +96,12 @@ def UpdateCurrentLocation(current_segment, AGV_ID, status):
             "agv_id": f"agv{AGV_ID}",
             "location": current_segment[0],
             "segment": current_segment,
-            "status": status,
+            "status": status, # 0: idle, 1: moving forward, 2: Loading, 3: Unloading, 4: Charging, 5:Turning Right, 6:Turning Left, 7:Turning Back, 8:Turning Completed, 9:Reverse
             "timestamp": timestamp,
         }
         mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
         print(
-            f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+            f"Published current location {current_segment[0]} and status {status} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
         )
     except Exception as e:
         print(f"Failed to publish to MQTT: {e}")
