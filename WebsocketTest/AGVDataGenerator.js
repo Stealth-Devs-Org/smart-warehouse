@@ -21,43 +21,45 @@ const wss = new WebSocket.Server({ port });
 
 
 
-// function generateRandomAGVData() {
-//   const agv = {
-//     agv_id: 1,  
-//     location: [
-//       15,        
-//       0        
-//     ],
-//     segment: Math.floor(Math.random() * 5),   
-//     status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
-//     timestamp: new Date().toISOString()       
-//   };
-//   return agv;
-// }
-
-
 function generateRandomAGVData() {
-  let agv = {
-    agv_id: 1,
-    location: [15, 0],  
-    segment: Math.floor(Math.random() * 5),
-    status: Math.floor(Math.random() * 4),  // 0: idle, 1: moving, 2: loading, 3: unloading
-    timestamp: new Date().toISOString()
+  const agv = {
+    agv_id: 1,  
+    location: [
+      15, 0      
+    ],
+    segment: Math.floor(Math.random() * 5),   
+    status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
+    timestamp: new Date().toISOString()       
   };
-
-  let y = 0;  // Initialize y-coordinate
-
-  setInterval(() => {
-    agv.location = [15, y];  // Update location with incrementing y
-    agv.segment = Math.floor(Math.random() * 5);
-    agv.status = Math.floor(Math.random() * 4);
-    agv.timestamp = new Date().toISOString();
-
-    console.log(agv);  // Output the AGV data (you can replace this with any action)
-
-    y++;  // Increment y-coordinate
-  }, 1001);  // Run every 1001 milliseconds
+  return agv;
 }
+
+
+// function generateRandomAGVData() {
+//   let agv = {
+//     agv_id: 1,
+//     location: [15, 0],  
+//     segment: Math.floor(Math.random() * 5),
+//     status: Math.floor(Math.random() * 4),  // 0: idle, 1: moving, 2: loading, 3: unloading
+//     timestamp: new Date().toISOString()
+//   };
+  
+
+//   let y = 0;  // Initialize y-coordinate
+
+//   setInterval(() => {
+//     agv.location = [15, y];  // Update location with incrementing y
+//     agv.segment = Math.floor(Math.random() * 5);
+//     agv.status = Math.floor(Math.random() * 4);
+//     agv.timestamp = new Date().toISOString();
+
+//     console.log(agv);  // Output the AGV data (you can replace this with any action)
+
+//     y++;  // Increment y-coordinate
+//   }, 1000);  // Run every 1001 milliseconds
+//   return agv;
+  
+// }
 
 
 
