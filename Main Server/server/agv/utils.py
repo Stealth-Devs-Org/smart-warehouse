@@ -250,3 +250,35 @@ def Get_values_from_sent_interrupt_json(key_list="all"):
 
     values = {key: sent_interrupts[key] for key in key_list}
     return values
+
+
+def Update_permanent_obstacles_json(object):
+    with open("server/agv/permanent_obstacles.json", "r") as f:
+        try:
+            permanent_obstacles = json.load(f)
+        except json.JSONDecodeError:
+            permanent_obstacles = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in permanent_obstacles:
+                del permanent_obstacles[key]
+        else:
+            permanent_obstacles[key] = object[key]
+
+    with open("server/agv/permanent_obstacles.json", "w") as f:
+        json.dump(permanent_obstacles, f)
+
+
+def Get_values_from_permanent_obstacles_json(key_list="all"):
+    with open("server/agv/permanent_obstacles.json", "r") as f:
+        try:
+            permanent_obstacles = json.load(f)
+        except json.JSONDecodeError:
+            permanent_obstacles = {}
+
+    if key_list == "all":
+        return permanent_obstacles
+
+    values = {key: permanent_obstacles[key] for key in key_list}
+    return values

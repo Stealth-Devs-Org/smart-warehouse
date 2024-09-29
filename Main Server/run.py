@@ -6,6 +6,9 @@ with open("server/agv/agv_data.json", "w") as f:
 with open("server/agv/sent_interrupts.json", "w") as f:
     json.dump({}, f)
 
+with open("server/agv/permanent_obstacles.json", "w") as f:
+    json.dump({}, f)
+
 from server import create_app
 from server.agv.col_avoid import run_collision_avoidance
 from server.agv.keep_alive import remove_timeout_agvs
