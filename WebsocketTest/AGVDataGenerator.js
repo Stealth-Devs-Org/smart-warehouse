@@ -25,8 +25,8 @@ function generateRandomAGVData() {
   const agv = {
     agv_id: 1,  
     location: [
-      0,        
-      -1        
+      15,        
+      0        
     ],
     segment: Math.floor(Math.random() * 5),   
     status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
