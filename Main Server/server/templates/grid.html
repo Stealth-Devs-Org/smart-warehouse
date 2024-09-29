@@ -27,7 +27,23 @@
 </div>
 
 <script>
-    // Set static dots to red
+    // Function to map AGV status to colors
+    function getColorByStatus(status) {
+        switch (status) {
+            case 0: return 'red';        // Idle
+            case 1: return 'green';     // Moving Forward
+            case 2: return 'blue';     // Loading
+            case 3: return 'purple';      // Unloading
+            case 4: return 'orange';       // Charging
+            case 5: return 'yellow';     // Turning Right
+            case 6: return 'brown';      // Turning Left
+            case 7: return 'pink';       // Turning Back
+            case 8: return 'gray';       // Turning End
+            default: return 'black';     // Fallback color if no valid status
+        }
+    }
+
+    // Set static dots to light gray for obstacles
     function setStaticDots() {
         for (let i = 9; i < 39; i++) {
             for (let j of [15,16,19,22,25,28,29]) {
@@ -79,6 +95,7 @@
         }
     }
 
+    // Reset the entire grid to white and set static dots
     function reset() {
         document.querySelectorAll('.dot').forEach(dot => {
             dot.style.backgroundColor = 'white';
@@ -87,7 +104,7 @@
         setStaticDots();
     }
 
-    // Fetch dynamic colors from the Flask server and update the grid
+    // Fetch dynamic locations from the Flask server and update the grid
     function updateDynamicDots() {
         fetch('/get_dynamic_locations')
             .then(response => response.json())
@@ -95,30 +112,44 @@
                 // Reset all dots to default color
                 reset();
 
-                // Set the dynamic dots to blue
+                // Update dots based on AGV status and location
                 for (const [agv_id, agvData] of Object.entries(data)) {
                     const [x, y] = agvData["location"];
+                    const status = agvData["status"];
+                    
                     row = 26 - (y - 3);
                     col = x - 9;
                     let dotId = `dot-${row}-${col}`;
-                    document.getElementById(dotId).style.backgroundColor = 'blue';
+                    
+                    // Get color based on the status
+                    const color = getColorByStatus(status);
+                    
+                    // Update the dot with the corresponding color and AGV ID as text
+                    document.getElementById(dotId).style.backgroundColor = color;
                     document.getElementById(dotId).innerText = agv_id;
                 }
             });
     }
 
+    // Handle real-time AGV location updates from Socket.IO
     socket.on('agv_location', function(data) {
         // Reset all dots to default color
         reset();
-        data = data;
 
-        // Set the dynamic dots to blue based on the data received
+        // Update dots based on AGV status and location
         for (const [agv_id, agvData] of Object.entries(data)) {
             const [x, y] = agvData["location"];
+            const status = agvData["status"];
+            
             row = 26 - (y - 3);
             col = x - 9;
             let dotId = `dot-${row}-${col}`;
-            document.getElementById(dotId).style.backgroundColor = 'blue';
+            
+            // Get color based on the status
+            const color = getColorByStatus(status);
+            
+            // Update the dot with the corresponding color and AGV ID as text
+            document.getElementById(dotId).style.backgroundColor = color;
             document.getElementById(dotId).innerText = agv_id;
         }
     });
