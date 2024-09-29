@@ -74,8 +74,13 @@ def UpdateCurrentLocation(AGV_ID, current_location, current_segment, status):
         "status": status,
         "timestamp": timestamp,
     }
-    mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
-    print(f"Published current location {current_location} to MQTT topic '{MQTT_LOCATION_TOPIC}'")
+    try:
+        mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
+        print(
+            f"Published current location {current_location} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+        )
+    except Exception as e:
+        print(f"Failed to publish current location to MQTT: {e}")
 
 
 def EndTask(AGV_ID):
