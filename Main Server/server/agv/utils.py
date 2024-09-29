@@ -1,5 +1,7 @@
 import math
 
+import ujson as json
+
 
 def get_common_elements(array1, array2):
     set1 = set(tuple(x) for x in array1)
@@ -85,6 +87,7 @@ def get_close_agv_pairs(agvs_data, threshold):
     list: A list of tuples representing AGV pairs that are closer than the threshold distance.
     """
     distances = calculate_agv_distances(agvs_data)
+    close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
     close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
 
     return close_pairs
@@ -184,3 +187,112 @@ def is_path_crossing(agv_1, agv_2):
         obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
     return obstacles
+    obstacles = []
+
+    for i in range(len(path_1)):
+        if path_1[i] in path_2:
+            obstacles.append(path_1[i])
+    for i in range(len(path_2)):
+        if path_2[i] in path_1:
+            obstacles.append(path_2[i])
+
+    if obstacles:
+        obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
+
+    return obstacles
+
+
+def Update_agv_json(object):
+    with open("server/agv/agv_data.json", "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in agv_status:
+                del agv_status[key]
+        else:
+            agv_status[key] = object[key]
+
+    with open("server/agv/agv_data.json", "w") as f:
+        json.dump(agv_status, f)
+
+
+def Get_values_from_agv_json(key_list="all"):
+    with open("server/agv/agv_data.json", "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    if key_list == "all":
+        return agv_status
+
+    values = {key: agv_status[key] for key in key_list}
+    return values
+
+
+def Update_sent_interrupt_json(object):
+    with open("server/agv/sent_interrupts.json", "r") as f:
+        try:
+            sent_interrupts = json.load(f)
+        except json.JSONDecodeError:
+            sent_interrupts = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in sent_interrupts:
+                del sent_interrupts[key]
+        else:
+            sent_interrupts[key] = object[key]
+
+    with open("server/agv/sent_interrupts.json", "w") as f:
+        json.dump(sent_interrupts, f)
+
+
+def Get_values_from_sent_interrupt_json(key_list="all"):
+    with open("server/agv/sent_interrupts.json", "r") as f:
+        try:
+            sent_interrupts = json.load(f)
+        except json.JSONDecodeError:
+            sent_interrupts = {}
+
+    if key_list == "all":
+        return sent_interrupts
+
+    values = {key: sent_interrupts[key] for key in key_list}
+    return values
+
+
+def Update_permanent_obstacles_json(object):
+    with open("server/agv/permanent_obstacles.json", "r") as f:
+        try:
+            permanent_obstacles = json.load(f)
+        except json.JSONDecodeError:
+            permanent_obstacles = {}
+
+    for key in object:
+        if object[key] is None:
+            if key in permanent_obstacles:
+                del permanent_obstacles[key]
+        else:
+            permanent_obstacles[key] = object[key]
+
+    with open("server/agv/permanent_obstacles.json", "w") as f:
+        json.dump(permanent_obstacles, f)
+
+
+def Get_values_from_permanent_obstacles_json(key_list="all"):
+    with open("server/agv/permanent_obstacles.json", "r") as f:
+        try:
+            permanent_obstacles = json.load(f)
+        except json.JSONDecodeError:
+            permanent_obstacles = {}
+
+    if key_list == "all":
+        return permanent_obstacles
+
+    values = {key: permanent_obstacles[key] for key in key_list}
+    return values

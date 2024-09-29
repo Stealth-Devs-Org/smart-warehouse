@@ -72,8 +72,8 @@ def CalculatePath(start, goal, grid):
 
 def RecalculatePath(obstacles, current_node, goal, fixed_grid):
     grid = copy.deepcopy(fixed_grid)
-    obstacles = [tuple(obstacle) for obstacle in obstacles]
     if obstacles:
+        obstacles = [tuple(obstacle) for obstacle in obstacles]
         for obs in obstacles:
             grid.pop(obs, None)
             for node, connections in grid.items():
@@ -81,4 +81,4 @@ def RecalculatePath(obstacles, current_node, goal, fixed_grid):
                     grid[node].remove(obs)
 
     new_path = CalculatePath(current_node, goal, grid)
-    return new_path, obstacles
+    return new_path

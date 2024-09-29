@@ -1,4 +1,7 @@
+import os
 import time
+
+import ujson as json
 
 from mqtt_handler import EndTask, UpdateCurrentLocation
 
@@ -48,7 +51,7 @@ def LoadUnload(storage_level):
 
 
 def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
-    UpdateCurrentLocation([current_location], AGV_ID, action)
+
     if action == 1 or action == 2:
         direction = SimulateTurning(
             current_location, (storage[0], storage[1]), direction, turning_time
@@ -62,6 +65,9 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
     elif action == 3:
         print(f"AGV {AGV_ID} started charging at {current_location}...")
         time.sleep(10)
+
+    from mqtt_handler import EndTask
+
     EndTask(AGV_ID)
     UpdateCurrentLocation([current_location], AGV_ID, 0)
     return direction
@@ -78,8 +84,9 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
     else:
         direction = "W"
 
-    print(f"Turning from {current_direction} to {direction}...")
-    print(time.time())
+    if current_direction != direction:
+        print(f"Turning from {current_direction} to {direction}...")
+        print(time.time())
     if current_direction == "N" and (direction == "E" or direction == "W"):
         time.sleep(turning_time)
         print(time.time())
@@ -127,3 +134,28 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     is_new_path_efficient = time_to_remain_path > time_to_new_path
     waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
     return is_new_path_efficient, waiting_time
+
+
+def Update_agv_json(file_name, object):
+    with open(file_name, "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    for key in object:
+        agv_status[key] = object[key]
+
+    with open(file_name, "w") as f:
+        json.dump(agv_status, f)
+
+
+def Get_values_from_agv_json(file_name, key_list):
+    with open(file_name, "r") as f:
+        try:
+            agv_status = json.load(f)
+        except json.JSONDecodeError:
+            agv_status = {}
+
+    values = {key: agv_status.get(key, 0) for key in key_list}
+    return values

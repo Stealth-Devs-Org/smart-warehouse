@@ -1,6 +1,8 @@
 import datetime
 import json
+import os
 import threading
+import time
 
 import paho.mqtt.client as mqtt
 
@@ -15,6 +17,8 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_LOCATION_TOPIC = "agv/location"
 MQTT_TASK_END_TOPIC = "agv/task_complete"
+MQTT_GOAL_TOPIC = ""
+MQTT_INTERRUPT_TOPIC = ""
 
 mqtt_client = mqtt.Client()
 
@@ -91,7 +95,7 @@ def on_message(client, userdata, message):
 def UpdateCurrentLocation(current_segment, AGV_ID, status):
     try:
         # Get the current time in a readable format
-        timestamp = datetime.datetime.now().isoformat()
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         location_data = {
             "agv_id": f"agv{AGV_ID}",
@@ -105,16 +109,17 @@ def UpdateCurrentLocation(current_segment, AGV_ID, status):
             f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
         )
     except Exception as e:
-        print(f"Failed to publish to MQTT: {e}")
+        print(f"Failed to publish current location to MQTT: {e}")
 
 
 def EndTask(AGV_ID):
+    print("Inside EndTask")
     try:
         # Get the current time in a readable format
         timestamp = datetime.datetime.now().isoformat()
 
         data = {"agv_id": f"agv{AGV_ID}", "timestamp": timestamp}
-        mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data))
+        mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data), qos=2)
 
     except Exception as e:
         print(f"Failed to publish to MQTT: {e}")

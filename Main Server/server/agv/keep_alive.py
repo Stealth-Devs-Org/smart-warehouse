@@ -1,42 +1,52 @@
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-from server.agv.col_avoid import agvs_data, sent_interrupts
 from server.agv.scheduler import working_agvs
-
-permanent_obstacles = {}
+from server.agv.utils import (
+    Get_values_from_agv_json,
+    Get_values_from_permanent_obstacles_json,
+    Get_values_from_sent_interrupt_json,
+    Update_agv_json,
+    Update_permanent_obstacles_json,
+    Update_sent_interrupt_json,
+)
 
 
 def remove_timeout_agvs():
-    global agvs_data
-    global sent_interrupts
 
-    while True:
-        for agv_id in list(agvs_data.keys()):
-            timestamp = datetime.fromisoformat(agvs_data[agv_id]["timestamp"])
-            if timestamp < datetime.now() - timedelta(seconds=15):
-                permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
-                del agvs_data[agv_id]
-                if agv_id in sent_interrupts.keys():
-                    del sent_interrupts[agv_id]
-                if agv_id in working_agvs.keys():
-                    del working_agvs[agv_id]
-                print("AGV", agv_id, "is timed out")
-        time.sleep(1)  # Sleep for a while before checking again
+    def check_agvs():
+        while True:
+            agvs_data = Get_values_from_agv_json()
+            sent_interrupts = Get_values_from_sent_interrupt_json()
+            permanent_obstacles = Get_values_from_permanent_obstacles_json()
+            for agv_id in list(agvs_data.keys()):
+                timestamp = datetime.fromisoformat(agvs_data[agv_id]["timestamp"]).replace(
+                    tzinfo=timezone.utc
+                )
+                if timestamp < datetime.now(timezone.utc) - timedelta(seconds=15):
+                    permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
+                    agvs_data[agv_id] = None
+                    if agv_id in sent_interrupts.keys():
+                        sent_interrupts[agv_id] = None
+                    if agv_id in working_agvs.keys():
+                        del working_agvs[agv_id]
+                    print("AGV", agv_id, "is timed out")
+                    Update_agv_json(agvs_data)
+                    Update_sent_interrupt_json(sent_interrupts)
+                    Update_permanent_obstacles_json(permanent_obstacles)
+            time.sleep(1)  # Sleep for a while before checking again
 
-
-# Start the remove_timeout_agvs function in a separate thread
-thread = threading.Thread(target=remove_timeout_agvs)
-thread.daemon = True
-thread.start()
+    thread = threading.Thread(target=check_agvs)
+    thread.start()
 
 
 def remove_from_permanent_obstacles(agv_id):
-    global permanent_obstacles
+    permanent_obstacles = Get_values_from_permanent_obstacles_json()
 
     if agv_id in permanent_obstacles.keys():
-        del permanent_obstacles[agv_id]
+        permanent_obstacles[agv_id] = None
+        Update_permanent_obstacles_json(permanent_obstacles)
         print("AGV", agv_id, "is back alive")
 
     return permanent_obstacles

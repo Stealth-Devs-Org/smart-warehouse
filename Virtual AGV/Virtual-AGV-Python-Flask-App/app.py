@@ -3,6 +3,7 @@ import os
 import threading
 import time
 
+import ujson as json
 import yaml
 
 from mqtt_handler import (
@@ -41,7 +42,8 @@ def ObtainGoal(idle_location):
 
         action = goal.get("action")  # 0: idle, 2: load, 3: unload, 4: charge
     else:
-        destination = idle_location
+        idle_location_tuple = tuple(agv_state["idle_location"])
+        destination = idle_location_tuple
         storage = None
         action = 4
     print("Returning goal...", destination, storage, action)
@@ -64,7 +66,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
             path_clearance = RequestPathClearance(AGV_ID, segment)
 
             if (path_clearance) == 1:
-                previous_obstacles = None
+                agv_state["previous_obstacles"] = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 if segment == segments[0]:
                     current_direction = SimulateTurning(
@@ -151,6 +153,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                         break
                     current_location = cell
                     current_location_index = segment.index(current_location)
+                    current_segment = segment[current_location_index:]
                     current_segment = segment[current_location_index:]
                     if current_location == destination:
                         status = 0
