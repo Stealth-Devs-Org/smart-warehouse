@@ -15,12 +15,12 @@ from mqtt_handler import (
 )
 from pathfinding import CalculatePath, ReadGrid, RecalculatePath
 from server_communication import ObtainGoal, RequestPathClearance
-from utils import CreateSegments, EvalNewPath, SimulateEndAction, SimulateTurning
+from utils import CreateSegments, EvalNewPath, SimulateEndAction, SimulateTurning, SetStatus, GetStatus
 
 fixed_grid = None  # Global variable for the fixed grid
-global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location, status, current_segment
+global AGV_ID, speed, cell_distance, turning_time, direction, current_location, idle_location, current_segment
 current_location = None
-status = 0
+
 
 
 def read_config(config_path):
@@ -43,13 +43,13 @@ def ObtainGoal(idle_location):
     else:
         destination = idle_location
         storage = None
-        action = 4
+        action = 0
     print("Returning goal...", destination, storage, action)
     return destination, storage, action
 
 
 def InteractivePathDisplay(segments_list, destination, direction, storage, action):
-    global status, current_direction, current_location, current_segment
+    global current_direction, current_location, current_segment
     previous_obstacles = None
     cell_time = cell_distance / speed
     current_direction = direction
@@ -66,17 +66,18 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
             if (path_clearance) == 1:
                 previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
-                if segment == segments[0]:
-                    current_direction = SimulateTurning(
-                        current_location, segment[0], current_direction, turning_time
+                current_direction = SimulateTurning(
+                        AGV_ID, current_location, segment[0], current_direction, turning_time
                     )
+                SetStatus(1)
+                
                 for cell in segment:
-                    if segment != segments[0] and len(segment) > 1 and cell == segment[1]:
-                        print(f"Current location: {current_location}, next location: {segment[1]}")
+                    if len(segment) > 1 and cell == segment[1]:
+                        print(f"Current location: {current_location}, next location: {cell}")
                         current_direction = SimulateTurning(
-                            current_location, segment[1], current_direction, turning_time
+                            AGV_ID, current_location, cell, current_direction, turning_time
                         )
-
+                        SetStatus(1)
                     movement_time = 0
                     interrupt_check_intervals = 1000
                     movement_interval = cell_time / interrupt_check_intervals
@@ -88,11 +89,18 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                             )  # Fetch interrupt value using thread-safe method
 
                             if interrupt_value == 0:
+                                # No any interrupt
                                 break
+
                             elif interrupt_value == 1:
+                                # Interrupt messege to stop 
                                 print(f"Interrupt value:: {interrupt_value}")
                                 print("Stop signal received! Halting AGV.")
+            
+                                SetStatus(0)
+
                                 time.sleep(cell_time * 5)
+
                                 if current_location in segment:
                                     current_segment = segment[segment.index(current_location) :]
                                     new_path_clearance = RequestPathClearance(
@@ -106,9 +114,11 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 else:
                                     SetInterrupt(new_path_clearance)
                             else:
+                                # Interrupt messege to recalculate the path
                                 print("Recalculating path...")
                                 print("Interrupt value:", interrupt_value)
                                 is_path_correct = 0
+                                SetStatus(0)
                                 # if movement_time > 0:
                                 #     obstacles = [tuple(obstacle) for obstacle in interrupt_value]
                                 #     if cell not in obstacles:
@@ -135,7 +145,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                     print("Obstacles:", obstacles)
 
                                     new_segments = CreateSegments(new_path)
-                                    UpdateCurrentLocation([current_location], AGV_ID, 0)
+                                    UpdateCurrentLocation([current_location], AGV_ID, GetInterrupt())
 
                                     segments = new_segments
                                     print("new_segments:", segments)
@@ -153,11 +163,11 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                     current_location_index = segment.index(current_location)
                     current_segment = segment[current_location_index:]
                     if current_location == destination:
-                        status = 0
-                        UpdateCurrentLocation(current_segment, AGV_ID, 0)
+                        SetStatus(0)
+                        UpdateCurrentLocation(current_segment, AGV_ID, GetStatus())
                     else:
-                        status = 1
-                        UpdateCurrentLocation(current_segment, AGV_ID, 1)
+                        SetStatus(1)
+                        UpdateCurrentLocation(current_segment, AGV_ID, GetStatus())
 
                 else:
                     index += 1
@@ -189,7 +199,7 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
                                 previous_obstacles = obstacles
                                 print("Waiting for obstacle to clear...", time.time())
                                 time.sleep(waiting_time)
-                                print("Obstacle cleared!", time.time())
+                                print("Request for resume!", time.time())
                                 break
                             else:
                                 recal_path = 1
@@ -207,20 +217,19 @@ def InteractivePathDisplay(segments_list, destination, direction, storage, actio
 
     print("End of path reached")
     SetGoal(None)
-    status = action
     direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
     )
-    status = 0
+    SetStatus(0)
     return current_location, direction
 
 
 def send_keep_alive():
-    global current_location, status, current_segment
+    global current_location, current_segment
     while True:
         time.sleep(10)
         print("Sending keep alive")
-        UpdateCurrentLocation(current_segment, AGV_ID, status)
+        UpdateCurrentLocation(current_segment, AGV_ID, GetStatus())
 
 
 # Start the keep-alive thread
