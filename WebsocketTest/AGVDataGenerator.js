@@ -5,12 +5,28 @@ const port = process.env.PORT || 8080;
 const wss = new WebSocket.Server({ port });
 
 
+// function generateRandomAGVData() {  //random data
+//   const agv = {
+//     agv_id: 1,  
+//     location: [
+//       Math.floor(Math.random() * 10),        
+//       Math.floor(Math.random() * 10)         
+//     ],
+//     segment: Math.floor(Math.random() * 5),   
+//     status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
+//     timestamp: new Date().toISOString()       
+//   };
+//   return agv;
+// }
+
+
+
 function generateRandomAGVData() {
   const agv = {
     agv_id: 1,  
     location: [
-      Math.floor(Math.random() * 10),        
-      Math.floor(Math.random() * 10)         
+      0,        
+      -1        
     ],
     segment: Math.floor(Math.random() * 5),   
     status: Math.floor(Math.random() * 4),     // 0: idle, 1: moving, 2: loading, 3: unloading
