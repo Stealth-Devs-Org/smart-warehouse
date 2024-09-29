@@ -255,3 +255,8 @@ def get_dynamic_locations():
     # agv_locations = get_agv_locations_array(agvs_data)
     # Return the dynamic dot color data
     return jsonify(agvs_data)
+
+
+@agv.route("/get_permanent_obstacles")
+def get_permanent_obstacles():
+    return jsonify(permanent_obstacles)

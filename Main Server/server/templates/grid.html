@@ -85,6 +85,7 @@
         });
         // Set static dots
         setStaticDots();
+        updatePermanentObstacles();
     }
 
     // Fetch dynamic colors from the Flask server and update the grid
@@ -102,6 +103,23 @@
                     col = x - 9;
                     let dotId = `dot-${row}-${col}`;
                     document.getElementById(dotId).style.backgroundColor = 'blue';
+                    document.getElementById(dotId).innerText = agv_id;
+                }
+            });
+    }
+
+    function updatePermanentObstacles() {
+        fetch('/get_permanent_obstacles')
+            .then(response => response.json())
+            .then(data => {
+
+                // Set the dynamic dots to blue
+                for (const [agv_id, location] of Object.entries(data)) {
+                    const [x, y] = location;
+                    row = 26 - (y - 3);
+                    col = x - 9;
+                    let dotId = `dot-${row}-${col}`;
+                    document.getElementById(dotId).style.backgroundColor = 'black';
                     document.getElementById(dotId).innerText = agv_id;
                 }
             });
