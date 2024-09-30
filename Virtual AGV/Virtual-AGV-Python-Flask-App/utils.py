@@ -3,16 +3,13 @@ import time
 
 import ujson as json
 
-from mqtt_handler import EndTask, UpdateCurrentLocation
+agv_state = {}
 
 
 def CreateSegments(path):
     segments = []
     if not path:
         return segments
-
-    # if len(path) == 1:
-    #     return [[path[0]]]
 
     current_segment = [path[0]]
     direction = None
@@ -51,31 +48,42 @@ def LoadUnload(storage_level):
 
 
 def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turning_time):
+    # from app import agv_state
+    from mqtt_handler import EndTask, UpdateCurrentLocation
 
-    if action == 1 or action == 2:
+    if action == 0:
+        print("Stopped at ideal location")
+        return direction
+    elif action == 2 or action == 3:
         direction = SimulateTurning(
-            current_location, (storage[0], storage[1]), direction, turning_time
+            AGV_ID, current_location, (storage[0], storage[1]), direction, turning_time
         )
         duration = LoadUnload(storage[2])
-        if action == 1:
+        if action == 2:
             print(f"AGV {AGV_ID} started loading at {current_location}...")
         else:
             print(f"AGV {AGV_ID} started unloading at {current_location}...")
         time.sleep(duration)
-    elif action == 3:
+    elif action == 4:
         print(f"AGV {AGV_ID} started charging at {current_location}...")
-        time.sleep(10)
-
-    from mqtt_handler import EndTask
-
+        duration = 10
+    agv_state["current_status"] = action
+    agv_state["current_direction"] = direction
+    UpdateCurrentLocation()
+    time.sleep(duration)
+    agv_state["current_status"] = 0
     EndTask(AGV_ID)
-    UpdateCurrentLocation([current_location], AGV_ID, 0)
+    UpdateCurrentLocation()
     return direction
 
 
-def SimulateTurning(current_location, next_location, current_direction, turning_time):
+def SimulateTurning(AGV_ID, current_location, next_location, current_direction, turning_time):
+    # from app import agv_state
+    from mqtt_handler import UpdateCurrentLocation
 
-    if current_location[0] == next_location[0] and current_location[1] < next_location[1]:
+    if current_location[0] == next_location[0] and current_location[1] == next_location[1]:
+        return current_direction
+    elif current_location[0] == next_location[0] and current_location[1] < next_location[1]:
         direction = "N"
     elif current_location[0] == next_location[0] and current_location[1] > next_location[1]:
         direction = "S"
@@ -84,30 +92,36 @@ def SimulateTurning(current_location, next_location, current_direction, turning_
     else:
         direction = "W"
 
-    if current_direction != direction:
-        print(f"Turning from {current_direction} to {direction}...")
-        print(time.time())
-    if current_direction == "N" and (direction == "E" or direction == "W"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "S" and (direction == "E" or direction == "W"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "E" and (direction == "N" or direction == "S"):
-        time.sleep(turning_time)
-        print(time.time())
-    elif current_direction == "W" and (direction == "N" or direction == "S"):
-        time.sleep(turning_time)
-        print(time.time())
+    if current_direction == direction:
+        print("same direction:" + direction)
+        return direction
+    elif (
+        (current_direction == "N" and direction == "E")
+        or (current_direction == "E" and direction == "S")
+        or (current_direction == "S" and direction == "W")
+        or (current_direction == "W" and direction == "N")
+    ):
+        agv_state["current_status"] = 5  # Turning Right
+    elif (
+        (current_direction == "N" and direction == "W")
+        or (current_direction == "W" and direction == "S")
+        or (current_direction == "S" and direction == "E")
+        or (current_direction == "E" and direction == "N")
+    ):
+        agv_state["current_status"] = 6  # Turning Left
     elif (
         (current_direction == "N" and direction == "S")
         or (current_direction == "S" and direction == "N")
         or (current_direction == "E" and direction == "W")
         or (current_direction == "W" and direction == "E")
     ):
-        time.sleep(turning_time * 2)
-        print(time.time())
-
+        turning_time *= 2
+        agv_state["current_status"] = 7  # Turning Back
+    print("Turning from " + current_direction + " to " + direction)
+    UpdateCurrentLocation()
+    time.sleep(turning_time)
+    agv_state["current_status"] = 8  # Turning Completed
+    UpdateCurrentLocation()
     return direction
 
 
@@ -136,11 +150,18 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     return is_new_path_efficient, waiting_time
 
 
+import threading
+
+# Create a file lock
+file_lock = threading.Lock()
+
+
 def Update_agv_json(file_name, object):
-    with open(file_name, "r") as f:
+    with file_lock:
         try:
-            agv_status = json.load(f)
-        except json.JSONDecodeError:
+            with open(file_name, "r") as f:
+                agv_status = json.load(f)
+        except FileNotFoundError:
             agv_status = {}
 
     for key in object:
@@ -150,12 +171,16 @@ def Update_agv_json(file_name, object):
         json.dump(agv_status, f)
 
 
-def Get_values_from_agv_json(file_name, key_list):
-    with open(file_name, "r") as f:
+def Get_values_from_agv_json(file_name, key_list="all"):
+    with file_lock:
         try:
-            agv_status = json.load(f)
-        except json.JSONDecodeError:
+            with open(file_name, "r") as f:
+                agv_status = json.load(f)
+        except FileNotFoundError:
             agv_status = {}
+
+    if key_list == "all":
+        return agv_status
 
     values = {key: agv_status.get(key, 0) for key in key_list}
     return values

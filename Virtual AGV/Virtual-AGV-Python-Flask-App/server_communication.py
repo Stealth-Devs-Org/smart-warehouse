@@ -8,7 +8,7 @@ def RequestPathClearance(AGV_ID, segment):
     url = MAIN_SERVER_URL + "/path_clearance"
     payload = {"agv_id": f"agv{AGV_ID}", "segment": segment}
 
-    print(f"Requesting path clearance from {segment[0]} to {segment[-1]}...")
+    print(f"Requesting path clearance for segment: {segment}")
 
     try:
         response = requests.post(url, json=payload)

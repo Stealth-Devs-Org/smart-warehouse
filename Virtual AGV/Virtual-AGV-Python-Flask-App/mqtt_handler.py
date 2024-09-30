@@ -1,10 +1,10 @@
 import datetime
 import json
-import os
 import threading
-import time
 
 import paho.mqtt.client as mqtt
+
+from utils import Get_values_from_agv_json
 
 interrupt = 0  # Global interrupt variable
 goal = None  # Global goal variable
@@ -75,6 +75,7 @@ def ConnectMQTT(AGV_ID):
 def on_message(client, userdata, message):
     try:
         data = json.loads(message.payload.decode())
+        print(f"Received message on topic '{message.topic}': {data}")
         if message.topic == MQTT_INTERRUPT_TOPIC:
             interrupt_value = data.get("interrupt")
             if interrupt_value == 1:
@@ -92,31 +93,30 @@ def on_message(client, userdata, message):
         print(f"Error decoding message: {e}")
 
 
-def UpdateCurrentLocation(current_segment, AGV_ID, status):
-    try:
-        # Get the current time in a readable format
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+def UpdateCurrentLocation():
+    from utils import agv_state
 
-        location_data = {
-            "agv_id": f"agv{AGV_ID}",
-            "location": current_segment[0],
-            "segment": current_segment,
-            "status": status,
-            "timestamp": timestamp,
-        }
-        mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
-        print(
-            f"Published current location {current_segment[0]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
-        )
-    except Exception as e:
-        print(f"Failed to publish current location to MQTT: {e}")
+    # Get the current time in a readable format
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    location_data = {
+        "agv_id": f"agv{agv_state["agv_id"]}",
+        "location": agv_state["current_location"],
+        "segment": agv_state["current_segment"],
+        "status": agv_state["current_status"],
+        "timestamp": timestamp,
+    }
+    mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
+    print(
+        f"Published current location {location_data['location']} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+    )
 
 
 def EndTask(AGV_ID):
     print("Inside EndTask")
     try:
         # Get the current time in a readable format
-        timestamp = datetime.datetime.now().isoformat()
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         data = {"agv_id": f"agv{AGV_ID}", "timestamp": timestamp}
         mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data), qos=2)
