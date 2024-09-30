@@ -1,13 +1,17 @@
 import json
 import threading
 import time
+from datetime import datetime
 
 from flask import Blueprint, jsonify, render_template, request
+
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     Get_values_from_agv_json,
+    Get_values_from_permanent_obstacles_json,
     Get_values_from_sent_interrupt_json,
     Update_agv_json,
+    Update_collisions_json,
     Update_sent_interrupt_json,
     get_agvs_location_within_range,
     get_buffered_positions,
@@ -21,7 +25,8 @@ from server.agv.utils import (
 agv = Blueprint("agv", __name__)
 
 
-# timeout_segments = {}
+agvs_data = {}
+sent_interrupts = {}
 
 
 # This function returns the current locations of the AGVs as an array of cordinates.
@@ -33,7 +38,7 @@ def get_agv_locations_array(agvs_data):
     return values
 
 
-from server.agv.keep_alive import permanent_obstacles, remove_from_permanent_obstacles
+from server.agv.keep_alive import remove_from_permanent_obstacles
 
 
 # This function returns the current obstacles in a segment of the path as an array of cordinates.
@@ -41,6 +46,9 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
     obstacles = get_common_elements(get_agv_locations_array(agvs_data), segment)
 
     # Add permanent obstacles to the list
+    from server.agv.keep_alive import permanent_obstacles
+
+    # permanent_obstacles = Get_values_from_permanent_obstacles_json()
     if permanent_obstacles:
         obstacles = obstacles + get_common_elements(permanent_obstacles.values(), segment)
 
@@ -51,9 +59,10 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
     # obstacles = get_buffered_positions(1, obstacles) # No need to buffer the obstacles
 
     if obstacles:
-        furthest_obstacle_distance = get_distance_of_furthest_obstacle(cur_agv_loc, obstacles)
+        # furthest_obstacle_distance = get_distance_of_furthest_obstacle(cur_agv_loc, obstacles)
+        range_of_obstacle_detection = 3
         obstacles_within_range = get_agvs_location_within_range(
-            agvs_data, agv_id, furthest_obstacle_distance
+            agvs_data, agv_id, range_of_obstacle_detection
         )
         obstacles = obstacles + obstacles_within_range
         obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
@@ -67,12 +76,14 @@ from server.mqtt.utils import mqtt_client
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id, col_agv_id):
-    sent_interrupts = Get_values_from_sent_interrupt_json()
-    agvs_data = Get_values_from_agv_json()
+    # sent_interrupts = Get_values_from_sent_interrupt_json()
+    # agvs_data = Get_values_from_agv_json()
+
     if (
         agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]
     ) and sent_interrupts[agv_id]["interrupt"] == 1:
         return
+
     topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": 1}
     message_json = json.dumps(message_dict)
@@ -84,24 +95,27 @@ def stop_agv(agv_id, col_agv_id):
     sent_interrupts[agv_id]["interrupt"] = 1
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
-    Update_sent_interrupt_json(sent_interrupts)
+    # Update_sent_interrupt_json(sent_interrupts)
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
-def recalibrate_path(agv_id, segment, crossing_segment, col_agv_id):
-    topic = f"{agv_id}/interrupt"
-    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
-    obstacles = []
+def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
+    # sent_interrupts = Get_values_from_sent_interrupt_json()
+    # agvs_data = Get_values_from_agv_json()
+
+    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    # obstacles = []
     # obstacles = obstacles + crossing_segment
     # if obstacles:
     #     obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
-    sent_interrupts = Get_values_from_sent_interrupt_json()
-    agvs_data = Get_values_from_agv_json()
+
     if (agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]) and (
         sent_interrupts[agv_id]["interrupt"] == 1
         or sent_interrupts[agv_id]["interrupt"] == obstacles
     ):
         return
+
+    topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": obstacles}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
@@ -112,42 +126,43 @@ def recalibrate_path(agv_id, segment, crossing_segment, col_agv_id):
     sent_interrupts[agv_id]["interrupt"] = obstacles
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
-    Update_sent_interrupt_json(sent_interrupts)
+    # Update_sent_interrupt_json(sent_interrupts)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
-    agvs_data = Get_values_from_agv_json()
+    # agvs_data = Get_values_from_agv_json()
+
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
             if crossing_segment != []:
-                print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]}")
                 if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
+                    print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]}")
                     stop_agv(agv_pair[0], agv_pair[1])
                     recalibrate_path(
                         agv_pair[1],
                         agvs_data[agv_pair[1]]["segment"],
-                        crossing_segment,
                         agv_pair[0],
                     )
                 elif agvs_data[agv_pair[0]]["status"] == 1:
+                    stop_agv(agv_pair[1], agv_pair[0])
                     recalibrate_path(
                         agv_pair[0],
                         agvs_data[agv_pair[0]]["segment"],
-                        crossing_segment,
                         agv_pair[1],
                     )
                 elif agvs_data[agv_pair[1]]["status"] == 1:
+                    stop_agv(agv_pair[0], agv_pair[1])
                     recalibrate_path(
                         agv_pair[1],
                         agvs_data[agv_pair[1]]["segment"],
-                        crossing_segment,
                         agv_pair[0],
                     )
                 else:
                     pass
+    detect_collision()
 
 
 def run_collision_avoidance(interval):
@@ -164,25 +179,45 @@ def run_collision_avoidance(interval):
 from server.websocket.utils import socketio
 
 
+def detect_collision():
+    for agv_id, data in agvs_data.items():
+        for agv_id2, data2 in agvs_data.items():
+            if agv_id != agv_id2:
+                if data["location"] == data2["location"]:
+                    print(
+                        f"Collision detected between AGV {agv_id} and AGV {agv_id2} at {data['location']}"
+                    )
+                    temp = {}
+                    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    temp["timestamp"] = timestamp
+                    temp["agv1"] = agv_id
+                    temp["agv2"] = agv_id2
+                    Update_collisions_json(temp)
+
+
 def update_agv_location(data):
-    temp_agvs_data = {}
-    temp_agvs_data[data["agv_id"]] = data
-    Update_agv_json(temp_agvs_data)
-    all_agvs_data = Get_values_from_agv_json()
-    socketio.emit("agv_location", all_agvs_data)
+    # temp_agvs_data = {}
+    # temp_agvs_data[data["agv_id"]] = data
+    # Update_agv_json(temp_agvs_data)
+    agvs_data[data["agv_id"]] = data
+
+    # all_agvs_data = Get_values_from_agv_json()
+    socketio.emit("agv_location", agvs_data)
     # print(agvs_data)
-    collision_avoidance()
 
     # Remove the interrupt if the AGV has moved from the location
-    sent_interrupts = Get_values_from_sent_interrupt_json()
+    # sent_interrupts = Get_values_from_sent_interrupt_json()
     if (
         data["agv_id"] in sent_interrupts.keys()
         and sent_interrupts[data["agv_id"]]["location"] != data["location"]
     ):
-        sent_interrupts[data["agv_id"]] = None
-        Update_sent_interrupt_json(sent_interrupts)
+        del sent_interrupts[data["agv_id"]]
+        # sent_interrupts[data["agv_id"]] = None
+        # Update_sent_interrupt_json(sent_interrupts)
 
-    # Remove the AGV location from permanent obstacles if it is back alive
+    collision_avoidance()
+
+    # Remove the AGV location from permanent obstacles since it is back alive
     remove_from_permanent_obstacles(data["agv_id"])
 
     save_agv_location(data)
@@ -216,14 +251,17 @@ def path_clearance():
     data = request.json
     agv_id = data["agv_id"]
     segment = data["segment"]
-    segment_tuple = tuple(tuple(inner) for inner in segment)
 
-    agvs_data = Get_values_from_agv_json()
+    # agvs_data = Get_values_from_agv_json()
     if agv_id in agvs_data:
-        agvs_data[agv_id]["segment"] = segment
-        agvs_data[agv_id]["status"] = 1
-        Update_agv_json(agvs_data)
-        time.sleep(1)
+        if agvs_data[agv_id]["status"] != 1:
+            agvs_data[agv_id]["segment"] = segment
+            agvs_data[agv_id]["status"] = 1
+            # Update_agv_json(agvs_data)
+            print(f"Path clearance request received for new task AGV {agv_id}")
+            collision_avoidance()
+            time.sleep(1)
+
         obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
         if not obstacles:
             # timeout_segments[segment_tuple] = time.time()
@@ -232,7 +270,7 @@ def path_clearance():
             return message_json
         else:
             agvs_data[agv_id]["segment"] = [agvs_data[agv_id]["location"]]
-            Update_agv_json(agvs_data)
+            # Update_agv_json(agvs_data)
             message_dict = {"result": obstacles}
             message_json = json.dumps(message_dict)
             return message_json
@@ -250,7 +288,7 @@ def index():
 
 @agv.route("/get_dynamic_locations")
 def get_dynamic_locations():
-    agvs_data = Get_values_from_agv_json()
+    # agvs_data = Get_values_from_agv_json()
     # agv_locations = get_agv_locations_array(agvs_data)
     # Return the dynamic dot color data
     return jsonify(agvs_data)
@@ -258,4 +296,7 @@ def get_dynamic_locations():
 
 @agv.route("/get_permanent_obstacles")
 def get_permanent_obstacles():
+    from server.agv.keep_alive import permanent_obstacles
+
+    # permanent_obstacles = Get_values_from_permanent_obstacles_json()
     return jsonify(permanent_obstacles)

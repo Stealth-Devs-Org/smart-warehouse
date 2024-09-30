@@ -3,14 +3,18 @@ import random
 import threading
 import time
 
-from server.agv.utils import Get_values_from_agv_json
+from server.agv.utils import (
+    Get_values_from_agv_json,
+    Get_values_from_working_agvs_json,
+    Update_working_agvs_json,
+)
 from server.mqtt.utils import mqtt_client
+
+working_agvs = {}
 
 inbound_pallet_locations = {}
 outbound_pallet_locations = {}
 storage_pallet_locations = {}
-
-working_agvs = {}
 
 # Assigning pallet locations with respective path location
 for y in range(5, 12):
@@ -108,8 +112,12 @@ def task_divider(task):
 
 
 def assign_task_to_agv():
-    agvs_data = Get_values_from_agv_json()
+    from server.agv.col_avoid import agvs_data
+    from server.agv.scheduler import working_agvs
+
+    # agvs_data = Get_values_from_agv_json()
     agvs = list(agvs_data.keys())
+    # working_agvs = Get_values_from_working_agvs_json()
     if not agvs:
         return None
     else:
@@ -122,6 +130,7 @@ def assign_task_to_agv():
     task = generate_random_task()
     task["assigned_agv"] = agv_id
     working_agvs[agv_id] = task
+    # Update_working_agvs_json(working_agvs)
     sending_task = task_divider(task)
 
     topic = f"{agv_id}/goal"
@@ -144,11 +153,15 @@ def run_task_scheduler(interval):
 
 
 def task_complete(data):
+    from server.agv.scheduler import working_agvs
+
     agv_id = data["agv_id"]
+    # working_agvs = Get_values_from_working_agvs_json()
     if agv_id in working_agvs.keys():
         task = working_agvs[agv_id]
         if not task["halfway"]:
             working_agvs[agv_id]["halfway"] = True
+            # Update_working_agvs_json(working_agvs)
             print("Loading task completed by " + agv_id)
 
             sending_task = task_divider(task)
@@ -159,4 +172,6 @@ def task_complete(data):
             print("Unloading task" + message_json + " assigned to " + agv_id)
         else:
             del working_agvs[agv_id]
+            # working_agvs[agv_id] = None
+            # Update_working_agvs_json(working_agvs)
             print("Unloading task completed by " + agv_id)

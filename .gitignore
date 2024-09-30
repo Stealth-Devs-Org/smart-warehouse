@@ -173,3 +173,6 @@ Virtual AGV/Virtual-AGV-Python-Flask-App/agv_status.json
 # Main Server AGV data files
 Main Server/server/agv/agv_data.json
 Main Server/server/agv/sent_interrupts.json
+Main Server/server/agv/collisions.json
+Main Server/server/agv/permanent_obstacles.json
+Main Server/server/agv/working_agvs.json
