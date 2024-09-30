@@ -99,13 +99,25 @@
 
 
 
+
+
 //////////////////// Code for straight line movement ////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const WebSocket = require('ws');
-const port = process.env.PORT || 8080;
+// const WebSocket = require('ws');
+// const port = process.env.PORT || 8080;
 
-const wss = new WebSocket.Server({ port });
+// const wss = new WebSocket.Server({ port });
+
+
+const WebSocket = require('ws');
+
+
+const localIP = '0.0.0.0'; //'192.168.x.x'; 
+const port = 8080;
+
+
+const wss = new WebSocket.Server({ host: localIP, port: port, path: '/AGV1' });
 
 function generateRandomAGVData() {
   let agv = {
@@ -155,4 +167,4 @@ wss.on('connection', (ws) => {
 });
 
 
-console.log(`WebSocket server is running on ws://localhost:${port}`);
+console.log(`WebSocket server is running on ws://${localIP}:${port}`);   // use /AGV1 for the path
