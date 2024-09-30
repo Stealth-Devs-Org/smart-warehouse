@@ -172,6 +172,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         break
 
     print("End of path reached")
+    agv_state["current_status"] = 0
     SetGoal(None)
     current_direction = SimulateEndAction(
         AGV_ID, current_location, current_direction, storage, action, turning_time
@@ -222,6 +223,7 @@ if __name__ == "__main__":
 
     # Start the keep-alive thread
     keep_alive_thread = threading.Thread(target=send_keep_alive)
+    keep_alive_thread.daemon = True
     keep_alive_thread.start()
 
     while True:
