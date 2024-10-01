@@ -286,6 +286,25 @@ def index():
     return render_template("grid.html")
 
 
+@agv.route("/get_goal", methods=["POST"])
+def get_goal():
+    from server.agv.scheduler import generate_random_task, task_divider, working_agvs
+
+    data = request.json
+    agv_id = data["agv_id"]
+    if agv_id in working_agvs.keys():
+        task = working_agvs[agv_id]
+        sending_task = task_divider(task)
+    else:
+        task = generate_random_task()
+        task["assigned_agv"] = agv_id
+        working_agvs[agv_id] = task
+        task = working_agvs[agv_id]
+        sending_task = task_divider(task)
+    message_json = json.dumps(sending_task)
+    return message_json
+
+
 @agv.route("/get_dynamic_locations")
 def get_dynamic_locations():
     # agvs_data = Get_values_from_agv_json()
