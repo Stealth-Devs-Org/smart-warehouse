@@ -106,10 +106,7 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
     # if obstacles:
     #     obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
-    if (agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]) and (
-        sent_interrupts[agv_id]["interrupt"] == 1
-        or sent_interrupts[agv_id]["interrupt"] == obstacles
-    ):
+    if agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]:
         return
 
     topic = f"{agv_id}/interrupt"
@@ -138,31 +135,12 @@ def collision_avoidance():
                 print(
                     f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
                 )
-                if agvs_data[agv_pair[0]]["status"] in [1, 5, 6, 7, 8] and agvs_data[agv_pair[1]][
-                    "status"
-                ] in [1, 5, 6, 7, 8]:
-                    stop_agv(agv_pair[0], agv_pair[1])
-                    recalibrate_path(
-                        agv_pair[1],
-                        agvs_data[agv_pair[1]]["segment"],
-                        agv_pair[0],
-                    )
-                elif agvs_data[agv_pair[0]]["status"] in [1, 5, 6, 7, 8]:
-                    stop_agv(agv_pair[1], agv_pair[0])
-                    recalibrate_path(
-                        agv_pair[0],
-                        agvs_data[agv_pair[0]]["segment"],
-                        agv_pair[1],
-                    )
-                elif agvs_data[agv_pair[1]]["status"] in [1, 5, 6, 7, 8]:
-                    stop_agv(agv_pair[0], agv_pair[1])
-                    recalibrate_path(
-                        agv_pair[1],
-                        agvs_data[agv_pair[1]]["segment"],
-                        agv_pair[0],
-                    )
-                else:
-                    pass
+                stop_agv(agv_pair[0], agv_pair[1])
+                recalibrate_path(
+                    agv_pair[1],
+                    agvs_data[agv_pair[1]]["segment"],
+                    agv_pair[0],
+                )
     detect_collision()
 
 
@@ -203,9 +181,6 @@ def detect_collision():
 
 
 def update_agv_location(data):
-    # temp_agvs_data = {}
-    # temp_agvs_data[data["agv_id"]] = data
-    # Update_agv_json(temp_agvs_data)
     agvs_data[data["agv_id"]] = data
 
     # all_agvs_data = Get_values_from_agv_json()
@@ -213,14 +188,19 @@ def update_agv_location(data):
     # print(agvs_data)
 
     # Remove the interrupt if the AGV has moved from the location
-    # sent_interrupts = Get_values_from_sent_interrupt_json()
     if (
         data["agv_id"] in sent_interrupts.keys()
+        and sent_interrupts[data["agv_id"]]["interrupt"] != 1
+        and sent_interrupts[data["agv_id"]]["location"] != data["location"]
+        and sent_interrupts[data["agv_id"]]["col_agv_id"] not in sent_interrupts.keys()
+    ):
+        del sent_interrupts[data["agv_id"]]
+    elif (
+        data["agv_id"] in sent_interrupts.keys()
+        and sent_interrupts[data["agv_id"]]["interrupt"] == 1
         and sent_interrupts[data["agv_id"]]["location"] != data["location"]
     ):
         del sent_interrupts[data["agv_id"]]
-        # sent_interrupts[data["agv_id"]] = None
-        # Update_sent_interrupt_json(sent_interrupts)
 
     collision_avoidance()
 
@@ -238,17 +218,16 @@ def path_clearance():
 
     # agvs_data = Get_values_from_agv_json()
     if agv_id in agvs_data.keys():
-        if (
-            agvs_data[agv_id]["status"] == 2
-            or agvs_data[agv_id]["status"] == 3
-            or agvs_data[agv_id]["status"] == 0
-        ):
-            # agvs_data[agv_id]["segment"] = segment
-            agvs_data[agv_id]["status"] = 1
-            # Update_agv_json(agvs_data)
-            print(f"Path clearance request received for new task AGV {agv_id}")
-            collision_avoidance()
-            time.sleep(1)
+        # if (
+        #     agvs_data[agv_id]["status"] == 2
+        #     or agvs_data[agv_id]["status"] == 3
+        #     or agvs_data[agv_id]["status"] == 0
+        # ):
+        #     # agvs_data[agv_id]["segment"] = segment
+        #     # agvs_data[agv_id]["status"] = 1
+        #     # Update_agv_json(agvs_data)
+        #     print(f"Path clearance request received for new task AGV {agv_id}")
+        #     # collision_avoidance()
 
         obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
         if not obstacles:

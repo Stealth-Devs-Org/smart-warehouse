@@ -13,7 +13,7 @@ with open("server/agv/json_data/working_agvs.json", "w") as f:
     json.dump({}, f)
 
 with open("server/agv/json_data/collisions.json", "w") as f:
-    json.dump({}, f)
+    json.dump([], f)
 
 from server import create_app
 from server.agv.col_avoid import run_collision_avoidance
@@ -25,7 +25,7 @@ app = create_app()
 
 if __name__ == "__main__":
     run_task_scheduler(5)  # Run the task scheduler every {arg} seconds
-    #  run_collision_avoidance(0.25)  # Run the collision avoidance every {arg} second
+    # run_collision_avoidance(0.25)  # Run the collision avoidance every {arg} second
     remove_timeout_agvs()  # Run the thread to remove timed out AGVs
     start_saving_data_thread(0.25)  # Run the thread to save AGV data
     socketio.run(app, host="0.0.0.0", port=5000)

@@ -337,15 +337,12 @@ def Update_collisions_json(object):
             with open("server/agv/json_data/collisions.json", "r") as f:
                 collisions = json.load(f)
         except FileNotFoundError:
-            collisions = {}
+            collisions = []
 
-    collisions[object["timestamp"]] = {}
-    for key in object:
-        if key != "timestamp":
-            collisions[object["timestamp"]][key] = object[key]
+        collisions.append(object)
 
-    with open("server/agv/json_data/collisions.json", "w") as f:
-        json.dump(collisions, f)
+        with open("server/agv/json_data/collisions.json", "w") as f:
+            json.dump(collisions, f)
 
 
 # def Get_values_from_collisions_json(key_list="all"):
