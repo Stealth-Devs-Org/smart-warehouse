@@ -15,7 +15,7 @@ from mqtt_handler import (
     UpdateCurrentLocation,
 )
 from pathfinding import CalculatePath, ReadGrid, RecalculatePath
-from server_communication import ObtainGoal, RequestPathClearance
+from server_communication import ObtainGoalHttp, RequestPathClearance
 from utils import (
     CreateSegments,
     EvalNewPath,
@@ -104,8 +104,9 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         if interrupt_value == 1:
                             print("Stop signal received! Halting AGV.")
                             agv_state["current_status"] = 0
+                            UpdateCurrentLocation()
 
-                            time.sleep(cell_time * 5)
+                            time.sleep(cell_time * 7)
 
                             SetInterrupt(0)
                             interrupted = 1
@@ -114,6 +115,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                             print("Recalculating path...")
                             print("Interrupt value:", interrupt_value)
                             agv_state["current_status"] = 0
+                            UpdateCurrentLocation()
 
                             SetInterrupt(0)
                             interrupted = 1
@@ -139,12 +141,16 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
 
             else:
                 print("obstacle*", path_clearance)
+                if path_clearance == None:
+                    print("No path clearance received. Retrying...")
+                    return
+                current_location_tuple = tuple(current_location)
                 new_path, obstacles = RecalculatePath(
-                    (path_clearance), current_location, destination, fixed_grid
+                    (path_clearance), current_location_tuple, destination, fixed_grid
                 )
                 if not new_path:
                     print("No valid path found after recalculation.")
-                    time.sleep(cell_time * 2)
+                    time.sleep(cell_time * 1)
                     break
                 else:
                     recal_path = 0
@@ -174,6 +180,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         segments = new_segments
                         index = 0
                         break
+            time.sleep(1)
 
     print("End of path reached")
     agv_state["current_status"] = 0
@@ -187,7 +194,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
 
 def send_keep_alive():
     while True:
-        time.sleep(10)
+        time.sleep(5)
         print("Sending keep alive")
         UpdateCurrentLocation()
 
@@ -195,7 +202,7 @@ def send_keep_alive():
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "1"))
+    instance_id = int(os.getenv("INSTANCE_ID", "3"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
