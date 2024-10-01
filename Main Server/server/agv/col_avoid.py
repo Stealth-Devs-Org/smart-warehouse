@@ -1,15 +1,12 @@
+import datetime
 import json
 import threading
 import time
-from datetime import datetime
 
 from flask import Blueprint, jsonify, render_template, request
 
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
-    Get_values_from_agv_json,
-    Get_values_from_permanent_obstacles_json,
-    Get_values_from_sent_interrupt_json,
     Update_agv_json,
     Update_collisions_json,
     Update_sent_interrupt_json,
@@ -103,8 +100,8 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
     # sent_interrupts = Get_values_from_sent_interrupt_json()
     # agvs_data = Get_values_from_agv_json()
 
-    obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
-    # obstacles = []
+    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
+    obstacles = []
     # obstacles = obstacles + crossing_segment
     # if obstacles:
     #     obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
@@ -138,22 +135,26 @@ def collision_avoidance():
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
             if crossing_segment != []:
-                if agvs_data[agv_pair[0]]["status"] == 1 and agvs_data[agv_pair[1]]["status"] == 1:
-                    print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]}")
+                print(
+                    f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
+                )
+                if agvs_data[agv_pair[0]]["status"] in [1, 5, 6, 7, 8] and agvs_data[agv_pair[1]][
+                    "status"
+                ] in [1, 5, 6, 7, 8]:
                     stop_agv(agv_pair[0], agv_pair[1])
                     recalibrate_path(
                         agv_pair[1],
                         agvs_data[agv_pair[1]]["segment"],
                         agv_pair[0],
                     )
-                elif agvs_data[agv_pair[0]]["status"] == 1:
+                elif agvs_data[agv_pair[0]]["status"] in [1, 5, 6, 7, 8]:
                     stop_agv(agv_pair[1], agv_pair[0])
                     recalibrate_path(
                         agv_pair[0],
                         agvs_data[agv_pair[0]]["segment"],
                         agv_pair[1],
                     )
-                elif agvs_data[agv_pair[1]]["status"] == 1:
+                elif agvs_data[agv_pair[1]]["status"] in [1, 5, 6, 7, 8]:
                     stop_agv(agv_pair[0], agv_pair[1])
                     recalibrate_path(
                         agv_pair[1],
@@ -173,6 +174,7 @@ def run_collision_avoidance(interval):
             time.sleep(interval)
 
     thread = threading.Thread(target=start)
+    thread.daemon = True
     thread.start()
 
 
@@ -192,6 +194,11 @@ def detect_collision():
                     temp["timestamp"] = timestamp
                     temp["agv1"] = agv_id
                     temp["agv2"] = agv_id2
+                    temp["location"] = data["location"]
+                    temp["agv1_path"] = data["segment"]
+                    temp["agv2_path"] = data2["segment"]
+                    temp["agv1_status"] = data["status"]
+                    temp["agv2_status"] = data2["status"]
                     Update_collisions_json(temp)
 
 
@@ -223,29 +230,6 @@ def update_agv_location(data):
     save_agv_location(data)
 
 
-# def remove_agv_location(agv_id):
-#     if agv_id in agv_locations:
-#         del agv_locations[agv_id]
-
-
-# def timeout_segment_manager():
-#     global timeout_segments
-#     while True:
-#         for segment in list(timeout_segments):
-#             if time.time() - timeout_segments[segment] > 1:
-#                 del timeout_segments[segment]
-#         time.sleep(1)
-
-
-# def start_timeout_segment_manager():
-#     thread = threading.Thread(target=timeout_segment_manager)
-#     thread.daemon = True
-#     thread.start()
-
-
-# start_timeout_segment_manager()
-
-
 @agv.route("/path_clearance", methods=["POST"])
 def path_clearance():
     data = request.json
@@ -253,9 +237,13 @@ def path_clearance():
     segment = data["segment"]
 
     # agvs_data = Get_values_from_agv_json()
-    if agv_id in agvs_data:
-        if agvs_data[agv_id]["status"] != 1:
-            agvs_data[agv_id]["segment"] = segment
+    if agv_id in agvs_data.keys():
+        if (
+            agvs_data[agv_id]["status"] == 2
+            or agvs_data[agv_id]["status"] == 3
+            or agvs_data[agv_id]["status"] == 0
+        ):
+            # agvs_data[agv_id]["segment"] = segment
             agvs_data[agv_id]["status"] = 1
             # Update_agv_json(agvs_data)
             print(f"Path clearance request received for new task AGV {agv_id}")
@@ -276,6 +264,7 @@ def path_clearance():
             return message_json
     else:
         print(f"AGV with id {agv_id} not found")
+        print(agvs_data.keys())
         message_dict = {"result": None}
         message_json = json.dumps(message_dict)
         return message_json

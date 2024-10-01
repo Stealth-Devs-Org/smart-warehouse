@@ -3,11 +3,7 @@ import random
 import threading
 import time
 
-from server.agv.utils import (
-    Get_values_from_agv_json,
-    Get_values_from_working_agvs_json,
-    Update_working_agvs_json,
-)
+from server.agv.utils import Update_working_agvs_json
 from server.mqtt.utils import mqtt_client
 
 working_agvs = {}
@@ -149,6 +145,7 @@ def run_task_scheduler(interval):
             time.sleep(interval)
 
     thread = threading.Thread(target=task_scheduler)
+    thread.daemon = True
     thread.start()
 
 

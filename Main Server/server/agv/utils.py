@@ -1,5 +1,6 @@
-import json
 import math
+
+import ujson as json
 
 
 def get_common_elements(array1, array2):
@@ -194,171 +195,169 @@ import threading
 file_lock = threading.Lock()
 
 
-def Update_agv_json(object):
-    with file_lock:
-        try:
-            with open("server/agv/agv_data.json", "r") as f:
-                agv_status = json.load(f)
-        except FileNotFoundError:
-            agv_status = {}
+def Update_agv_json(agv_status):
+    # with file_lock:
+    #     try:
+    #         with open("server/agv/agv_data.json", "r") as f:
+    #             agv_status = json.load(f)
+    #     except FileNotFoundError:
+    #         agv_status = {}
 
-    for key in object:
-        if object[key] is None:
-            if key in agv_status:
-                del agv_status[key]
-        else:
-            agv_status[key] = object[key]
+    # for key in object:
+    #     if object[key] is None:
+    #         if key in agv_status:
+    #             del agv_status[key]
+    #     else:
+    #         agv_status[key] = object[key]
 
-    with open("server/agv/agv_data.json", "w") as f:
+    with open("server/agv/json_data/agv_data.json", "w") as f:
         json.dump(agv_status, f)
 
 
-def Get_values_from_agv_json(key_list="all"):
-    with file_lock:
-        try:
-            with open("server/agv/agv_data.json", "r") as f:
-                agv_status = json.load(f)
-        except FileNotFoundError:
-            agv_status = {}
+# def Get_values_from_agv_json(key_list="all"):
+#     with file_lock:
+#         try:
+#             with open("server/agv/agv_data.json", "r") as f:
+#                 agv_status = json.load(f)
+#         except FileNotFoundError:
+#             agv_status = {}
 
-    if key_list == "all":
-        return agv_status
+#     if key_list == "all":
+#         return agv_status
 
-    values = {key: agv_status[key] for key in key_list}
-    return values
+#     values = {key: agv_status[key] for key in key_list}
+#     return values
 
 
-def Update_sent_interrupt_json(object):
-    with file_lock:
-        try:
-            with open("server/agv/sent_interrupts.json", "r") as f:
-                sent_interrupts = json.load(f)
-        except FileNotFoundError:
-            sent_interrupts = {}
+def Update_sent_interrupt_json(sent_interrupts):
+    # with file_lock:
+    #     try:
+    #         with open("server/agv/sent_interrupts.json", "r") as f:
+    #             sent_interrupts = json.load(f)
+    #     except FileNotFoundError:
+    #         sent_interrupts = {}
 
-    for key in object:
-        if object[key] is None:
-            if key in sent_interrupts:
-                del sent_interrupts[key]
-        else:
-            sent_interrupts[key] = object[key]
+    # for key in object:
+    #     if object[key] is None:
+    #         if key in sent_interrupts:
+    #             del sent_interrupts[key]
+    #     else:
+    #         sent_interrupts[key] = object[key]
 
-    with open("server/agv/sent_interrupts.json", "w") as f:
+    with open("server/agv/json_data/sent_interrupts.json", "w") as f:
         json.dump(sent_interrupts, f)
 
 
-def Get_values_from_sent_interrupt_json(key_list="all"):
-    with file_lock:
-        try:
-            with open("server/agv/sent_interrupts.json", "r") as f:
-                sent_interrupts = json.load(f)
-        except FileNotFoundError:
-            sent_interrupts = {}
+# def Get_values_from_sent_interrupt_json(key_list="all"):
+#     with file_lock:
+#         try:
+#             with open("server/agv/sent_interrupts.json", "r") as f:
+#                 sent_interrupts = json.load(f)
+#         except FileNotFoundError:
+#             sent_interrupts = {}
 
-    if key_list == "all":
-        return sent_interrupts
+#     if key_list == "all":
+#         return sent_interrupts
 
-    values = {key: sent_interrupts[key] for key in key_list}
-    return values
+#     values = {key: sent_interrupts[key] for key in key_list}
+#     return values
 
 
-def Update_permanent_obstacles_json(object):
-    with file_lock:
-        try:
-            with open("server/agv/permanent_obstacles.json", "r") as f:
-                permanent_obstacles = json.load(f)
-        except FileNotFoundError:
-            permanent_obstacles = {}
+def Update_permanent_obstacles_json(permanent_obstacles):
+    # with file_lock:
+    #     try:
+    #         with open("server/agv/permanent_obstacles.json", "r") as f:
+    #             permanent_obstacles = json.load(f)
+    #     except FileNotFoundError:
+    #         permanent_obstacles = {}
 
-    for key in object:
-        if object[key] is None:
-            if key in permanent_obstacles:
-                del permanent_obstacles[key]
-        else:
-            permanent_obstacles[key] = object[key]
+    # for key in object:
+    #     if object[key] is None:
+    #         if key in permanent_obstacles:
+    #             del permanent_obstacles[key]
+    #     else:
+    #         permanent_obstacles[key] = object[key]
 
-    with open("server/agv/permanent_obstacles.json", "w") as f:
+    with open("server/agv/json_data/permanent_obstacles.json", "w") as f:
         json.dump(permanent_obstacles, f)
 
 
-def Get_values_from_permanent_obstacles_json(key_list="all"):
-    with file_lock:
-        try:
-            with open("server/agv/permanent_obstacles.json", "r") as f:
-                permanent_obstacles = json.load(f)
-        except FileNotFoundError:
-            permanent_obstacles = {}
+# def Get_values_from_permanent_obstacles_json(key_list="all"):
+#     with file_lock:
+#         try:
+#             with open("server/agv/permanent_obstacles.json", "r") as f:
+#                 permanent_obstacles = json.load(f)
+#         except FileNotFoundError:
+#             permanent_obstacles = {}
 
-    if key_list == "all":
-        return permanent_obstacles
+#     if key_list == "all":
+#         return permanent_obstacles
 
-    values = {key: permanent_obstacles[key] for key in key_list}
-    return values
+#     values = {key: permanent_obstacles[key] for key in key_list}
+#     return values
 
 
-def Update_working_agvs_json(object):
-    with file_lock:
-        try:
-            with open("server/agv/working_agvs.json", "r") as f:
-                working_agvs = json.load(f)
-        except FileNotFoundError:
-            working_agvs = {}
+def Update_working_agvs_json(working_agvs):
+    # with file_lock:
+    #     try:
+    #         with open("server/agv/working_agvs.json", "r") as f:
+    #             working_agvs = json.load(f)
+    #     except FileNotFoundError:
+    #         working_agvs = {}
 
-    for key in object:
-        if object[key] is None:
-            if key in working_agvs:
-                del working_agvs[key]
-        else:
-            working_agvs[key] = object[key]
+    # for key in object:
+    #     if object[key] is None:
+    #         if key in working_agvs:
+    #             del working_agvs[key]
+    #     else:
+    #         working_agvs[key] = object[key]
 
-    with open("server/agv/working_agvs.json", "w") as f:
+    with open("server/agv/json_data/working_agvs.json", "w") as f:
         json.dump(working_agvs, f)
 
 
-def Get_values_from_working_agvs_json(key_list="all"):
-    with file_lock:
-        try:
-            with open("server/agv/working_agvs.json", "r") as f:
-                working_agvs = json.load(f)
-        except FileNotFoundError:
-            working_agvs = {}
+# def Get_values_from_working_agvs_json(key_list="all"):
+#     with file_lock:
+#         try:
+#             with open("server/agv/working_agvs.json", "r") as f:
+#                 working_agvs = json.load(f)
+#         except FileNotFoundError:
+#             working_agvs = {}
 
-    if key_list == "all":
-        return working_agvs
+#     if key_list == "all":
+#         return working_agvs
 
-    values = {key: working_agvs[key] for key in key_list}
-    return values
+#     values = {key: working_agvs[key] for key in key_list}
+#     return values
 
 
 def Update_collisions_json(object):
     with file_lock:
         try:
-            with open("server/agv/collisions.json", "r") as f:
+            with open("server/agv/json_data/collisions.json", "r") as f:
                 collisions = json.load(f)
         except FileNotFoundError:
             collisions = {}
 
+    collisions[object["timestamp"]] = {}
     for key in object:
-        if object[key] is None:
-            if key in collisions:
-                del collisions[key]
-        else:
-            collisions[key] = object[key]
+        if key != "timestamp":
+            collisions[object["timestamp"]][key] = object[key]
 
-    with open("server/agv/collisions.json", "w") as f:
+    with open("server/agv/json_data/collisions.json", "w") as f:
         json.dump(collisions, f)
 
 
-def Get_values_from_collisions_json(key_list="all"):
-    with file_lock:
-        try:
-            with open("server/agv/collisions.json", "r") as f:
-                collisions = json.load(f)
-        except FileNotFoundError:
-            collisions = {}
+# def Get_values_from_collisions_json(key_list="all"):
+#     with file_lock:
+#         try:
+#             with open("server/agv/collisions.json", "r") as f:
+#                 collisions = json.load(f)
+#         except FileNotFoundError:
+#             collisions = {}
 
-    if key_list == "all":
-        return collisions
+#     if key_list == "all":
+#         return collisions
 
-    values = {key: collisions[key] for key in key_list}
-    return values
+#     values = {key: collisions[key] for key in key_list}
+#     return values
