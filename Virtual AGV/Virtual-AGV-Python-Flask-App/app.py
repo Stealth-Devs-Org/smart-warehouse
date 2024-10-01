@@ -36,7 +36,11 @@ def read_config(config_path):
 
 def ObtainGoal(idle_location):
     print("Obtaining goal...")
-    goal = GetGoal()
+    # goal = GetGoal()
+    goal = ObtainGoalHttp(AGV_ID)
+    if goal is None:
+        print("Goal not found. Returning default goal.")
+        return idle_location, None, 0
     print("Goal:", goal)
     if goal:
         destination = tuple(map(int, goal.get("destination")))

@@ -20,15 +20,15 @@ def RequestPathClearance(AGV_ID, segment):
         return None
 
 
-def ObtainGoal(AGV_ID):
+def ObtainGoalHttp(AGV_ID):
     url = MAIN_SERVER_URL + "/get_goal"
-    payload = {"AGV_ID": AGV_ID}
+    payload = {"agv_id": f"agv{AGV_ID}"}
 
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        goal = tuple(map(int, response.json().get("goal")))
-        return goal
+        response_data = response.json()
+        return response_data
     except requests.exceptions.RequestException as e:
         print(f"Error obtaining goal: {e}")
         return None
