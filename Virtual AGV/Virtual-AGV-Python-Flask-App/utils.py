@@ -11,25 +11,26 @@ def CreateSegments(path):
     if not path:
         return segments
 
-    current_segment = [path[0]]
+    current_segment = [path[1]]
     direction = None
-    for i in range(1, len(path)):
-        if path[i][0] == current_segment[-1][0]:
-            new_direction = "vertical"
-            if direction != new_direction:
-                if direction:
-                    segments.append(current_segment[0:-1])
-                    current_segment = [current_segment[-1]]
-                direction = new_direction
-            current_segment.append(path[i])
-        elif path[i][1] == current_segment[-1][1]:
-            new_direction = "horizontal"
-            if direction != new_direction:
-                if direction:
-                    segments.append(current_segment[0:-1])
-                    current_segment = [current_segment[-1]]
-                direction = new_direction
-            current_segment.append(path[i])
+    if len(path) > 1:
+        for i in range(2, len(path)):
+            if path[i][0] == current_segment[-1][0]:
+                new_direction = "vertical"
+                if direction != new_direction:
+                    if direction:
+                        segments.append(current_segment[0:-1])
+                        current_segment = [current_segment[-1]]
+                    direction = new_direction
+                current_segment.append(path[i])
+            elif path[i][1] == current_segment[-1][1]:
+                new_direction = "horizontal"
+                if direction != new_direction:
+                    if direction:
+                        segments.append(current_segment[0:-1])
+                        current_segment = [current_segment[-1]]
+                    direction = new_direction
+                current_segment.append(path[i])
     segments.append(current_segment)
     return segments
 
@@ -145,7 +146,7 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     print("time to new_path", time_to_new_path)
 
     # Compare the times to decide whether the new path is better
-    is_new_path_efficient = time_to_remain_path > time_to_new_path
+    is_new_path_efficient = time_to_remain_path >= time_to_new_path
     waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
     return is_new_path_efficient, waiting_time
 
