@@ -74,6 +74,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
             interrupted = 0
             segment = agv_state["current_segment"]
             path_clearance = RequestPathClearance(AGV_ID, segment)
+            # time.sleep(1)
 
             if (path_clearance) == 1:
                 previous_obstacles = None
@@ -83,6 +84,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                 )
                 agv_state["current_direction"] = current_direction
                 agv_state["current_status"] = 1
+                UpdateCurrentLocation()
 
                 for cell in segment:
 
@@ -95,11 +97,12 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         agv_state["current_status"] = 1
 
                     movement_time = 0
+                    interrupt_check_intervals = 100
                     while movement_time < cell_time:
                         interrupt_value = (
                             GetInterrupt()
                         )  # Fetch interrupt value using thread-safe method
-                        print(f"Current interrupt value: {interrupt_value}")
+                        # print(f"Current interrupt value: {interrupt_value}")
 
                         if interrupt_value == 1:
                             print("Stop signal received! Halting AGV.")
@@ -117,13 +120,15 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                             agv_state["current_status"] = 0
                             UpdateCurrentLocation()
 
+                            time.sleep(cell_time)
+
                             SetInterrupt(0)
                             interrupted = 1
 
                         if interrupted:
                             break
-                        time.sleep(cell_time / 2)
-                        movement_time += cell_time / 2
+                        time.sleep(cell_time / interrupt_check_intervals)
+                        movement_time += cell_time / interrupt_check_intervals
 
                     if interrupted:
                         break
@@ -180,7 +185,6 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         segments = new_segments
                         index = 0
                         break
-            time.sleep(1)
 
     print("End of path reached")
     agv_state["current_status"] = 0

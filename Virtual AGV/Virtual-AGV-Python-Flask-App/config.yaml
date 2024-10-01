@@ -2,7 +2,7 @@ defaults: &defaults
   speed: 2  # Default speed of the AGVs
   cell_distance: 2  # Default cell distance between two cells
   direction: "N"  # Default initial direction of the AGVs
-  turning_time: 1  # Default time taken to turn the AGVs
+  turning_time: 0.5  # Default time taken to turn the AGVs
   grid_path: "grid.xlsx"  # Default file path of the warehouse map
 
 instances:

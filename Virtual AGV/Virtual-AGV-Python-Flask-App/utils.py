@@ -18,7 +18,7 @@ def CreateSegments(path):
             new_direction = "vertical"
             if direction != new_direction:
                 if direction:
-                    segments.append(current_segment[0:-1])
+                    segments.append(current_segment)
                     current_segment = [current_segment[-1]]
                 direction = new_direction
             current_segment.append(path[i])
@@ -26,7 +26,7 @@ def CreateSegments(path):
             new_direction = "horizontal"
             if direction != new_direction:
                 if direction:
-                    segments.append(current_segment[0:-1])
+                    segments.append(current_segment)
                     current_segment = [current_segment[-1]]
                 direction = new_direction
             current_segment.append(path[i])
