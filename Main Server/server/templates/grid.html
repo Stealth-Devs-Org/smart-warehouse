@@ -136,8 +136,25 @@
             row = 26 - (y - 3);
             col = x - 9;
             let dotId = `dot-${row}-${col}`;
+            if (agvData["status"] == 0) {
+                document.getElementById(dotId).style.backgroundColor = 'red';
+            } else if (agvData["status"] == 2 || agvData["status"] == 3) {
+                document.getElementById(dotId).style.backgroundColor = 'green';
+            } else {
             document.getElementById(dotId).style.backgroundColor = 'blue';
-            document.getElementById(dotId).innerText = agv_id;
+            }
+            if (agvData["status"] == 5) {
+                document.getElementById(dotId).innerText = agv_id + "R";
+            } else if (agvData["status"] == 6) {
+                document.getElementById(dotId).innerText = agv_id + "L";
+            } else if (agvData["status"] == 7) {
+                document.getElementById(dotId).innerText = agv_id + "B";
+            } else if (agvData["status"] == 8) {
+                document.getElementById(dotId).innerText = agv_id + "C";
+            }
+            else {
+                document.getElementById(dotId).innerText = agv_id;
+            }
         }
     });
 
