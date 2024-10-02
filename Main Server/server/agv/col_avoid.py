@@ -7,16 +7,12 @@ from flask import Blueprint, jsonify, render_template, request
 
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
-    Update_agv_json,
     Update_collisions_json,
-    Update_sent_interrupt_json,
     get_agvs_location_within_range,
-    get_buffered_positions,
     get_close_agv_pairs,
     get_common_elements,
-    get_distance_of_furthest_obstacle,
+    get_high_value_agv_id,
     is_path_crossing,
-    is_segment_occupied,
 )
 
 agv = Blueprint("agv", __name__)
@@ -73,12 +69,8 @@ from server.mqtt.utils import mqtt_client
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
 def stop_agv(agv_id, col_agv_id):
-    # sent_interrupts = Get_values_from_sent_interrupt_json()
-    # agvs_data = Get_values_from_agv_json()
 
-    if (
-        agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]
-    ) and sent_interrupts[agv_id]["interrupt"] == 1:
+    if (agv_id in sent_interrupts) and sent_interrupts[agv_id]["interrupt"] == 1:
         return
 
     topic = f"{agv_id}/interrupt"
@@ -92,32 +84,26 @@ def stop_agv(agv_id, col_agv_id):
     sent_interrupts[agv_id]["interrupt"] = 1
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
-    # Update_sent_interrupt_json(sent_interrupts)
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
 def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
-    # sent_interrupts = Get_values_from_sent_interrupt_json()
-    # agvs_data = Get_values_from_agv_json()
 
-    # obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
-    obstacles = []
-    # obstacles = obstacles + crossing_segment
-    # if obstacles:
-    #     obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
-
-    if agv_id in sent_interrupts and col_agv_id == sent_interrupts[agv_id]["col_agv_id"]:
+    if agv_id in sent_interrupts and (
+        col_agv_id == sent_interrupts[agv_id]["col_agv_id"]
+        or sent_interrupts[agv_id]["interrupt"] == 1
+    ):
         return
 
     topic = f"{agv_id}/interrupt"
-    message_dict = {"interrupt": obstacles}
+    message_dict = {"interrupt": 2}
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
     print(f"Sent recalibrate signal to AGV {agv_id}")
 
     if agv_id not in sent_interrupts:
         sent_interrupts[agv_id] = {}
-    sent_interrupts[agv_id]["interrupt"] = obstacles
+    sent_interrupts[agv_id]["interrupt"] = 2
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
     # Update_sent_interrupt_json(sent_interrupts)
@@ -135,6 +121,7 @@ def collision_avoidance():
                 print(
                     f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
                 )
+                agv_pair = get_high_value_agv_id(agv_pair[0], agv_pair[1])
                 stop_agv(agv_pair[0], agv_pair[1])
                 recalibrate_path(
                     agv_pair[1],
@@ -189,19 +176,19 @@ def update_agv_location(data):
     emit_to_webpage(agvs_data, permanent_obstacles)
 
     # Remove the interrupt if the AGV has moved from the location
-    if (
-        data["agv_id"] in sent_interrupts.keys()
-        and sent_interrupts[data["agv_id"]]["interrupt"] != 1
-        and sent_interrupts[data["agv_id"]]["location"] != data["location"]
-        and sent_interrupts[data["agv_id"]]["col_agv_id"] not in sent_interrupts.keys()
-    ):
-        del sent_interrupts[data["agv_id"]]
-    elif (
-        data["agv_id"] in sent_interrupts.keys()
-        and sent_interrupts[data["agv_id"]]["interrupt"] == 1
-        and sent_interrupts[data["agv_id"]]["location"] != data["location"]
-    ):
-        del sent_interrupts[data["agv_id"]]
+    # if (
+    #     data["agv_id"] in sent_interrupts.keys()
+    #     and sent_interrupts[data["agv_id"]]["interrupt"] != 1
+    #     and sent_interrupts[data["agv_id"]]["location"] != data["location"]
+    #     and sent_interrupts[data["agv_id"]]["col_agv_id"] not in sent_interrupts.keys()
+    # ):
+    #     del sent_interrupts[data["agv_id"]]
+    # elif (
+    #     data["agv_id"] in sent_interrupts.keys()
+    #     and sent_interrupts[data["agv_id"]]["interrupt"] == 1
+    #     and sent_interrupts[data["agv_id"]]["location"] != data["location"]
+    # ):
+    #     del sent_interrupts[data["agv_id"]]
 
     collision_avoidance()
 
@@ -219,33 +206,32 @@ def path_clearance():
 
     # agvs_data = Get_values_from_agv_json()
     if agv_id in agvs_data.keys():
-        # if (
-        #     agvs_data[agv_id]["status"] == 2
-        #     or agvs_data[agv_id]["status"] == 3
-        #     or agvs_data[agv_id]["status"] == 0
-        # ):
-        #     # agvs_data[agv_id]["segment"] = segment
-        #     # agvs_data[agv_id]["status"] = 1
-        #     # Update_agv_json(agvs_data)
-        #     print(f"Path clearance request received for new task AGV {agv_id}")
-        #     # collision_avoidance()
+
+        if (
+            agv_id in sent_interrupts.keys()
+            and sent_interrupts[agv_id]["interrupt"] == 2
+            and sent_interrupts[agv_id]["col_agv_id"] not in sent_interrupts.keys()
+        ):
+            del sent_interrupts[agv_id]
+        elif data["agv_id"] in sent_interrupts.keys() and sent_interrupts[agv_id]["interrupt"] == 1:
+            del sent_interrupts[agv_id]
+        collision_avoidance()
 
         obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
         if not obstacles:
-            # timeout_segments[segment_tuple] = time.time()
+            agvs_data[agv_id]["segment"] = segment
             message_dict = {"result": 1}
             message_json = json.dumps(message_dict)
             return message_json
         else:
             agvs_data[agv_id]["segment"] = [agvs_data[agv_id]["location"]]
-            # Update_agv_json(agvs_data)
             message_dict = {"result": obstacles}
             message_json = json.dumps(message_dict)
             return message_json
     else:
         print(f"AGV with id {agv_id} not found")
         print(agvs_data.keys())
-        message_dict = {"result": None}
+        message_dict = {"result": 0}  # 0 means AGV not found
         message_json = json.dumps(message_dict)
         return message_json
 
@@ -276,8 +262,6 @@ def get_goal():
 
 @agv.route("/get_dynamic_locations")
 def get_dynamic_locations():
-    # agvs_data = Get_values_from_agv_json()
-    # agv_locations = get_agv_locations_array(agvs_data)
     # Return the dynamic dot color data
     return jsonify(agvs_data)
 
@@ -286,5 +270,4 @@ def get_dynamic_locations():
 def get_permanent_obstacles():
     from server.agv.keep_alive import permanent_obstacles
 
-    # permanent_obstacles = Get_values_from_permanent_obstacles_json()
     return jsonify(permanent_obstacles)
