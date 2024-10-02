@@ -114,7 +114,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                             SetInterrupt(0)
                             interrupted = 1
 
-                        elif interrupt_value != 0:
+                        elif interrupt_value == 2:
                             print("Recalculating path...")
                             print("Interrupt value:", interrupt_value)
                             agv_state["current_status"] = 0
@@ -144,6 +144,10 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                     index += 1
                     break
 
+            elif path_clearance == 0:
+                UpdateCurrentLocation()
+                time.sleep(cell_time)
+
             else:
                 print("obstacle*", path_clearance)
                 if path_clearance == None:
@@ -156,7 +160,6 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                 if not new_path:
                     print("No valid path found after recalculation.")
                     time.sleep(cell_time * 1)
-                    break
                 else:
                     recal_path = 0
                     print("New path:", new_path)
@@ -164,7 +167,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                     print("previous_obstacles:", previous_obstacles)
                     print("obstacles:", obstacles)
                     if obstacles != previous_obstacles:
-                        remain_path = segments[index:]
+                        remain_path = [agv_state["current_segment"]] + segments[index + 1 :]
                         is_new_path_efficient, waiting_time = EvalNewPath(
                             new_segments, obstacles, remain_path, cell_time, turning_time
                         )
@@ -173,6 +176,8 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         if not is_new_path_efficient:
                             previous_obstacles = obstacles
                             print("Waiting for obstacle to clear...", time.time())
+                            agv_state["current_status"] = 9  # Waiting for obstacle to clear
+                            UpdateCurrentLocation()
                             time.sleep(waiting_time)
                             print("Obstacle assumed cleared!", time.time())
                             break
@@ -237,9 +242,9 @@ if __name__ == "__main__":
     grid = copy.deepcopy(fixed_grid)
 
     # Start the keep-alive thread
-    keep_alive_thread = threading.Thread(target=send_keep_alive)
-    keep_alive_thread.daemon = True
-    keep_alive_thread.start()
+    # keep_alive_thread = threading.Thread(target=send_keep_alive)
+    # keep_alive_thread.daemon = True
+    # keep_alive_thread.start()
 
     while True:
         idle_time = 10  # Set the idle time in seconds before going to default location

@@ -62,8 +62,8 @@ def ConnectMQTT(AGV_ID):
     setTopic(AGV_ID)
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC)  # Subscribe to the interrupt topic
-        mqtt_client.subscribe(MQTT_GOAL_TOPIC)  # Subscribe to the goal topic
+        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC, qos=2)  # Subscribe to the interrupt topic
+        mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
         print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
@@ -106,7 +106,7 @@ def UpdateCurrentLocation():
         "status": agv_state["current_status"],
         "timestamp": timestamp,
     }
-    mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data))
+    mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
     print(
         f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
     )
