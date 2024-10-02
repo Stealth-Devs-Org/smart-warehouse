@@ -27,7 +27,7 @@ def remove_timeout_agvs():
                 timestamp = datetime.fromisoformat(agvs_data[agv_id]["timestamp"]).replace(
                     tzinfo=timezone.utc
                 )
-                if timestamp < datetime.now(timezone.utc) - timedelta(seconds=15):
+                if timestamp < datetime.now(timezone.utc) - timedelta(seconds=30):
                     permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
                     del agvs_data[agv_id]
                     # agvs_data[agv_id] = None
