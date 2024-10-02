@@ -12,9 +12,10 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    from server.mqtt.utils import mqtt_client
+    from server.mqtt.utils import ConnectMQTT, mqtt_client
 
-    mqtt_client.init_app(app)
+    # mqtt_client.init_app(app)
+    ConnectMQTT()
 
     from server.agv.col_avoid import agv
 
