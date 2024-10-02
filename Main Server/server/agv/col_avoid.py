@@ -183,9 +183,10 @@ def detect_collision():
 def update_agv_location(data):
     agvs_data[data["agv_id"]] = data
 
-    # all_agvs_data = Get_values_from_agv_json()
-    socketio.emit("agv_location", agvs_data)
-    # print(agvs_data)
+    from server.agv.keep_alive import permanent_obstacles
+    from server.websocket.utils import emit_to_webpage
+
+    emit_to_webpage(agvs_data, permanent_obstacles)
 
     # Remove the interrupt if the AGV has moved from the location
     if (
