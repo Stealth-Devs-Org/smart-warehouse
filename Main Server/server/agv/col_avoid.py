@@ -106,12 +106,10 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
     sent_interrupts[agv_id]["interrupt"] = 2
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
-    # Update_sent_interrupt_json(sent_interrupts)
 
 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
-    # agvs_data = Get_values_from_agv_json()
 
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
@@ -173,23 +171,6 @@ def update_agv_location(data):
     from server.agv.keep_alive import permanent_obstacles
     from server.websocket.utils import emit_to_webpage
 
-    emit_to_webpage(agvs_data, permanent_obstacles)
-
-    # Remove the interrupt if the AGV has moved from the location
-    # if (
-    #     data["agv_id"] in sent_interrupts.keys()
-    #     and sent_interrupts[data["agv_id"]]["interrupt"] != 1
-    #     and sent_interrupts[data["agv_id"]]["location"] != data["location"]
-    #     and sent_interrupts[data["agv_id"]]["col_agv_id"] not in sent_interrupts.keys()
-    # ):
-    #     del sent_interrupts[data["agv_id"]]
-    # elif (
-    #     data["agv_id"] in sent_interrupts.keys()
-    #     and sent_interrupts[data["agv_id"]]["interrupt"] == 1
-    #     and sent_interrupts[data["agv_id"]]["location"] != data["location"]
-    # ):
-    #     del sent_interrupts[data["agv_id"]]
-
     collision_avoidance()
 
     # Remove the AGV location from permanent obstacles since it is back alive
@@ -204,7 +185,6 @@ def path_clearance():
     agv_id = data["agv_id"]
     segment = data["segment"]
 
-    # agvs_data = Get_values_from_agv_json()
     if agv_id in agvs_data.keys():
 
         if (
