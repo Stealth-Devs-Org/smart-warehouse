@@ -90,8 +90,7 @@ def stop_agv(agv_id, col_agv_id):
 def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
 
     if agv_id in sent_interrupts and (
-        col_agv_id == sent_interrupts[agv_id]["col_agv_id"]
-        or sent_interrupts[agv_id]["interrupt"] == 1
+        sent_interrupts[agv_id]["interrupt"] == 1 or sent_interrupts[agv_id]["interrupt"] == 2
     ):
         return
 
