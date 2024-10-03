@@ -14,6 +14,7 @@ from server.agv.utils import (
     get_high_value_agv_id,
     is_path_crossing,
 )
+from server.websocket.websocket import send_through_websocket
 
 agv = Blueprint("agv", __name__)
 
@@ -172,6 +173,9 @@ def update_agv_location(data):
     from server.websocket.utils import emit_to_webpage
 
     collision_avoidance()
+
+    emit_to_webpage(agvs_data, permanent_obstacles)
+    send_through_websocket({"agvs_data": agvs_data})  # Send the AGV data to the Unity warehouse
 
     # Remove the AGV location from permanent obstacles since it is back alive
     remove_from_permanent_obstacles(data["agv_id"])
