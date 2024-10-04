@@ -17,6 +17,7 @@ class WarehouseSimulator(tk.Tk):
         # Set canvas size to fit the screen
         self.canvas_width = screen_width - 200  # Adjust width to leave space for controls
         self.canvas_height = screen_height - 100  # Adjust height to leave space for controls
+        #print (self.canvas_width, self.canvas_height)
 
         self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -150,7 +151,14 @@ class WarehouseSimulator(tk.Tk):
 
     def handle_click(self, event):
         """Handle mouse clicks based on the current mode (add heat points, air quality points, delete points, or measure temp/smoke/air quality)."""
-        x, y = event.x, event.y
+        #x, y = event.x, event.y
+
+
+        x = (1/22) * event.x
+        y= -(1/22) * event.y
+
+        print(f"Clicked at ({x}, {y})")
+        
 
         if self.measure_mode:
             # Measure the heat or smoke or  air quality at this point
