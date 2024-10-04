@@ -38,13 +38,16 @@ class WarehouseSimulator(tk.Tk):
         self.add_air_quality_button = tk.Button(self.controls_frame, text="Add Air Quality Points", command=self.enable_air_quality_adding)
         self.add_air_quality_button.pack(fill=tk.X)
 
+        self.add_smoke_button = tk.Button(self.controls_frame, text="Add Smoke Points", command=self.enable_smoke_adding)
+        self.add_smoke_button.pack(fill=tk.X)
+
         self.clear_button = tk.Button(self.controls_frame, text="Clear All Points", command=self.clear_all_points)
         self.clear_button.pack(fill=tk.X)
 
         self.delete_button = tk.Button(self.controls_frame, text="Delete Points", command=self.enable_point_deletion)
         self.delete_button.pack(fill=tk.X)
 
-        self.measure_button = tk.Button(self.controls_frame, text="Measure Heat/Air Quality", command=self.enable_measurement)
+        self.measure_button = tk.Button(self.controls_frame, text="Measure Heat/Air Quality/Smoke", command=self.enable_measurement)
         self.measure_button.pack(fill=tk.X)
 
         # Button to clear measurement points
@@ -77,6 +80,17 @@ class WarehouseSimulator(tk.Tk):
         self.air_quality_radius_slider = tk.Scale(self.controls_frame, from_=10, to=200, orient=tk.HORIZONTAL)
         self.air_quality_radius_slider.pack(fill=tk.X)
 
+        # Sliders and input for smoke point adjustment
+        self.smoke_value_label = tk.Label(self.controls_frame, text="Smoke Value:")
+        self.smoke_value_label.pack()
+        self.smoke_value_slider = tk.Scale(self.controls_frame, from_=0, to=100, orient=tk.HORIZONTAL)
+        self.smoke_value_slider.pack(fill=tk.X)
+
+        self.smoke_radius_label = tk.Label(self.controls_frame, text="Smoke Radius:")
+        self.smoke_radius_label.pack()
+        self.smoke_radius_slider = tk.Scale(self.controls_frame, from_=10, to=200, orient=tk.HORIZONTAL)
+        self.smoke_radius_slider.pack(fill=tk.X)
+
         # Entry for environmental temperature
         self.env_temp_label = tk.Label(self.controls_frame, text="Environmental Temperature (°C):")
         self.env_temp_label.pack()
@@ -84,9 +98,10 @@ class WarehouseSimulator(tk.Tk):
         self.env_temp_entry.pack(fill=tk.X)
         self.env_temp_entry.insert(0, "30")  # Default environmental temperature
 
-        # Store heat and air quality points with identifiers
+        # Store heat, air quality, and smoke points with identifiers
         self.heat_points = []
         self.air_quality_points = []
+        self.smoke_points = []  # New list for smoke points
         self.point_ids = {}  # Track point IDs for deletion
         self.current_id = 0
         self.radius_visible = True  # Track visibility of radii
@@ -94,6 +109,7 @@ class WarehouseSimulator(tk.Tk):
         self.measure_mode = False
         self.add_heat_mode = True  # Start in add heat points mode
         self.add_air_quality_mode = False  # Start in add air quality points mode
+        self.add_smoke_mode = False  # Start in add smoke points mode
 
         # Track measurement text IDs
         self.measurement_text_ids = []
@@ -119,16 +135,17 @@ class WarehouseSimulator(tk.Tk):
             self.canvas.create_image(0, 0, anchor=tk.NW, image=self.floor_plan)
 
     def handle_click(self, event):
-        """Handle mouse clicks based on the current mode (add heat points, air quality points, delete points, or measure heat/air quality)."""
+        """Handle mouse clicks based on the current mode (add heat points, air quality points, smoke points, delete points, or measure)."""
         x, y = event.x, event.y
 
         if self.measure_mode:
-            # Measure the heat or air quality at this point
+            # Measure the heat or air quality or smoke at this point
             total_heat = self.calculate_heat_at_point(x, y)
             total_air_quality = self.calculate_air_quality_at_point(x, y)
+            total_smoke = self.calculate_smoke_at_point(x, y)
             env_temp = float(self.env_temp_entry.get())
             final_temp = max(total_heat, env_temp)
-            text_id = self.canvas.create_text(x, y, text=f"Heat: {final_temp:.2f}°C\nAir Quality: {total_air_quality:.2f}", fill="blue")
+            text_id = self.canvas.create_text(x, y, text=f"Heat: {final_temp:.2f}°C\nAir Quality: {total_air_quality:.2f}\nSmoke: {total_smoke:.2f}", fill="blue")
             self.measurement_text_ids.append(text_id)
 
         elif self.add_heat_mode:
@@ -149,217 +166,184 @@ class WarehouseSimulator(tk.Tk):
             self.point_ids[air_quality_point_id] = self.draw_air_quality_point(x, y, air_quality_radius, air_quality_value, air_quality_point_id)
             self.current_id += 1
 
+        elif self.add_smoke_mode:
+            # Add a new smoke point with the selected values
+            smoke_radius = self.smoke_radius_slider.get()
+            smoke_value = self.smoke_value_slider.get()
+            smoke_point_id = self.current_id
+            self.smoke_points.append((smoke_point_id, x, y, smoke_radius, smoke_value))
+            self.point_ids[smoke_point_id] = self.draw_smoke_point(x, y, smoke_radius, smoke_value, smoke_point_id)
+            self.current_id += 1
+
         elif self.delete_mode:
-            # Start drawing the selection rectangle
-            self.rect_start_x = event.x
-            self.rect_start_y = event.y
+            # Check if a point is close enough to be deleted
+            self.delete_point(x, y)
+
+    def draw_heat_point(self, x, y, radius, value, point_id):
+        """Draw a heat point on the canvas."""
+        radius_visible = self.radius_visible
+        if radius_visible:
+            return self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline="red", width=2, tag=f"heat_{point_id}")
+        return None
+
+    def draw_air_quality_point(self, x, y, radius, value, point_id):
+        """Draw an air quality point on the canvas."""
+        radius_visible = self.radius_visible
+        if radius_visible:
+            return self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline="green", width=2, tag=f"air_quality_{point_id}")
+        return None
+
+    def draw_smoke_point(self, x, y, radius, value, point_id):
+        """Draw a smoke point on the canvas."""
+        radius_visible = self.radius_visible
+        if radius_visible:
+            return self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline="black", width=2, tag=f"smoke_{point_id}")
+        return None
 
     def handle_drag(self, event):
-        """Handle dragging the mouse to draw the selection rectangle."""
-        if self.delete_mode and self.rect_start_x is not None and self.rect_start_y is not None:
-            self.canvas.delete("selection")
-            self.canvas.create_rectangle(
-                self.rect_start_x, self.rect_start_y, event.x, event.y,
-                outline="blue", dash=(2, 2), tags="selection"
-            )
+        """Handle drag events for rectangle drawing or other interactions."""
+        if self.rect_start_x is not None and self.rect_start_y is not None:
+            x1, y1 = self.rect_start_x, self.rect_start_y
+            x2, y2 = event.x, event.y
+            self.canvas.delete("rectangle")
+            self.canvas.create_rectangle(x1, y1, x2, y2, outline="blue", tag="rectangle")
 
     def handle_release(self, event):
-        """Handle mouse release to finalize the selection rectangle and delete points."""
-        if self.delete_mode:
-            if self.rect_start_x is not None and self.rect_start_y is not None:
-                x1, y1 = self.rect_start_x, self.rect_start_y
-                x2, y2 = event.x, event.y
-
-                # Ensure rectangle coordinates are in the correct order
-                x1, x2 = min(x1, x2), max(x1, x2)
-                y1, y2 = min(y1, y2), max(y1, y2)
-
-                # Delete points within the selection rectangle
-                self.delete_points_within(x1, y1, x2, y2)
-
-                # Reset rectangle variables
-                self.rect_start_x = None
-                self.rect_start_y = None
-                self.canvas.delete("selection")
-
-    def draw_heat_point(self, x, y, heat_radius, heat_value, point_id):
-        """Draw a heat point with an optional radius."""
-        # Draw the radius circle if it is visible
-        if self.radius_visible:
-            radius_id = self.canvas.create_oval(
-                x - heat_radius, y - heat_radius,
-                x + heat_radius, y + heat_radius,
-                outline="red", width=2, tags=f"heat_radius_{point_id}"
-            )
-        else:
-            radius_id = None
-
-        # Draw the heat value text at the point
-        text_id = self.canvas.create_text(x, y, text=f"{heat_value}°C", fill="black", tags=f"heat_text_{point_id}")
-
-        # Return the IDs of the radius and text elements
-        return {'radius': radius_id, 'text': text_id}
-
-    def draw_air_quality_point(self, x, y, air_quality_radius, air_quality_value, point_id):
-        """Draw an air quality point with an optional radius."""
-        # Draw the radius circle if it is visible
-        if self.radius_visible:
-            radius_id = self.canvas.create_oval(
-                x - air_quality_radius, y - air_quality_radius,
-                x + air_quality_radius, y + air_quality_radius,
-                outline="blue", width=2, tags=f"air_quality_radius_{point_id}"
-            )
-        else:
-            radius_id = None
-
-        # Draw the air quality text at the point
-        text_id = self.canvas.create_text(x, y, text=f"{air_quality_value}", fill="black", tags=f"air_quality_text_{point_id}")
-
-        # Return the IDs of the radius and text elements
-        return {'radius': radius_id, 'text': text_id}
-
-    def delete_points_within(self, x1, y1, x2, y2):
-        """Delete points within the specified rectangular area."""
-        points_to_remove = []
-        for point_id, px, py, radius, _ in self.heat_points + self.air_quality_points:
-            if x1 <= px <= x2 and y1 <= py <= y2:
-                points_to_remove.append(point_id)
-
-                # Delete radius and text from canvas
-                if point_id in self.point_ids:
-                    if self.radius_visible:
-                        if point_id in [point[0] for point in self.heat_points]:
-                            self.canvas.delete(f"heat_radius_{point_id}")
-                        else:
-                            self.canvas.delete(f"air_quality_radius_{point_id}")
-                    self.canvas.delete(f"heat_text_{point_id}" if point_id in [point[0] for point in self.heat_points] else f"air_quality_text_{point_id}")
-
-        # Remove deleted points from the lists and ID tracking
-        self.heat_points = [point for point in self.heat_points if point[0] not in points_to_remove]
-        self.air_quality_points = [point for point in self.air_quality_points if point[0] not in points_to_remove]
-        for point_id in points_to_remove:
-            del self.point_ids[point_id]
+        """Handle the release event to finalize rectangle drawing."""
+        if self.rect_start_x is not None and self.rect_start_y is not None:
+            self.canvas.delete("rectangle")
+            self.rect_start_x = None
+            self.rect_start_y = None
 
     def calculate_heat_at_point(self, x, y):
-        """Calculate the cumulative heat at a specific point using a more realistic approach."""
+        """Calculate total heat at a given point."""
         total_heat = 0
-        for _, heat_x, heat_y, heat_radius, heat_value in self.heat_points:
-            # Calculate the distance between the point and the heat source
-            distance = math.sqrt((x - heat_x) ** 2 + (y - heat_y) ** 2)
-
-            if distance <= heat_radius:
-                # Apply a gradient for heat contribution
-                gradient = max(0, (heat_radius - distance) / heat_radius)
-                contribution = heat_value * gradient
-                total_heat = max(total_heat, contribution)  # Keep the highest temperature
-
+        for (point_id, px, py, radius, value) in self.heat_points:
+            distance = math.sqrt((px - x) ** 2 + (py - y) ** 2)
+            if distance <= radius:
+                total_heat += value
         return total_heat
 
     def calculate_air_quality_at_point(self, x, y):
-        """Calculate the cumulative air quality at a specific point using a more realistic approach."""
+        """Calculate total air quality at a given point."""
         total_air_quality = 0
-        for _, air_quality_x, air_quality_y, air_quality_radius, air_quality_value in self.air_quality_points:
-            # Calculate the distance between the point and the air quality source
-            distance = math.sqrt((x - air_quality_x) ** 2 + (y - air_quality_y) ** 2)
-
-            if distance <= air_quality_radius:
-                # Apply a gradient for air quality contribution
-                gradient = max(0, (air_quality_radius - distance) / air_quality_radius)
-                contribution = air_quality_value * gradient
-                total_air_quality = max(total_air_quality, contribution)  # Keep the highest air quality
-
+        for (point_id, px, py, radius, value) in self.air_quality_points:
+            distance = math.sqrt((px - x) ** 2 + (py - y) ** 2)
+            if distance <= radius:
+                total_air_quality += value
         return total_air_quality
 
-    def enable_measurement(self):
-        """Enable the measurement mode."""
-        self.measure_mode = True
-        self.add_heat_mode = False
-        self.add_air_quality_mode = False
-        self.delete_mode = False
-        self.measure_button.config(state=tk.DISABLED)
-        self.add_heat_button.config(state=tk.NORMAL)
-        self.add_air_quality_button.config(state=tk.NORMAL)
-        self.delete_button.config(state=tk.NORMAL)
-
-    def enable_heat_adding(self):
-        """Enable the heat adding mode."""
-        self.add_heat_mode = True
-        self.add_air_quality_mode = False
-        self.measure_mode = False
-        self.delete_mode = False
-        self.add_heat_button.config(state=tk.DISABLED)
-        self.measure_button.config(state=tk.NORMAL)
-        self.add_air_quality_button.config(state=tk.NORMAL)
-        self.delete_button.config(state=tk.NORMAL)
-
-    def enable_air_quality_adding(self):
-        """Enable the air quality adding mode."""
-        self.add_air_quality_mode = True
-        self.add_heat_mode = False
-        self.measure_mode = False
-        self.delete_mode = False
-        self.add_air_quality_button.config(state=tk.DISABLED)
-        self.measure_button.config(state=tk.NORMAL)
-        self.add_heat_button.config(state=tk.NORMAL)
-        self.delete_button.config(state=tk.NORMAL)
-
-    def enable_point_deletion(self):
-        """Enable the point deletion mode."""
-        self.delete_mode = True
-        self.add_heat_mode = False
-        self.add_air_quality_mode = False
-        self.measure_mode = False
-        self.delete_button.config(state=tk.DISABLED)
-        self.add_heat_button.config(state=tk.NORMAL)
-        self.add_air_quality_button.config(state=tk.NORMAL)
-        self.measure_button.config(state=tk.NORMAL)
+    def calculate_smoke_at_point(self, x, y):
+        """Calculate total smoke at a given point."""
+        total_smoke = 0
+        for (point_id, px, py, radius, value) in self.smoke_points:
+            distance = math.sqrt((px - x) ** 2 + (py - y) ** 2)
+            if distance <= radius:
+                total_smoke += value
+        return total_smoke
 
     def clear_all_points(self):
-        """Clear all heat and air quality points and redraw the canvas."""
+        """Clear all points from the canvas."""
+        self.canvas.delete("heat")
+        self.canvas.delete("air_quality")
+        self.canvas.delete("smoke")  # Clear smoke points
         self.heat_points.clear()
         self.air_quality_points.clear()
+        self.smoke_points.clear()  # Clear smoke points
         self.point_ids.clear()
-        self.canvas.delete("all")
-        self.measure_mode = False
+        self.current_id = 0
+        self.measurement_text_ids.clear()
+
+    def enable_heat_adding(self):
+        """Enable adding heat points."""
         self.add_heat_mode = True
         self.add_air_quality_mode = False
+        self.add_smoke_mode = False
         self.delete_mode = False
+        self.measure_mode = False
 
-        # Redraw the floor plan if it's uploaded
-        if self.floor_plan:
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=self.floor_plan)
+    def enable_air_quality_adding(self):
+        """Enable adding air quality points."""
+        self.add_heat_mode = False
+        self.add_air_quality_mode = True
+        self.add_smoke_mode = False
+        self.delete_mode = False
+        self.measure_mode = False
 
-        # Redraw all heat points
-        for _, x, y, radius, value in self.heat_points:
-            self.draw_heat_point(x, y, radius, value, _)
+    def enable_smoke_adding(self):
+        """Enable adding smoke points."""
+        self.add_heat_mode = False
+        self.add_air_quality_mode = False
+        self.add_smoke_mode = True
+        self.delete_mode = False
+        self.measure_mode = False
 
-        # Redraw all air quality points
-        for _, x, y, radius, value in self.air_quality_points:
-            self.draw_air_quality_point(x, y, radius, value, _)
+    def enable_point_deletion(self):
+        """Enable point deletion mode."""
+        self.add_heat_mode = False
+        self.add_air_quality_mode = False
+        self.add_smoke_mode = False
+        self.delete_mode = True
+        self.measure_mode = False
+
+    def enable_measurement(self):
+        """Enable measurement mode."""
+        self.add_heat_mode = False
+        self.add_air_quality_mode = False
+        self.add_smoke_mode = False
+        self.delete_mode = False
+        self.measure_mode = True
 
     def clear_measurement_points(self):
-        """Clear all measurement points from the canvas."""
+        """Clear measurement points from the canvas."""
         for text_id in self.measurement_text_ids:
             self.canvas.delete(text_id)
         self.measurement_text_ids.clear()
 
-
     def toggle_radius_visibility(self):
-        """Toggle the visibility of heat and air quality radii."""
+        """Toggle the visibility of radii."""
         self.radius_visible = not self.radius_visible
+        # Redraw all points with updated visibility
+        self.canvas.delete("heat")
+        self.canvas.delete("air_quality")
+        self.canvas.delete("smoke")  # Clear smoke points for redrawing
+        for (point_id, x, y, radius, value) in self.heat_points:
+            self.draw_heat_point(x, y, radius, value, point_id)
+        for (point_id, x, y, radius, value) in self.air_quality_points:
+            self.draw_air_quality_point(x, y, radius, value, point_id)
+        for (point_id, x, y, radius, value) in self.smoke_points:
+            self.draw_smoke_point(x, y, radius, value, point_id)
 
-        # Update visibility of existing radii
-        for point_id in self.point_ids:
-            if self.radius_visible:
-                if point_id in [point[0] for point in self.heat_points]:
-                    self.canvas.itemconfig(f"heat_radius_{point_id}", state=tk.NORMAL)
-                else:
-                    self.canvas.itemconfig(f"air_quality_radius_{point_id}", state=tk.NORMAL)
-            else:
-                if point_id in [point[0] for point in self.heat_points]:
-                    self.canvas.itemconfig(f"heat_radius_{point_id}", state=tk.HIDDEN)
-                else:
-                    self.canvas.itemconfig(f"air_quality_radius_{point_id}", state=tk.HIDDEN)
+    def delete_point(self, x, y):
+        """Delete a point if within close proximity."""
+        # Iterate through heat points
+        for (point_id, px, py, radius, _) in self.heat_points:
+            if self.is_within_radius(x, y, px, py, radius):
+                self.canvas.delete(self.point_ids[point_id])
+                del self.point_ids[point_id]
+                self.heat_points = [point for point in self.heat_points if point[0] != point_id]
+                return
+
+        # Iterate through air quality points
+        for (point_id, px, py, radius, _) in self.air_quality_points:
+            if self.is_within_radius(x, y, px, py, radius):
+                self.canvas.delete(self.point_ids[point_id])
+                del self.point_ids[point_id]
+                self.air_quality_points = [point for point in self.air_quality_points if point[0] != point_id]
+                return
+
+        # Iterate through smoke points
+        for (point_id, px, py, radius, _) in self.smoke_points:
+            if self.is_within_radius(x, y, px, py, radius):
+                self.canvas.delete(self.point_ids[point_id])
+                del self.point_ids[point_id]
+                self.smoke_points = [point for point in self.smoke_points if point[0] != point_id]
+                return
+
+    def is_within_radius(self, x, y, px, py, radius):
+        """Check if a point is within the radius of another point."""
+        distance = math.sqrt((px - x) ** 2 + (py - y) ** 2)
+        return distance <= radius
 
 if __name__ == "__main__":
     app = WarehouseSimulator()
