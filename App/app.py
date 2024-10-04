@@ -42,9 +42,6 @@ def upload_floor_plan():
 def Sensors():
     return render_template('Sensors & Actuators.html')
 
-@app.route('/DigitalWarehouse')
-def Digital():
-    return render_template('Digital Warehouse.html')
 
 
 @app.route('/MainServer')
@@ -55,6 +52,9 @@ def Mainserver():
 def agv():
     return render_template('Automate Guided Vehicles.html')
 
+@app.route('/NetworkMonitoring')
+def NetworkMonitoring():
+    return render_template('Network_Monitoring.html')
 
 
 

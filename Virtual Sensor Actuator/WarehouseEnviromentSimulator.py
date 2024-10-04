@@ -343,6 +343,7 @@ class WarehouseSimulator(tk.Tk):
             self.canvas.delete(text_id)
         self.measurement_text_ids.clear()
 
+
     def toggle_radius_visibility(self):
         """Toggle the visibility of heat and air quality radii."""
         self.radius_visible = not self.radius_visible
