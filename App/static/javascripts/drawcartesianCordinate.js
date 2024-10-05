@@ -125,6 +125,20 @@ function drawCartesianCoordinates() {
                     ctx.fill();   // Fill the polygon with the transparent color
                     ctx.stroke(); // Draw the slightly darker border
         }
+
+        function drawTextLabel(text, xCoordinate, yCoordinate, fontSize, color) {
+            // Set the text color and font size
+            ctx.fillStyle = color || 'black';  // Default to black if no color is provided
+            ctx.font = `${fontSize || 16}px Arial`;  // Default to 16px Arial if no font size is provided
+            
+            // Convert the coordinates to match the canvas' coordinate system
+            const labelXPos = gridSpacing + xCoordinate * 20;
+            const labelYPos = 620 - yCoordinate * 20;
+            
+            // Draw the text label at the specified coordinates
+            ctx.fillText(text, labelXPos, labelYPos);
+        }
+        
                 
                 
             
@@ -261,6 +275,22 @@ function drawCartesianCoordinates() {
                 [41, 30],
                 [41,14.5]
             ]);
+
+
+
+
+
+
+
+            drawTextLabel("Part 1", 3.5, 6, 16);
+            drawTextLabel("Part 2", 14.5, 7, 16);
+            drawTextLabel("Part 3", 35, 7, 16);
+            drawTextLabel("Part 4", 4, 21, 16);
+            drawTextLabel("Part 5", 16, 22, 16);
+            drawTextLabel("Part 6", 33, 22, 16);
+            drawTextLabel("Part 7", 49, 20, 16);
+
+
             
     
     
