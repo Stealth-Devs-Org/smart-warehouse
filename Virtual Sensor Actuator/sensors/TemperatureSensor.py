@@ -2,6 +2,7 @@ import threading
 import random
 import time
 
+climate = random.choice(['winter', 'spring', 'summer'])
 
 
 class TemperatureSensor(threading.Thread):
@@ -25,10 +26,21 @@ def main():
     no_of_partitions = 7
     no_of_sensors_in_each_part= [3,4,5,6,7,8,9]
     allSensors=[]
+
     
-    num_sensors = 5  # Number of sensors
-    min_temp = -40.0  # Minimum temperature
-    max_temp = 40.0  # Maximum temperature
+    if climate=="winter":
+            min_temp = -10.0  # Minimum temperature
+            max_temp = -8.0  # Maximum temperature
+
+    elif climate=="spring":
+            min_temp = 25.0  # Minimum temperature
+            max_temp = 27.0  # Maximum temperature
+
+    else:
+            min_temp = 30.0  # Minimum temperature
+            max_temp = 33.0  # Maximum temperature
+
+
 
     for j in range (no_of_partitions):
         allSensors.append([])
@@ -38,15 +50,10 @@ def main():
             allSensors[j].append(sensor)
             sensor.start()
 
-    try:
-        while True:
+    
+    while True:
             time.sleep(0.1)
-    except KeyboardInterrupt:
-        for partition in allSensors:
-            for sensor in partition:
-                sensor.stop()
-            for sensor in partition:
-                sensor.join()
+
 
 if __name__ == "__main__":
     main()
