@@ -6,22 +6,6 @@ import math
 app = Flask(__name__)
 
 
-
-# To store heat and air quality points
-heat_points = []
-air_quality_points = []
-
-# Function to calculate heat
-def calculate_heat_at_point(x, y, points):
-    total_heat = 0
-    for _, heat_x, heat_y, heat_radius, heat_value in points:
-        distance = math.sqrt((x - heat_x) ** 2 + (y - heat_y) ** 2)
-        if distance <= heat_radius:
-            gradient = max(0, (heat_radius - distance) / heat_radius)
-            contribution = heat_value * gradient
-            total_heat = max(total_heat, contribution)
-    return total_heat
-
 @app.route('/')
 def index():
     return render_template('home.html')

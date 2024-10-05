@@ -169,6 +169,7 @@ class WarehouseSimulator(tk.Tk):
             final_temp = max(total_heat, env_temp)
             text_id = self.canvas.create_text(x, y, text=f"Heat: {final_temp:.2f}°C\nAir Quality: {total_air_quality:.2f}\nSmoke: {total_smoke:.2f}", fill="blue")
             self.measurement_text_ids.append(text_id)
+            print (f"reading at ({x},{y}) Heat: {final_temp:.2f}°C, Air Quality: {total_air_quality:.2f}, Smoke: {total_smoke:.2f}")
 
         elif self.add_heat_mode:
             # Add a new heat point with the selected values
@@ -378,7 +379,7 @@ class WarehouseSimulator(tk.Tk):
         self.add_air_quality_button.config(state=tk.NORMAL)
         self.add_smoke_button.config(state=tk.NORMAL)
         self.delete_button.config(state=tk.NORMAL)
-
+    
     def enable_heat_adding(self):
         """Enable the heat adding mode."""
         self.add_heat_mode = True
