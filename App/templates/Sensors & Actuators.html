@@ -6,54 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <style>
-        /* Reset body margins */
+       
         body {
             margin: 0;
             padding: 0;
         }
 
-        /* Navbar styles */
+        
         #banner {
             height: 500px;
             width: 100%;
             object-fit: cover;
         }
         .custom-h1 {
-            font-size: 4rem; /* Adjust the size as needed */
+            font-size: 4rem; 
         }
 
-        /* Flex container for canvas and buttons */
+        
         .container {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
             align-items: flex-start;
-            margin: 0; /* Remove margin */
-            width: 100vw; /* Full viewport width */
+            margin: 0; 
+            width: 100vw; 
         }
 
-        /* Styling for Cartesian canvas */
+   
         #coordinateCanvas {
-            flex-grow: 1; /* Fill available space */
+            flex-grow: 1; 
             border: 1px solid #ccc;
         }
 
-        /* Button container styles */
+       
         .button-container {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin-left: 20px; /* Spacing between canvas and buttons */
-            min-width: 150px; /* Minimum width for button container */
+            margin-left: 20px; 
+            min-width: 150px; 
         }
 
-        /* Individual button styles */
+        
         .btn-custom {
-            margin-bottom: 10px; /* Adjust spacing between buttons */
+            margin-bottom: 10px; 
         }
 
-        /* Centering the canvas */
+        
         #coordinateCanvas {
             display: block;
             border: 1px solid #000;
@@ -86,10 +86,8 @@
     <h2 class="text-center mt-4 mb-4 text-dark">Sensor Actuator Environment</h2>
 
     <div class="container">
-        <!-- Cartesian Coordinate Canvas -->
+        
         <canvas id="coordinateCanvas" width="1200" height="640"></canvas>
-
-        <!-- Button and Extra Canvas Container -->
         <div class="button-container">
             <!-- Buttons -->
             <button class="btn btn-primary btn-custom">Button 1</button>
