@@ -151,13 +151,13 @@ class WarehouseSimulator(tk.Tk):
 
     def handle_click(self, event):
         """Handle mouse clicks based on the current mode (add heat points, air quality points, delete points, or measure temp/smoke/air quality)."""
-        #x, y = event.x, event.y
+        x, y = event.x, event.y
 
 
-        x = (1/22) * event.x
-        y= -(1/22) * event.y
+        #x = (1/22) * event.x
+        #y= -(1/22) * event.y
 
-        print(f"Clicked at ({x}, {y})")
+        #print(f"Clicked at ({x}, {y})")
         
 
         if self.measure_mode:
