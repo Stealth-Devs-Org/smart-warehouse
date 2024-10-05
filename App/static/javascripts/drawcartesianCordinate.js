@@ -97,6 +97,35 @@ function drawCartesianCoordinates() {
                     ctx.lineTo(lineEndX, lineEndY); // End the line
                     ctx.stroke(); // Draw the line
                 }
+
+    function drawTransparentPolygon(fillColor, strokeColor, strokeWidth, coordinates) {
+                    // Set the stroke color for the border
+                    ctx.strokeStyle = strokeColor; 
+                    // Set the fill color with transparency using RGBA
+                    ctx.fillStyle = fillColor;   
+                    ctx.lineWidth = strokeWidth; // Set the stroke width
+                    
+                    // Start the path for the polygon
+                    ctx.beginPath();
+                    
+                    // Move to the first point of the polygon
+                    const startX = gridSpacing + coordinates[0][0] * 20;
+                    const startY = 620 - coordinates[0][1] * 20;
+                    ctx.moveTo(startX, startY);
+                    
+                    // Loop through the rest of the coordinates and draw lines to them
+                    for (let i = 1; i < coordinates.length; i++) {
+                        const x = gridSpacing + coordinates[i][0] * 20;
+                        const y = 620 - coordinates[i][1] * 20;
+                        ctx.lineTo(x, y);
+                    }
+                    
+                    // Close the path and fill the polygon with transparency
+                    ctx.closePath();
+                    ctx.fill();   // Fill the polygon with the transparent color
+                    ctx.stroke(); // Draw the slightly darker border
+        }
+                
                 
             
 
@@ -104,66 +133,125 @@ function drawCartesianCoordinates() {
         
 
         function build() {  
-            //floor outline
-            drawLine('maroon', 4, 0, 0, 47, 0);
-            drawLine('maroon', 4, 47, 0, 47, 9);
-            drawLine('maroon', 4, 47, 9, 55, 9);
-            drawLine('maroon', 4, 55, 9, 55, 30);
-            drawLine('maroon', 4, 0, 0, 0, 30);
-            drawLine('maroon', 4, 0, 30, 55, 30);
+            // //floor outline
+            // drawLine('maroon', 4, 0, 0, 47, 0);
+            // drawLine('maroon', 4, 47, 0, 47, 9);
+            // drawLine('maroon', 4, 47, 9, 55, 9);
+            // drawLine('maroon', 4, 55, 9, 55, 30);
+            // drawLine('maroon', 4, 0, 0, 0, 30);
+            // drawLine('maroon', 4, 0, 30, 55, 30);
     
-            //storage racks
-            drawRectangle('blue', 2, 10.5, 27.5, 12, 2);
-            drawRectangle('blue', 2, 24.5, 27.5, 12, 2);
+            // //storage racks
+            // drawRectangle('blue', 2, 10.5, 27.5, 12, 2);
+            // drawRectangle('blue', 2, 24.5, 27.5, 12, 2);
     
-            drawRectangle('blue', 2, 10.5, 24.5, 12, 2);
-            drawRectangle('blue', 2, 24.5, 24.5, 12, 2);
+            // drawRectangle('blue', 2, 10.5, 24.5, 12, 2);
+            // drawRectangle('blue', 2, 24.5, 24.5, 12, 2);
     
-            drawRectangle('blue', 2, 10.5, 21.5, 12, 2);
-            drawRectangle('blue', 2, 24.5, 21.5, 12, 2);
+            // drawRectangle('blue', 2, 10.5, 21.5, 12, 2);
+            // drawRectangle('blue', 2, 24.5, 21.5, 12, 2);
     
-            drawRectangle('blue', 2, 10.5, 18.5, 12, 2);
-            drawRectangle('blue', 2, 24.5, 18.5, 12, 2);
+            // drawRectangle('blue', 2, 10.5, 18.5, 12, 2);
+            // drawRectangle('blue', 2, 24.5, 18.5, 12, 2);
     
-            //agv pathline 
-            drawRectangle('orange', 2, 9, 29, 29, 14);
-            drawRectangle('orange', 2, 10,28, 27, 12);
-            drawRectangle('orange', 2, 17, 13, 13, 9);
-            drawRectangle('orange', 2, 16, 14, 15, 11);
+            // //agv pathline 
+            // drawRectangle('orange', 2, 9, 29, 29, 14);
+            // drawRectangle('orange', 2, 10,28, 27, 12);
+            // drawRectangle('orange', 2, 17, 13, 13, 9);
+            // drawRectangle('orange', 2, 16, 14, 15, 11);
     
-            drawLine('orange', 2, 23, 29, 23, 3);
-            drawLine('orange', 2, 24, 29, 24, 3);
+            // drawLine('orange', 2, 23, 29, 23, 3);
+            // drawLine('orange', 2, 24, 29, 24, 3);
     
-            drawLine('orange', 2, 30, 12, 36,12);
-            drawLine('orange', 2, 30, 11, 37,11);
-            drawLine('orange', 2, 30, 10, 38,10);
-            drawLine('orange', 2, 30, 9, 39,9);
-    
-    
-            drawLine('orange', 2, 36, 12, 36,15);
-            drawLine('orange', 2, 37, 11, 37,15);
-            drawLine('orange', 2, 38, 10, 38,15);
-            drawLine('orange', 2, 39, 9, 39,15);
-            drawLine('orange', 2, 38, 15, 39,15);
+            // drawLine('orange', 2, 30, 12, 36,12);
+            // drawLine('orange', 2, 30, 11, 37,11);
+            // drawLine('orange', 2, 30, 10, 38,10);
+            // drawLine('orange', 2, 30, 9, 39,9);
     
     
-            //charging dock
-            drawRectangle('red', 2, 35.5, 13.5,1, 1);
-            drawRectangle('red', 2, 36.5, 13.5, 1, 1);
-            drawRectangle('red', 2, 37.5, 13.5, 1, 1);
-            drawRectangle('red', 2, 38.5, 13.5, 1, 1);
+            // drawLine('orange', 2, 36, 12, 36,15);
+            // drawLine('orange', 2, 37, 11, 37,15);
+            // drawLine('orange', 2, 38, 10, 38,15);
+            // drawLine('orange', 2, 39, 9, 39,15);
+            // drawLine('orange', 2, 38, 15, 39,15);
+    
+    
+            // //charging dock
+            // drawRectangle('red', 2, 35.5, 13.5,1, 1);
+            // drawRectangle('red', 2, 36.5, 13.5, 1, 1);
+            // drawRectangle('red', 2, 37.5, 13.5, 1, 1);
+            // drawRectangle('red', 2, 38.5, 13.5, 1, 1);
     
     
     
-            //inbound outbound racks
-            drawRectangle('green', 2, 17.5, 12.5, 2, 8);
-            drawRectangle('green', 2, 20.5, 12.5, 2, 8);
+            // //inbound outbound racks
+            // drawRectangle('green', 2, 17.5, 12.5, 2, 8);
+            // drawRectangle('green', 2, 20.5, 12.5, 2, 8);
     
-            drawRectangle('red', 2, 24.5, 12.5, 2, 8);
-            drawRectangle('red', 2, 27.5, 12.5, 2, 8);
+            // drawRectangle('red', 2, 24.5, 12.5, 2, 8);
+            // drawRectangle('red', 2, 27.5, 12.5, 2, 8);
     
-            // control room
-            drawRectangle('black', 3, 0, 12, 5, 12);
+            // // control room
+            // drawRectangle('black', 3, 0, 12, 5, 12);
+
+
+            // partitions
+
+            
+
+            drawTransparentPolygon('rgba(88, 42, 42, 0.5)', 'rgb(88, 42, 42)', 1,[
+                [0,0],
+                [5,0],
+                [5, 12],
+                [0,12]
+            ]);
+
+            drawTransparentPolygon('rgba(139, 0, 0, 0.5)', 'rgb(139, 0, 0)', 1,[
+                [7.5,14.5],
+                [7.5,30],
+                [0, 30],
+                [0,12],
+                [5,12]
+            ]);
+
+            drawTransparentPolygon('rgba(0, 0, 139, 0.5)', 'rgb(0, 0, 239)', 1,[
+                [7.5,14.5],
+                [23.5,14.5],
+                [23.5, 30],
+                [7.5,30]
+            ]);
+
+            drawTransparentPolygon('rgba(0, 139, 0, 0.5)', 'rgb(0, 239, 0)', 1,[
+                [5,12],
+                [5,0],
+                [23.5, 0],
+                [23.5, 14.5],
+                [7.5,14.5]
+            ]);
+
+            drawTransparentPolygon('rgba(0, 139, 139, 0.5)', 'rgb(0, 239, 239)', 1,[
+                [23.5,0],
+                [47,0],
+                [47,9],
+                [41, 14.5],
+                [23.5, 14.5]
+            ]);
+
+            drawTransparentPolygon('rgba(139, 139, 0, 0.5)', 'rgb(239, 239, 0)', 1,[
+                [23.5,14.5],
+                [41,14.5],
+                [41,30 ],
+                [23.5, 30]
+            ]);
+
+            drawTransparentPolygon('rgba(139, 0, 139, 0.5)', 'rgb(239,0, 239)', 1,[
+                [47,9],
+                [55,9],
+                [55,30 ],
+                [41, 30],
+                [41,14.5]
+            ]);
+            
     
     
     
