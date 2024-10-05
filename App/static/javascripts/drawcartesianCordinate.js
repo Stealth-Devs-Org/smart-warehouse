@@ -134,12 +134,20 @@ function drawCartesianCoordinates() {
 
         function build() {  
             // //floor outline
-            // drawLine('maroon', 4, 0, 0, 47, 0);
-            // drawLine('maroon', 4, 47, 0, 47, 9);
-            // drawLine('maroon', 4, 47, 9, 55, 9);
-            // drawLine('maroon', 4, 55, 9, 55, 30);
-            // drawLine('maroon', 4, 0, 0, 0, 30);
-            // drawLine('maroon', 4, 0, 30, 55, 30);
+            drawLine('maroon', 4, 0, 0, 47, 0);
+            drawLine('maroon', 4, 47, 0, 47, 9);
+            drawLine('maroon', 4, 47, 9, 55, 9);
+            drawLine('maroon', 4, 55, 9, 55, 30);
+            drawLine('maroon', 4, 0, 0, 0, 30);
+            drawLine('maroon', 4, 0, 30, 55, 30);
+
+            // outer black box for HVAC
+            drawTransparentPolygon('rgba(0, 0, 0, 1)', 'rgb(0, 0, 0)', 1,[
+                [55,26],
+                [58,26],
+                [58, 30],
+                [55,30]
+            ]);
     
             // //storage racks
             // drawRectangle('blue', 2, 10.5, 27.5, 12, 2);
@@ -195,10 +203,12 @@ function drawCartesianCoordinates() {
             // drawRectangle('black', 3, 0, 12, 5, 12);
 
 
-            // partitions
-
             
-
+            
+            
+            
+            // partitions ####################################################
+            
             drawTransparentPolygon('rgba(88, 42, 42, 0.5)', 'rgb(88, 42, 42)', 1,[
                 [0,0],
                 [5,0],
