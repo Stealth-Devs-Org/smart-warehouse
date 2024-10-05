@@ -38,18 +38,12 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            
             margin-left: 20px; 
             min-width: 250px; 
         }
 
         .btn-custom {
             margin-bottom: 10px; 
-        }
-
-        #coordinateCanvas {
-            display: block;
-            border: 1px solid #000;
         }
 
         .slider-container {
@@ -70,6 +64,8 @@
         }
     </style>
     <script src="static/javascripts/drawcartesianCordinate.js"></script>
+    <script src="static/javascripts/buttonController.js"></script>
+    
 </head>
 <body>
 
@@ -98,7 +94,7 @@
     <div class="container">
         <canvas id="coordinateCanvas" width="1200" height="640"></canvas>
         <div class="button-container">
-            <button class="btn btn-primary btn-custom">Add Heat Point</button>
+            <button class="btn btn-primary btn-custom" onclick="addHeatPoint()">Add Heat Point</button>
             <button class="btn btn-primary btn-custom">Add Air Quality Point</button>
             <button class="btn btn-primary btn-custom">Add Smoke Point</button>
             <button class="btn btn-primary btn-custom">Delete Points</button>
@@ -106,9 +102,8 @@
             <button class="btn btn-primary btn-custom">Measure At Point</button>
             <button class="btn btn-primary btn-custom">Hide Radii</button>
 
-
             <div class="slider-container">
-                <label for="slider2">TempVal:</label>
+                <label for="slider1">TempVal:</label>
                 <input type="range" min="0" max="100" class="slider" id="slider1" value="50" oninput="updateValue('slider1')">
                 <span class="slider-value" id="value1">50</span>
             </div>
@@ -118,22 +113,22 @@
                 <span class="slider-value" id="value2">50</span>
             </div>
             <div class="slider-container">
-                <label for="slider2">AirQVal:</label>
+                <label for="slider3">AirQVal:</label>
                 <input type="range" min="0" max="100" class="slider" id="slider3" value="50" oninput="updateValue('slider3')">
                 <span class="slider-value" id="value3">50</span>
             </div>
             <div class="slider-container">
-                <label for="slider2">AirQRadius:</label>
+                <label for="slider4">AirQRadius:</label>
                 <input type="range" min="0" max="100" class="slider" id="slider4" value="50" oninput="updateValue('slider4')">
                 <span class="slider-value" id="value4">50</span>
             </div>
             <div class="slider-container">
-                <label for="slider2">SmokeVal:</label>
+                <label for="slider5">SmokeVal:</label>
                 <input type="range" min="0" max="100" class="slider" id="slider5" value="50" oninput="updateValue('slider5')">
                 <span class="slider-value" id="value5">50</span>
             </div>
             <div class="slider-container">
-                <label for="slider2">SmokeRadius:</label>
+                <label for="slider6">SmokeRadius:</label>
                 <input type="range" min="0" max="100" class="slider" id="slider6" value="50" oninput="updateValue('slider6')">
                 <span class="slider-value" id="value6">50</span>
             </div>
@@ -141,14 +136,12 @@
     </div>
 
     <script>
+        
+
         drawCartesianCoordinates();
+        src="static/javascripts/buttonController.js"  
 
-        function updateValue(sliderId) {
-            const slider = document.getElementById(sliderId);
-            const valueDisplay = document.getElementById('value' + sliderId.charAt(sliderId.length - 1));
-            valueDisplay.innerText = slider.value;
-        }
+
     </script>
-
 </body>
 </html>
