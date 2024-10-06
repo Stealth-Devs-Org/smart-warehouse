@@ -330,7 +330,7 @@ function drawCartesianCoordinates() {
             // // Draw the Temp sensors for each partition
             const partitionsTempSensors = [
                 // Partition 1
-                ["1,11", "4,11", "4,1", "1,1"],
+                ["2,2", "2,10"],
                 
                 // Partition 2
                 ["9,11", "19,11", "19,3", "9,3"],
@@ -351,54 +351,84 @@ function drawCartesianCoordinates() {
                 ["28,18", "36,18", "28,27", "36,27"]
                 
             ];
-            
 
-
-            
-            // Call the function to draw all sensors
-            
-
-
-
-
-
-
-            
-            
+ 
             // // Draw the Air Quality sensors for each partition
             const partitionsAirQualitySensors = [
                 // Partition 1
-                ["1,11", "4,11", "4,1", "1,1"],
+                ["2,4", "2,8"],
                 
                 // Partition 2
-                ["9,11", "19,11", "19,3", "9,3"],
+                ["14,3", "14,11"],
                 
                 // Partition 3
-                ["28,11", "41,11", "28,3", "41,3"],
+                ["34,3", "34,11"],
                 
                 // Partition 4
-                ["5,15", "2,28", "5,28", "2,19"],
+                ["3,16", "3,26"],
                 
                 // Partition 5
-                ["12,27", "19,27", "19,17", "12,17"],
+                ["15,17", "15,27"],
                 
                 // Partition 6
-                ["52,13", "52,26", "46,17", "46,24"],
+                ["32,18", "32,27"],
 
                 // Partition 7
-                ["28,18", "36,18", "28,27", "36,27"]
+                ["49,14", "49,27"]
                 
+            ];
+            
+
+             // // Draw the Air Quality sensors for each partition
+             const partitionsHumiditySensors = [
+                // No partion for humidty
+
+                ["4,3","4,9","3,22","15,23","36,6"]
+
+                
+ 
+                
+            ];
+
+             // // Draw the Smoke sensors for each partition
+             const partitionsSmokeSensors = [
+
+                [
+                    "1,29", "3,29", "5,29", "7,29", "9,29", "11,29", "13,29", "15,29", "17,29", "19,29",
+                    "21,29", "23,29", "25,29", "27,29", "29,29", "31,29", "33,29", "35,29", "37,29", "39,29",
+                    "41,29", "43,29", "45,29", "47,29", "49,29", "51,29", "53,29"
+                ],
+
+
+                [
+                    "54,10", "54,12", "54,14", "54,16", "54,18", "54,20", "54,22", "54,24", "54,26", "54,28"
+                ],
+
+                ["52,10","50,10", "48,10","46,10"],
+
+                [
+                    "1,1", "3,1", "5,1", "7,1", "9,1", "11,1", "13,1", "15,1", "17,1", "19,1",
+                    "21,1", "23,1", "25,1", "27,1", "29,1", "31,1", "33,1", "35,1", "37,1", "39,1",
+                    "41,1", "43,1", "45,1"
+                ],
+
+                [
+                    "1,3", "1,5", "1,7", "1,9", "1,11", "1,13", "1,15", "1,17", "1,19", "1,21",
+                    "1,23", "1,25", "1,27"
+                ],
+                [
+                    "46,2", "46,4", "46,6", "46,8"
+                ]
             ];
             
 
 
             drawSensors(partitionsTempSensors,'red');
-            //drawSensors(partitionsTempSensors);
+            drawSensors(partitionsAirQualitySensors,'green');
+            drawSensors(partitionsHumiditySensors,'lightblue');
+            drawSensors(partitionsSmokeSensors,'grey');
 
      
-
-
-
 
 
 
