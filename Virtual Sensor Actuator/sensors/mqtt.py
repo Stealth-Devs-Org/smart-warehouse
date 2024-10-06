@@ -5,7 +5,7 @@ import threading
 import paho.mqtt.client as mqtt
 
 from utils import Get_values_from_agv_json
-from TemperatureSensor
+from TemperatureSensor import sensor_state
 
 interrupt = 0  # Global interrupt variable
 goal = None  # Global goal variable
