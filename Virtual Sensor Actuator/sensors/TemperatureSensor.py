@@ -15,23 +15,42 @@ def change_climate():
         current_index = (current_index + 1) % len(climates)  
         time.sleep(10)
 
-# Sensor ID for each partition (as coordinate locations)
-TempsensorID = [
-    ["(3,2)", "(3,2)"],               # Partition 1
-    ["(4,9)", "(4,19)", "(4,19)", "(4,9)"],  # Partition 2
-    ["(5,28)", "(5,41)", "(5,28)", "(5,41)"], # Partition 3
-    ["(6,5)", "(6,2)", "(6,5)", "(6,2)"],     # Partition 4
-    ["(4,12)", "(4,19)", "(4,19)", "(4,12)"], # Partition 5
-    ["(4,52)", "(4,52)", "(4,46)", "(4,46)"],  # Partition 6
-    ["(4,28)", "(4,36)", "(4,28)", "(4,36)"]   # Partition 7
-]
-
-
 climate_temperature_values = {
     "winter": [0.0, -1.0, -1.5, -2.0, -1.8, -2.3, -0.5],  # Winter values
     "spring": [15.0, 16.0, 15.5, 15.8, 16.3, 16.8, 16.1], # Spring values
     "summer": [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]  # Summer values
 }
+
+
+
+
+# Sensor ID for each partition (as coordinate locations)
+TempsensorID = [
+    # Partition 1
+    ["(2,2)", "(2,10)"],
+    
+    # Partition 2
+    ["(9,11)", "(19,11)", "(19,3)", "(9,3)"],
+    
+    # Partition 3
+    ["(28,11)", "(41,11)", "(28,3)", "(41,3)"],
+    
+    # Partition 4
+    ["(5,15)", "(2,28)", "(5,28)", "(2,19)"],
+    
+    # Partition 5
+    ["(12,27)", "(19,27)", "(19,17)", "(12,17)"],
+    
+    # Partition 6
+    ["(52,13)", "(52,26)", "(46,17)", "(46,24)"],
+    
+    # Partition 7
+    ["(28,18)", "(36,18)", "(28,27)", "(36,27)"]
+]
+
+
+
+
 
 class TemperatureSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
@@ -63,16 +82,18 @@ class TemperatureSensor(threading.Thread):
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
 
+
+
+
+
 def main():
     no_of_partitions = len(TempsensorID)
     allSensors = []
 
-    
     climate_thread = threading.Thread(target=change_climate)
     climate_thread.daemon = True
     climate_thread.start()
 
-    
     for j in range(no_of_partitions):
         allSensors.append([])
         for coord in TempsensorID[j]:
