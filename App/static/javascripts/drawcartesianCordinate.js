@@ -139,7 +139,30 @@ function drawCartesianCoordinates() {
             ctx.fillText(text, labelXPos, labelYPos);
         }
         
-                
+        function drawFilledCircle(color, x, y, radius, label) {
+            // Set the fill and stroke color for the circle
+            ctx.fillStyle = color;
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
+            
+            // Calculate the coordinates based on the grid system
+            const circleX = gridSpacing + x * 20;
+            const circleY = 620 - y * 20;
+            
+            // Draw the filled circle
+            ctx.beginPath();
+            ctx.arc(circleX, circleY, radius, 0, Math.PI * 2, false);
+            ctx.fill();  // Fill the circle with the specified color
+            ctx.stroke(); // Draw the outline of the circle
+            
+            // Add text label
+            ctx.fillStyle = 'black'; // Set text color
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '6px Arial';
+            ctx.fillText(label, circleX, circleY); // Display label at the circle's center
+        }
+        
                 
             
 
@@ -155,6 +178,8 @@ function drawCartesianCoordinates() {
             drawLine('maroon', 4, 0, 0, 0, 30);
             drawLine('maroon', 4, 0, 30, 55, 30);
 
+
+            
             // outer black box for HVAC
             drawTransparentPolygon('rgba(0, 0, 0, 1)', 'rgb(0, 0, 0)', 1,[
                 [55,26],
@@ -276,12 +301,7 @@ function drawCartesianCoordinates() {
                 [41,14.5]
             ]);
 
-
-
-
-
-
-
+            // // Draw the labels for each partition
             drawTextLabel("Part 1", 3.5, 6, 16);
             drawTextLabel("Part 2", 14.5, 7, 16);
             drawTextLabel("Part 3", 35, 7, 16);
@@ -291,10 +311,111 @@ function drawCartesianCoordinates() {
             drawTextLabel("Part 7", 49, 20, 16);
 
 
+
+
+            ////////////////// Sensor Sketch Part //////////////////////////////
             
-    
-    
-    
+            function drawSensors( partitions, color) {
+                let labelCounter = 1; // Label for the sensors
+                let colorused = color;
+                partitions.forEach((partition, partitionIndex) => {
+                    partition.forEach(coordinate => {
+                        const [x, y] = coordinate.split(',').map(Number); // Split and convert coordinates to numbers
+                        drawFilledCircle(colorused, x, y,6, labelCounter.toString()); // Draw the sensor
+                        labelCounter++; // Increment label for the next sensor
+                    });
+                });
+            }
+            
+            // // Draw the Temp sensors for each partition
+            const partitionsTempSensors = [
+                // Partition 1
+                ["1,11", "4,11", "4,1", "1,1"],
+                
+                // Partition 2
+                ["9,11", "19,11", "19,3", "9,3"],
+                
+                // Partition 3
+                ["28,11", "41,11", "28,3", "41,3"],
+                
+                // Partition 4
+                ["5,15", "2,28", "5,28", "2,19"],
+                
+                // Partition 5
+                ["12,27", "19,27", "19,17", "12,17"],
+                
+                // Partition 6
+                ["52,13", "52,26", "46,17", "46,24"],
+
+                // Partition 7
+                ["28,18", "36,18", "28,27", "36,27"]
+                
+            ];
+            
+
+
+            
+            // Call the function to draw all sensors
+            
+
+
+
+
+
+
+            
+            
+            // // Draw the Air Quality sensors for each partition
+            const partitionsAirQualitySensors = [
+                // Partition 1
+                ["1,11", "4,11", "4,1", "1,1"],
+                
+                // Partition 2
+                ["9,11", "19,11", "19,3", "9,3"],
+                
+                // Partition 3
+                ["28,11", "41,11", "28,3", "41,3"],
+                
+                // Partition 4
+                ["5,15", "2,28", "5,28", "2,19"],
+                
+                // Partition 5
+                ["12,27", "19,27", "19,17", "12,17"],
+                
+                // Partition 6
+                ["52,13", "52,26", "46,17", "46,24"],
+
+                // Partition 7
+                ["28,18", "36,18", "28,27", "36,27"]
+                
+            ];
+            
+
+
+            drawSensors(partitionsTempSensors,'red');
+            //drawSensors(partitionsTempSensors);
+
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
 
