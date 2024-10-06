@@ -2,6 +2,16 @@ import threading
 import random
 import time
 
+sensor_state = {}
+
+def SetSensor(type, id, location, reading, status):
+    global sensor_state
+    sensor_state["sensor_type"] = type
+    sensor_state["sensor_id"] = id
+    sensor_state["sensor_location"] = location
+    sensor_state["reading"] = reading
+    sensor_state["current_status"] = status     # 0 or 1 (0 = inactive, 1 = active)
+    #print(f"Received new sensor state: {sensor_state}")
 
 climate = "winter"
 
@@ -52,6 +62,8 @@ TempsensorID = [
 
 
 
+
+
 class TemperatureSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
         threading.Thread.__init__(self)
@@ -64,6 +76,9 @@ class TemperatureSensor(threading.Thread):
         while self.running:
             temperature = self.get_temperature_value()
             print(f"\nSensor {self.sensor_id}: {temperature:.2f}°C")
+            ######################################################################################
+            SetSensor("temperature",self.sensor_id, self.sensor_id, temperature:.2f, 1)      
+            ######################################################################################
             time.sleep(1)
 
     def stop(self):
