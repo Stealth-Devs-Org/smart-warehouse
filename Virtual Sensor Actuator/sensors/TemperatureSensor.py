@@ -1,12 +1,23 @@
 import threading
 import random
 import time
-from sensorUtils import SetSensorState
+
+
+from sensorUtils import SetSensorState, sensor_state
 
 
 
-sensor_state = {"sensor_type": "", "sensor_id": "", "sensor_location": "", "reading": 0.0, "current_status": 0}
-    
+#sensor_state = {"sensor_type": "", "sensor_id": "", "sensor_location": "", "reading": 0.0, "current_status": 0}
+
+# def SetSensorState(type, id, location, reading, status):
+#     global sensor_state
+#     sensor_state["sensor_type"] = type
+#     sensor_state["sensor_id"] = id
+#     sensor_state["sensor_location"] = location
+#     sensor_state["reading"] = reading
+#     sensor_state["current_status"] = status     # 0 or 1 (0 = inactive, 1 = active)
+#     #print(f"Received new sensor state: {sensor_state}")
+
     
 climate = "winter"
 
@@ -16,7 +27,7 @@ def change_climate():
     current_index = 0
     while True:
         climate = climates[current_index]
-        print(f"\nClimate changed to: {climate}\n")  
+        #print(f"\nClimate changed to: {climate}\n")  
         current_index = (current_index + 1) % len(climates)  
         time.sleep(5)
 
@@ -67,7 +78,8 @@ class TemperatureSensor(threading.Thread):
                 self.last_climate = climate  
             temperature = self.get_temperature_value()
             print(f"\nSensor {self.sensor_id}: {temperature:.2f}°C")
-            print(climate)
+            SetSensorState("Temperature", self.sensor_id, self.sensor_id, temperature, 1)
+            print(f"Sensor state: {sensor_state}")
             time.sleep(1)
 
     def stop(self):
@@ -80,7 +92,6 @@ class TemperatureSensor(threading.Thread):
 
     def get_temperature_value(self):
         """ Get a temperature value close to the current climate values, with slight variation """
-
         base_temperature = self.temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation

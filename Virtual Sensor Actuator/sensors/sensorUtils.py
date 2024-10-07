@@ -1,3 +1,4 @@
+sensor_state = {"sensor_type": "", "sensor_id": "", "sensor_location": "", "reading": 0.0, "current_status": 0}
 
 def SetSensorState(type, id, location, reading, status):
     global sensor_state
