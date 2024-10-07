@@ -18,7 +18,7 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_LOCATION_TOPIC = "agv/location"
 MQTT_TASK_END_TOPIC = "agv/task_complete"
-MQTT_SENSOR_TOPIC = "Sensor/Temperature"        ################################################################### SAIRISAN
+MQTT_SENSOR_TOPIC = "Sensor"        ################################################################### SAIRISAN
 MQTT_GOAL_TOPIC = ""
 MQTT_INTERRUPT_TOPIC = ""
 
@@ -59,13 +59,7 @@ def setTopic(AGV_ID):
     print(f"MQTT_GOAL_TOPIC: {MQTT_GOAL_TOPIC}")
     print(f"MQTT_INTERRUPT_TOPIC: {MQTT_INTERRUPT_TOPIC}")
 
-###############################################################################
-def SetTopic(SensorID):
-    global MQTT_SENSOR_TOPIC
-    MQTT_SENSOR_TOPIC = f"Sensor/{SensorID}"
-    print(f"MQTT_SENSOR_TOPIC: {MQTT_SENSOR_TOPIC}")
 
-###############################################################################
 
 
 def ConnectMQTT(AGV_ID):
@@ -80,6 +74,14 @@ def ConnectMQTT(AGV_ID):
         print(f"Subscribed to MQTT topic '{MQTT_GOAL_TOPIC}' for goals")
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
+
+
+###############################################################################
+def SetTopic(SensorID):
+    global MQTT_SENSOR_TOPIC
+    MQTT_SENSOR_TOPIC = f"Sensor/{SensorID}"
+    print(f"MQTT_SENSOR_TOPIC: {MQTT_SENSOR_TOPIC}")
+###############################################################################
 
 
 def on_message(client, userdata, message):
@@ -138,8 +140,6 @@ def UpdateSensorReadings():
     print(
          f"Published current location {sensor_data['location']} & reading {sensor_state["reading"]} to MQTT topic '{MQTT_SENSOR_TOPIC}'"
      )
-
-
 ############################################################################################
 
 

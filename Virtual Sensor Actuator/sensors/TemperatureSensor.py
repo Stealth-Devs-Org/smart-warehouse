@@ -1,17 +1,18 @@
 import threading
 import random
 import time
+from sensorUtils import SetSensorState
 
 sensor_state = {"sensor_type": "", "sensor_id": "", "sensor_location": "", "reading": 0.0, "current_status": 0}
 
-def SetSensorState(type, id, location, reading, status):
-    global sensor_state
-    sensor_state["sensor_type"] = type
-    sensor_state["sensor_id"] = id
-    sensor_state["sensor_location"] = location
-    sensor_state["reading"] = reading
-    sensor_state["current_status"] = status     # 0 or 1 (0 = inactive, 1 = active)
-    #print(f"Received new sensor state: {sensor_state}")
+# def SetSensorState(type, id, location, reading, status):
+#     global sensor_state
+#     sensor_state["sensor_type"] = type
+#     sensor_state["sensor_id"] = id
+#     sensor_state["sensor_location"] = location
+#     sensor_state["reading"] = reading
+#     sensor_state["current_status"] = status     # 0 or 1 (0 = inactive, 1 = active)
+#     #print(f"Received new sensor state: {sensor_state}")
     
 
 climate = "winter"
@@ -27,11 +28,10 @@ def change_climate():
         time.sleep(10)
 
 climate_temperature_values = {
-    "winter": [0.0, -1.0, -1.5, -2.0, -1.8, -2.3, -0.5],  # Winter values
-    "spring": [15.0, 16.0, 15.5, 15.8, 16.3, 16.8, 16.1], # Spring values
-    "summer": [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]  # Summer values
+    "winter": [0.0, -1.0, -1.5, -2.0, -1.8, -2.3, -0.5],  # Winter values with 7 partitions
+    "spring": [15.0, 16.0, 15.5, 15.8, 16.3, 16.8, 16.1], # Spring values with 7 partitions
+    "summer": [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]  # Summer values with 7 partitions
 }
-
 
 
 
@@ -58,12 +58,6 @@ TempsensorID = [
     # Partition 7
     ["(28,18)", "(36,18)", "(28,27)", "(36,27)"]
 ]
-
-
-
-
-
-
 
 class TemperatureSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
@@ -93,7 +87,7 @@ class TemperatureSensor(threading.Thread):
     def get_temperature_value(self):
         """ Get a temperature value close to the current climate values, with slight variation """
         # Choose a base temperature from the current climate's values
-        base_temperature = random.choice(self.temperature_values)
+        base_temperature = self.temperature_values[self.partition_id]
         # Add a small random value between -0.1 and 0.1
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
@@ -114,7 +108,7 @@ def main():
         allSensors.append([])
         for coord in TempsensorID[j]:
             sensor = TemperatureSensor(sensor_id=coord, partition_id=j)  # Pass partition ID
-            allSensors[j].append(sensor)
+            allSensors[j].append(sensor)  # add sensor in each partitions
             sensor.start()
 
     try:
