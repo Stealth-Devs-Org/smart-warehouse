@@ -3,6 +3,8 @@ import random
 import time
 from sensorUtils import SetSensorState
 
+
+
 sensor_state = {"sensor_type": "", "sensor_id": "", "sensor_location": "", "reading": 0.0, "current_status": 0}
     
     
@@ -14,9 +16,9 @@ def change_climate():
     current_index = 0
     while True:
         climate = climates[current_index]
-        #print(f"\nClimate changed to: {climate}\n")  
+        print(f"\nClimate changed to: {climate}\n")  
         current_index = (current_index + 1) % len(climates)  
-        time.sleep(10)
+        time.sleep(5)
 
 climate_temperature_values = {
     "winter": [0.0, -1.0, -1.5, -2.0, -1.8, -2.3, -0.5],  # Winter values with 7 partitions
@@ -24,9 +26,7 @@ climate_temperature_values = {
     "summer": [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]  # Summer values with 7 partitions
 }
 
-
-
-# Sensor ID for each partition (as coordinate locations)
+# Sensor ID for each partition (as coordinate)
 TempsensorID = [
     # Partition 1
     ["(2,2)", "(2,10)"],
@@ -56,15 +56,18 @@ class TemperatureSensor(threading.Thread):
         self.sensor_id = sensor_id
         self.partition_id = partition_id
         self.running = True
-        self.update_temperature_range() 
+        self.last_climate = climate  
+        self.update_temperature_range()
+        
 
     def run(self):
         while self.running:
+            if self.last_climate != climate:
+                self.update_temperature_range()
+                self.last_climate = climate  
             temperature = self.get_temperature_value()
             print(f"\nSensor {self.sensor_id}: {temperature:.2f}°C")
-            ######################################################################################
-            SetSensorState("temperature",self.sensor_id, self.sensor_id, round(temperature, 2), 1)      
-            ######################################################################################
+            print(climate)
             time.sleep(1)
 
     def stop(self):
@@ -77,17 +80,13 @@ class TemperatureSensor(threading.Thread):
 
     def get_temperature_value(self):
         """ Get a temperature value close to the current climate values, with slight variation """
-        # Choose a base temperature from the current climate's values
+
         base_temperature = self.temperature_values[self.partition_id]
-        # Add a small random value between -0.1 and 0.1
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
 
-
-
-
-
 def main():
+
     no_of_partitions = len(TempsensorID)
     allSensors = []
 
@@ -99,12 +98,12 @@ def main():
         allSensors.append([])
         for coord in TempsensorID[j]:
             sensor = TemperatureSensor(sensor_id=coord, partition_id=j)  # Pass partition ID
-            allSensors[j].append(sensor)  # add sensor in each partitions
+            allSensors[j].append(sensor) 
             sensor.start()
 
     try:
         while True:
-            time.sleep(0.1)  # Keep the main thread alive
+            time.sleep(0.1)  
     except KeyboardInterrupt:
         print("\nStopping all sensors...\n")
         for partition in allSensors:
