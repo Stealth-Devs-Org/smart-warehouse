@@ -3,25 +3,11 @@ import random
 import time
 
 
+from warehouseEnvironment import warehouse_temperature_values
 from sensorUtils import SetSensorState, sensor_state
     
-climate = "winter"
 
-def change_climate():
-    global climate
-    climates = ['winter', 'spring', 'summer']
-    current_index = 0
-    while True:
-        climate = climates[current_index]
-        #print(f"\nClimate changed to: {climate}\n")  
-        current_index = (current_index + 1) % len(climates)  
-        time.sleep(5)
-
-climate_temperature_values = {
-    "winter": [0.0, -1.0, -1.5, -2.0, -1.8, -2.3, -0.5],  # Winter values with 7 partitions
-    "spring": [15.0, 16.0, 15.5, 15.8, 16.3, 16.8, 16.1], # Spring values with 7 partitions
-    "summer": [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]  # Summer values with 7 partitions
-}
+#climate_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
 
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
@@ -52,33 +38,23 @@ class TemperatureSensor(threading.Thread):
         threading.Thread.__init__(self)
         self.sensor_id = sensor_id
         self.partition_id = partition_id
-        self.running = True
-        self.last_climate = climate  
-        self.update_temperature_range()
+        self.running = True  
         
 
     def run(self):
         while self.running:
-            if self.last_climate != climate:
-                self.update_temperature_range()
-                self.last_climate = climate  
             temperature = self.get_temperature_value()
-            print(f"\nSensor {self.sensor_id}: {temperature:.2f}°C")
-            SetSensorState("Temperature", self.sensor_id, self.sensor_id, temperature, 1)
+            #print(f"\nSensor {self.sensor_id}: {temperature:.2f}°C")
+            SetSensorState("Temperature", self.sensor_id, self.sensor_id,self.partition_id, round(temperature,2), 1)
             print(f"Sensor state: {sensor_state}")
             time.sleep(1)
 
     def stop(self):
         self.running = False
 
-    def update_temperature_range(self):
-        """ Update the temperature values based on the current climate """
-        global climate
-        self.temperature_values = climate_temperature_values[climate]
-
     def get_temperature_value(self):
-        """ Get a temperature value close to the current climate values, with slight variation """
-        base_temperature = self.temperature_values[self.partition_id]
+        global warehouse_temperature_values
+        base_temperature = warehouse_temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
 
@@ -87,10 +63,6 @@ def main():
     no_of_partitions = len(TempsensorID)
     allSensors = []
 
-    climate_thread = threading.Thread(target=change_climate)
-    climate_thread.daemon = True
-    climate_thread.start()
-
     for j in range(no_of_partitions):
         allSensors.append([])
         for coord in TempsensorID[j]:
@@ -98,16 +70,9 @@ def main():
             allSensors[j].append(sensor) 
             sensor.start()
 
-    try:
-        while True:
-            time.sleep(0.1)  
-    except KeyboardInterrupt:
-        print("\nStopping all sensors...\n")
-        for partition in allSensors:
-            for sensor in partition:
-                sensor.stop()  
-                sensor.join()  
-        print("All sensors stopped.")
+    
+    while True:
+        time.sleep(0.1)  
 
 if __name__ == "__main__":
     main()
