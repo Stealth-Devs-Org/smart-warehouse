@@ -9,6 +9,7 @@ from sensorUtils import SetSensorState, sensor_state
 
 #climate_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
 
+
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
     # Partition 1
@@ -72,8 +73,19 @@ def main():
             sensor.start()
 
     
-    while True:
-        time.sleep(0.1)  
+    try:
+        while True:
+            time.sleep(1)  
+            print("\nTemperature Sensors are running")
+    except KeyboardInterrupt:
+        print("\nStopping all sensors...")
+        for partition in allSensors:
+            for sensor in partition:
+                sensor.stop()
+        for partition in allSensors:
+            for sensor in partition:
+                sensor.join()
+        print("All sensors stopped.")
 
 if __name__ == "__main__":
     main()
