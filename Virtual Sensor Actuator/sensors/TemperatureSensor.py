@@ -57,6 +57,7 @@ class TemperatureSensor(threading.Thread):
         base_temperature = warehouse_temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
+    
 
 def main():
 
