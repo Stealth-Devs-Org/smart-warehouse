@@ -428,24 +428,6 @@ function drawCartesianCoordinates() {
             drawSensors(partitionsHumiditySensors,'lightblue');
             drawSensors(partitionsSmokeSensors,'grey');
 
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
 
 
