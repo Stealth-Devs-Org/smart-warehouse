@@ -1,157 +1,111 @@
-import datetime
-import json
 import threading
-
+import random
+import time
 import paho.mqtt.client as mqtt
+from warehouseEnvironment import warehouse_temperature_values
+from sensorUtils import SetSensorState, sensor_state
 
-from utils import Get_values_from_agv_json
-from TemperatureSensor import sensor_state
-
-interrupt = 0  # Global interrupt variable
-goal = None  # Global goal variable
-interrupt_lock = threading.Lock()
-goal_lock = threading.Lock()
-
-MQTT_BROKER = "localhost"
-# MQTT_BROKER = "host.docker.internal"
-
-MQTT_PORT = 1883
-MQTT_LOCATION_TOPIC = "agv/location"
-MQTT_TASK_END_TOPIC = "agv/task_complete"
-MQTT_SENSOR_TOPIC = "Sensor"        ################################################################### SAIRISAN
-MQTT_GOAL_TOPIC = ""
-MQTT_INTERRUPT_TOPIC = ""
-
-mqtt_client = mqtt.Client()
-
-
-def SetInterrupt(value):
-    global interrupt
-    with interrupt_lock:
-        interrupt = value
-
-
-def GetInterrupt():
-    global interrupt
-    with interrupt_lock:
-        return interrupt
+# Sensor ID for each partition (as coordinate)
+TempsensorID = [
+    # Partition 1
+    ["(2,2)", "(2,10)"],
+    
+    # Partition 2
+    ["(9,11)", "(19,11)", "(19,3)", "(9,3)"],
+    
+    # Partition 3
+    ["(28,11)", "(41,11)", "(28,3)", "(41,3)"],
+    
+    # Partition 4
+    ["(5,15)", "(2,28)", "(5,28)", "(2,19)"],
+    
+    # Partition 5
+    ["(12,27)", "(19,27)", "(19,17)", "(12,17)"],
+    
+    # Partition 6
+    ["(52,13)", "(52,26)", "(46,17)", "(46,24)"],
+    
+    # Partition 7
+    ["(28,18)", "(36,18)", "(28,27)", "(36,27)"]
+]
 
 
-def SetGoal(new_goal):
-    global goal
-    with goal_lock:
-        goal = new_goal
+BROKER = "localhost"  
+PORT = 1883
+TOPIC = "/sensor"
+
+client = mqtt.Client()
 
 
-def GetGoal():
-    global goal
-    with goal_lock:
-        return goal
+def connect_mqtt():
+    client.connect(BROKER, PORT, 60)
+    client.loop_start()  #loop in seperate thread...
 
+class TemperatureSensor(threading.Thread):
+    def __init__(self, sensor_id, partition_id):
+        threading.Thread.__init__(self)
+        self.sensor_id = sensor_id
+        self.partition_id = partition_id
+        self.running = True  
+        
+    def run(self):
+        while self.running:
+            temperature = self.get_temperature_value()
+            SetSensorState("Temperature", self.sensor_id, self.sensor_id, self.partition_id, round(temperature, 2), 1)
+            print(f"Sensor state: {sensor_state}")
+            
+ 
+            self.publish_temperature(temperature)             # Publish 
 
-def setTopic(AGV_ID):
+            time.sleep(1)
 
-    global MQTT_INTERRUPT_TOPIC
-    global MQTT_GOAL_TOPIC
-    MQTT_GOAL_TOPIC = f"agv{AGV_ID}/goal"
-    MQTT_INTERRUPT_TOPIC = f"agv{AGV_ID}/interrupt"
-    print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
-    print(f"MQTT_GOAL_TOPIC: {MQTT_GOAL_TOPIC}")
-    print(f"MQTT_INTERRUPT_TOPIC: {MQTT_INTERRUPT_TOPIC}")
+    def stop(self):
+        self.running = False
 
+    def get_temperature_value(self):
+        global warehouse_temperature_values
+        base_temperature = warehouse_temperature_values[self.partition_id]
+        variation = random.uniform(-0.1, 0.1)
+        return base_temperature + variation
 
+    def publish_temperature(self, temperature):
+        # Create payload to send
+        payload = {
+            "sensor_id": self.sensor_id,
+            "partition_id": self.partition_id,
+            "temperature": round(temperature, 2)
+        }
+        # Publish to the MQTT broker
+        client.publish(TOPIC, str(payload))
+        print(f"Published to MQTT: {payload}")
 
+def main():
+    connect_mqtt()
 
-def ConnectMQTT(AGV_ID):
-    setTopic(AGV_ID)
+    no_of_partitions = len(TempsensorID)
+    allSensors = []
+
+    for j in range(no_of_partitions):
+        allSensors.append([])
+        for coord in TempsensorID[j]:
+            sensor = TemperatureSensor(sensor_id=coord, partition_id=j)  # Pass partition ID
+            allSensors[j].append(sensor) 
+            sensor.start()
+
     try:
-        mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC, qos=2)  # Subscribe to the interrupt topic
-        mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
-        mqtt_client.on_message = on_message  # Set the message handler
-        mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
-        print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
-        print(f"Subscribed to MQTT topic '{MQTT_GOAL_TOPIC}' for goals")
-    except Exception as e:
-        print(f"Failed to connect to MQTT broker: {e}")
+        while True:
+            time.sleep(1)  
+            print("\nTemperature Sensors are running")
+    except KeyboardInterrupt:
+        print("\nStopping all sensors...")
+        for partition in allSensors:
+            for sensor in partition:
+                sensor.stop()
+        for partition in allSensors:
+            for sensor in partition:
+                sensor.join()
+        print("All sensors stopped.")
+        client.loop_stop()  # Stop the MQTT loop
 
-
-###############################################################################
-def SetTopic(SensorID):
-    global MQTT_SENSOR_TOPIC
-    MQTT_SENSOR_TOPIC = f"Sensor/{SensorID}"
-    print(f"MQTT_SENSOR_TOPIC: {MQTT_SENSOR_TOPIC}")
-###############################################################################
-
-
-def on_message(client, userdata, message):
-    try:
-        data = json.loads(message.payload.decode())
-        print(f"Received message on topic '{message.topic}': {data}")
-        if message.topic == MQTT_INTERRUPT_TOPIC:
-            interrupt_value = data.get("interrupt")
-            if interrupt_value == 1:
-                SetInterrupt(1)
-                print("Received 'Stop' interrupt. Stopping AGV.")
-            else:
-                SetInterrupt(interrupt_value)
-                print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt_value)
-
-        elif message.topic == MQTT_GOAL_TOPIC:
-            SetGoal(data)
-            print(f"Received new goal: {goal}")
-
-    except json.JSONDecodeError as e:
-        print(f"Error decoding message: {e}")
-
-
-def UpdateCurrentLocation():
-    from utils import agv_state
-
-    # Get the current time in a readable format
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-    location_data = {
-        "agv_id": f"agv{agv_state["agv_id"]}",
-        "location": agv_state["current_location"],
-        "segment": agv_state["current_segment"],
-        "status": agv_state["current_status"],
-        "timestamp": timestamp,
-    }
-    mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
-    print(
-        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
-    )
-
-############################################################################################
-def UpdateSensorReadings():
-    # Get the current time in a readable format
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-    sensor_data = {
-        "sensor_type": sensor_state["sensor_type"],
-        "sensor_id": f"sensor{sensor_state["sensor_id"]}",
-        "location": sensor_state["sensor_location"],
-        "reading": sensor_state["reading"],
-        "status": sensor_state["current_status"],
-        "timestamp": timestamp,
-    }
-    mqtt_client.publish(MQTT_SENSOR_TOPIC, json.dumps(sensor_data), qos=1)
-    print(
-         f"Published current location {sensor_data['location']} & reading {sensor_state["reading"]} to MQTT topic '{MQTT_SENSOR_TOPIC}'"
-     )
-############################################################################################
-
-
-
-def EndTask(AGV_ID):
-    print("Inside EndTask")
-    try:
-        # Get the current time in a readable format
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        data = {"agv_id": f"agv{AGV_ID}", "timestamp": timestamp}
-        mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data), qos=2)
-
-    except Exception as e:
-        print(f"Failed to publish to MQTT: {e}")
+if __name__ == "__main__":
+    main()
