@@ -1,6 +1,5 @@
 import paho.mqtt.client as mqtt
 
-
 BROKER = "localhost"  
 PORT = 1883
 TOPIC = "/sensor"
@@ -12,7 +11,6 @@ def on_connect(client, userdata, flags, rc):
         client.subscribe(TOPIC)
     else:
         print(f"Failed to connect, return code {rc}")
-
 
 def on_message(client, userdata, msg):
     payload = msg.payload.decode('utf-8')
