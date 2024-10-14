@@ -2,13 +2,15 @@ import paho.mqtt.client as mqtt
 
 BROKER = "localhost"  
 PORT = 1883
-TOPIC = "/sensor"
+TOPIC1 = "/sensor_temperature"
+TOPIC2 = "/sensor_airquality"
 
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT Broker!")
-        client.subscribe(TOPIC)
+        client.subscribe(TOPIC1)
+        client.subscribe(TOPIC2)
     else:
         print(f"Failed to connect, return code {rc}")
 

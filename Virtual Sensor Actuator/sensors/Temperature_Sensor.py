@@ -32,7 +32,7 @@ TempsensorID = [
 
 BROKER = "localhost"  
 PORT = 1883
-TOPIC = "/sensor"
+TOPIC = "/sensor_temperature"
 
 client = mqtt.Client()
 
@@ -52,7 +52,7 @@ class TemperatureSensor(threading.Thread):
         while self.running:
             temperature = self.get_temperature_value()
             SetSensorState("Temperature", self.sensor_id, self.sensor_id, self.partition_id, round(temperature, 2), 1)
-            #print(f"Sensor state: {sensor_state}")
+            print(f"Sensor state: {sensor_state}")
             client.publish(TOPIC, str(sensor_state))
             #self.publish_temperature(temperature)             # Publish 
             time.sleep(1)
@@ -65,17 +65,6 @@ class TemperatureSensor(threading.Thread):
         base_temperature = warehouse_temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
-
-    def publish_temperature(self, temperature):
-        # Create payload to send
-        payload = {
-            "sensor_id": self.sensor_id,
-            "partition_id": self.partition_id,
-            "temperature": round(temperature, 2)
-        }
-        # Publish to the MQTT broker
-        client.publish(TOPIC, str(payload))
-        print(f"Published to MQTT: {payload}")
 
 def main():
     connect_mqtt()
@@ -93,7 +82,7 @@ def main():
     try:
         while True:
             time.sleep(1)  
-            print("\nTemperature Sensors are running")
+            #print("\nTemperature Sensors are running")
     except KeyboardInterrupt:
         print("\nStopping all sensors...")
         for partition in allSensors:
