@@ -16,6 +16,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     payload = msg.payload.decode('utf-8')
+    #print(f"ClientID={client} Topic={msg.topic} Message={payload}")
     print(f"Received :  {msg.topic}: {payload}")
 
 def main():

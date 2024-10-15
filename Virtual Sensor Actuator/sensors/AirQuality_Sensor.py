@@ -35,26 +35,33 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "/sensor_airquality"
 
-client = mqtt.Client()
+#client = mqtt.Client()
 
 
-def connect_mqtt():
-    client.connect(BROKER, PORT, 60)
-    client.loop_start()  #loop in seperate thread...
+# def connect_mqtt():
+#     client.connect(BROKER, PORT, 60)
+#     client.loop_start()  #loop in seperate thread...
 
 class AirQualitySensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
         threading.Thread.__init__(self)
+        self.client = mqtt.Client()
         self.sensor_id = sensor_id
         self.partition_id = partition_id
         self.running = True  
-        
+
+    def connect_mqtt(self):
+        self.client.connect(BROKER, PORT, 60)
+        self.client.loop_start()  #loop in seperate thread...
+
     def run(self):
+        self.connect_mqtt()
         while self.running:
             airquality = self.get_airquality_value()
             SetSensorState("AirQuality", self.sensor_id, self.sensor_id, self.partition_id, round(airquality, 2), 1)
+            #print(f"ClientID={self.client}")
             print(f"Sensor state: {sensor_state}")
-            client.publish(TOPIC, str(sensor_state)) 
+            self.client.publish(TOPIC, str(sensor_state)) 
             time.sleep(1)
 
     def stop(self):
@@ -67,7 +74,7 @@ class AirQualitySensor(threading.Thread):
         return base_airquality + variation
 
 def main():
-    connect_mqtt()
+    
 
     no_of_partitions = len(AirQualitysensorID)
     allSensors = []
@@ -92,7 +99,7 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        client.loop_stop()  # Stop the MQTT loop
+        #client.loop_stop()  # Stop the MQTT loop
 
 if __name__ == "__main__":
     main()

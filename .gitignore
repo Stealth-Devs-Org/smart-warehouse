@@ -176,3 +176,7 @@ Main Server/server/agv/json_data/sent_interrupts.json
 Main Server/server/agv/json_data/collisions.json
 Main Server/server/agv/json_data/permanent_obstacles.json
 Main Server/server/agv/json_data/working_agvs.json
+
+# Node modules
+node_modules/
+
