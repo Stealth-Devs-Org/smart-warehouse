@@ -1,0 +1,53 @@
+services:
+  mqtt_broker:
+    container_name: Warehouse_MQTT_Broker
+    image: eclipse-mosquitto:1.6
+    restart: always
+    ports:
+      - 1883:1883
+      - 9002:9001
+    networks:
+      warehouse_network:
+        ipv4_address: 192.168.10.2
+  
+  mongodb:
+    container_name: Warehouse_MongoDB
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - type: bind
+        source: ./mongoDB/data
+        target: /data/db
+    networks:
+      warehouse_network:
+        ipv4_address: 192.168.10.3
+
+  warehouse_server:
+    container_name: Warehouse_Server
+    build: .
+    image: main-server:latest
+    restart: always
+    ports:
+      - 5000:5000
+    depends_on:
+      - mqtt_broker
+      - mongodb
+    environment:
+      - MQTT_BROKER=warehouse_mqtt_broker
+      - MONGO_DB=warehouse_mongodb
+    volumes:
+      - type: bind
+        source: .env
+        target: /main-server/.env
+    networks:
+      warehouse_network:
+        ipv4_address: 192.168.10.4
+
+networks:
+  warehouse_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24

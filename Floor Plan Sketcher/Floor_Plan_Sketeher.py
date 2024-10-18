@@ -190,14 +190,14 @@ def on_press(event):
         print(f"Selected point for moving: ({x}, {y})")
 
 # Main execution
-file_path = 'grid.xlsx'  # Path to your input Excel file
+file_path = 'Floor Plan Sketcher\grid.xlsx'  # Path to your input Excel file
 grid = ReadGrid(file_path)
 selected_points = []
 mode = None  # Current mode: add, erase, connect, or move
 move_point = None  # The point being moved
 erased_points = set()  # To track erased points
-grid_size_x = 32  # Size of the grid in the x direction
-grid_size_y = 28  # Size of the grid in the y direction
+grid_size_x = 40  # Size of the grid in the x direction
+grid_size_y = 30  # Size of the grid in the y direction
 
 # Create the main window
 root = tk.Tk()
