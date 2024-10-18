@@ -69,6 +69,7 @@ class AirQualitySensor(threading.Thread):
 
     def stop(self):
         self.running = False
+        self.client.loop_stop()
 
     def get_airquality_value(self):
         global warehouse_airquality_values

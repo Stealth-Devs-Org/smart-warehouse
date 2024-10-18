@@ -57,6 +57,7 @@ class TemperatureSensor(threading.Thread):
         self.client.loop_start()  #loop in seperate thread...
         
     def run(self):
+        self.connect_mqtt()
         while self.running:
             temperature = self.get_temperature_value()
             SetSensorState("Temperature", self.sensor_id, self.sensor_id, self.partition_id, round(temperature, 2), 1)
@@ -65,6 +66,7 @@ class TemperatureSensor(threading.Thread):
             time.sleep(1)
 
     def stop(self):
+        self.client.loop_stop()
         self.running = False
 
     def get_temperature_value(self):
@@ -99,7 +101,7 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        client.loop_stop()  # Stop the MQTT loop
+        
 
 if __name__ == "__main__":
     main()

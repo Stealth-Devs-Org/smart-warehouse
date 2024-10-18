@@ -52,6 +52,7 @@ class HumiditySensor(threading.Thread):
 
     def stop(self):
         self.running = False
+        self.client.loop_stop()
 
     def get_humidity_value(self):
         global warehouse_humidity_values
@@ -85,7 +86,7 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        client.loop_stop()  # Stop the MQTT loop
+        
 
 if __name__ == "__main__":
     main()
