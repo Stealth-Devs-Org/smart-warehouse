@@ -1,9 +1,12 @@
 import threading
 import random
 import time
+import sys
 import paho.mqtt.client as mqtt
-from warehouseEnvironment import warehouse_temperature_values
 from sensorUtils import SetSensorState, sensor_state
+
+sys.path.append('Virtual Sensor Actuator')
+from warehouseEnvironment import warehouse_temperature_values
 
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
@@ -34,27 +37,31 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "/sensor_temperature"
 
-client = mqtt.Client()
+# client = mqtt.Client()
 
 
-def connect_mqtt():
-    client.connect(BROKER, PORT, 60)
-    client.loop_start()  #loop in seperate thread...
+# def connect_mqtt():
+#     client.connect(BROKER, PORT, 60)
+#     client.loop_start()  #loop in seperate thread...
 
 class TemperatureSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
         threading.Thread.__init__(self)
+        self.client = mqtt.Client()
         self.sensor_id = sensor_id
         self.partition_id = partition_id
         self.running = True  
+
+    def connect_mqtt(self):
+        self.client.connect(BROKER, PORT, 60)
+        self.client.loop_start()  #loop in seperate thread...
         
     def run(self):
         while self.running:
             temperature = self.get_temperature_value()
             SetSensorState("Temperature", self.sensor_id, self.sensor_id, self.partition_id, round(temperature, 2), 1)
             print(f"Sensor state: {sensor_state}")
-            client.publish(TOPIC, str(sensor_state))
-            #self.publish_temperature(temperature)             # Publish 
+            self.client.publish(TOPIC, str(sensor_state)) 
             time.sleep(1)
 
     def stop(self):
@@ -67,7 +74,7 @@ class TemperatureSensor(threading.Thread):
         return base_temperature + variation
 
 def main():
-    connect_mqtt()
+    # connect_mqtt()
 
     no_of_partitions = len(TempsensorID)
     allSensors = []

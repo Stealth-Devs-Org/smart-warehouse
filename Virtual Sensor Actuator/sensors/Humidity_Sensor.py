@@ -1,9 +1,15 @@
 import threading
 import random
+import sys
 import time
 import paho.mqtt.client as mqtt
-from warehouseEnvironment import warehouse_humidity_values
 from sensorUtils import SetSensorState, sensor_state
+
+sys.path.append('Virtual Sensor Actuator')
+from warehouseEnvironment import warehouse_humidity_values
+
+
+
 
 # Sensor ID for each partition (as coordinate)
 HumiditysensorID = [
