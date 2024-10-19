@@ -75,6 +75,10 @@ def stop_agv(agv_id, col_agv_id):
 
     topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": 1}
+    
+    t1 = time.time()
+    message_dict['t1'] = t1
+
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
     print(f"Sent stop signal to AGV {agv_id}")
@@ -96,6 +100,10 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
 
     topic = f"{agv_id}/interrupt"
     message_dict = {"interrupt": 2}
+
+    t1 = time.time()
+    message_dict['t1'] = t1
+
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
     print(f"Sent recalibrate signal to AGV {agv_id}")
@@ -107,7 +115,7 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
     # Update_sent_interrupt_json(sent_interrupts)
 
-
+ 
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
     # agvs_data = Get_values_from_agv_json()
@@ -199,9 +207,13 @@ def update_agv_location(data):
 
 @agv.route("/path_clearance", methods=["POST"])
 def path_clearance():
+    # Capture t2 (time when the request is received)
+    t2 = time.time()
+
     data = request.json
     agv_id = data["agv_id"]
     segment = data["segment"]
+    t1 = data.get("t1")  # Extract t1 from client request
 
     # agvs_data = Get_values_from_agv_json()
     if agv_id in agvs_data.keys():
@@ -220,20 +232,23 @@ def path_clearance():
         if not obstacles:
             agvs_data[agv_id]["segment"] = segment
             message_dict = {"result": 1}
-            message_json = json.dumps(message_dict)
-            return message_json
         else:
             agvs_data[agv_id]["segment"] = [agvs_data[agv_id]["location"]]
             message_dict = {"result": obstacles}
-            message_json = json.dumps(message_dict)
-            return message_json
     else:
         print(f"AGV with id {agv_id} not found")
         print(agvs_data.keys())
         message_dict = {"result": 0}  # 0 means AGV not found
-        message_json = json.dumps(message_dict)
-        return message_json
-
+        
+    # Add timestamps to the response
+    message_dict["t1"] = t1
+    message_dict["t2"] = t2
+    # Capture t3 (time when the goal is sent back to client)
+    t3 = time.time()
+    message_dict["t3"] = t3
+    
+    message_json = json.dumps(message_dict)
+    return message_json
 
 @agv.route("/")
 def index():
@@ -242,10 +257,15 @@ def index():
 
 @agv.route("/get_goal", methods=["POST"])
 def get_goal():
+    # Capture t2 (time when the request is received)
+    t2 = time.time()
+
     from server.agv.scheduler import generate_random_task, task_divider, working_agvs
 
     data = request.json
     agv_id = data["agv_id"]
+    t1 = data.get("t1")  # Extract t1 from client request
+
     if agv_id in working_agvs.keys():
         task = working_agvs[agv_id]
         sending_task = task_divider(task)
@@ -255,6 +275,14 @@ def get_goal():
         working_agvs[agv_id] = task
         task = working_agvs[agv_id]
         sending_task = task_divider(task)
+    
+    # Add timestamps to the response
+    sending_task["t1"] = t1
+    sending_task["t2"] = t2
+    # Capture t3 (time when the goal is sent back to client)
+    t3 = time.time()
+    sending_task["t3"] = t3
+    
     message_json = json.dumps(sending_task)
     return message_json
 

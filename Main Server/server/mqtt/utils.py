@@ -1,5 +1,7 @@
 import json
-
+import time
+import os
+import csv
 # from flask_mqtt import Mqtt
 import paho.mqtt.client as mqtt
 
@@ -46,6 +48,7 @@ def ConnectMQTT():
         print("Subscribed to agv/location")
         mqtt_client.subscribe("agv/task_complete", qos=2)  # Subscribe to the task complete topic
         print("Subscribed to agv/task_complete")
+        mqtt_client.subscribe("agv/response", qos=2)
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
     except Exception as e:
@@ -54,9 +57,13 @@ def ConnectMQTT():
 
 def on_message(client, userdata, message):
     try:
+        t = time.time()
         topic = message.topic
         payload = message.payload.decode()
         data = json.loads(payload)
+        t1 = data["t1"]
+        SendResponse(data["agv_id"], t1, t, topic)
+
         if topic == "agv/location":
             from server.agv.col_avoid import update_agv_location
 
@@ -66,5 +73,44 @@ def on_message(client, userdata, message):
             from server.agv.scheduler import task_complete
 
             task_complete(data)
+        
+        elif topic == "agv/response":
+            t2 = data["t2"]
+            t3 = data["t3"]
+            SaveToCSV(data["agv_id"], data["interrupt_value"], t1, t2, t3, t, "interrupt_response.csv")
+
     except json.JSONDecodeError as e:
         print(f"Error decoding message: {e}")
+
+
+def SendResponse(AGV_ID, t1, t2, topic):
+    response_topic = f"{AGV_ID}/response"
+    
+    t3 = time.time()
+    response = {
+        "t1": t1,
+        "t2": t2,
+        "t3": t3,
+        "topic": topic
+    }
+
+    response = json.dumps(response)
+    mqtt_client.publish(response_topic, response, qos=2)
+    return
+
+def SaveToCSV(AGV_ID, interrupt_value,  t1, t2, t3, t4, filename):
+    # Check if file exists
+    file_exists = os.path.isfile(filename)
+
+    # Open CSV file in append mode
+    with open(filename, mode="a", newline='') as file:
+        writer = csv.writer(file)
+
+        # If file does not exist, write the header
+        if not file_exists:
+            writer.writerow(["AGV_ID", "interrupt_value", "t1", "t2", "t3", "t4"])  # Write the header
+
+        # Write the row with timestamps
+        writer.writerow([AGV_ID, interrupt_value, t1, t2, t3, t4])
+
+
