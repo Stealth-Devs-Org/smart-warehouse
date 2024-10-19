@@ -3,10 +3,8 @@ import random
 import time
 import sys
 import paho.mqtt.client as mqtt
-from sensorUtils import SetSensorState, sensor_state
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
-sys.path.append('Virtual Sensor Actuator')
-from warehouseEnvironment import warehouse_airquality_values
 
 # Sensor ID for each partition (as coordinate)
 AirQualitysensorID = [
@@ -72,7 +70,7 @@ class AirQualitySensor(threading.Thread):
         self.client.loop_stop()
 
     def get_airquality_value(self):
-        global warehouse_airquality_values
+        warehouse_airquality_values = ReadVariableFromDatabase("AirQuality Values")
         base_airquality = warehouse_airquality_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_airquality + variation

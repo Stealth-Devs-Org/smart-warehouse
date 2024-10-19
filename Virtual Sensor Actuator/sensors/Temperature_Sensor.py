@@ -3,10 +3,9 @@ import random
 import time
 import sys
 import paho.mqtt.client as mqtt
-from sensorUtils import SetSensorState, sensor_state
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
-sys.path.append('Virtual Sensor Actuator')
-from warehouseEnvironment import warehouse_temperature_values
+
 
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
@@ -70,7 +69,7 @@ class TemperatureSensor(threading.Thread):
         self.running = False
 
     def get_temperature_value(self):
-        global warehouse_temperature_values
+        warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
         base_temperature = warehouse_temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation

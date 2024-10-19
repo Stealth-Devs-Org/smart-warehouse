@@ -97,7 +97,6 @@ class AirConditioner(threading.Thread):
         warehouse_temperature_values = values
 
         with open(filepath, 'w') as file:
-
             file.write(', '.join(map(str, warehouse_temperature_values)) + "\n\n")
             
 
@@ -109,7 +108,7 @@ def main():
     for j in range(no_of_partitions):
         allActuators.append([])
         for coord in AirConditionerID[j]:
-            actuator = AirConditioner(actuator_id=coord, partition_id=j)  # Pass partition ID
+            actuator = AirConditioner(actuator_id=coord, partition_id=j)  
             allActuators[j].append(actuator) 
             actuator.start()
 
@@ -126,7 +125,7 @@ def main():
             for actuator in partition:
                 actuator.join()
         print("All actuators stopped.")
-        # client.loop_stop()  # Stop the MQTT loop
+        
 
 if __name__ == "__main__":
     main()

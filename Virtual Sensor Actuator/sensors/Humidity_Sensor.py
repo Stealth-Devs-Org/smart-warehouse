@@ -3,10 +3,7 @@ import random
 import sys
 import time
 import paho.mqtt.client as mqtt
-from sensorUtils import SetSensorState, sensor_state
-
-sys.path.append('Virtual Sensor Actuator')
-from warehouseEnvironment import warehouse_humidity_values
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
 
 
@@ -55,7 +52,7 @@ class HumiditySensor(threading.Thread):
         self.client.loop_stop()
 
     def get_humidity_value(self):
-        global warehouse_humidity_values
+        warehouse_airquality_values = ReadVariableFromDatabase("Humidity Values")
         base_humidty = warehouse_humidity_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)   
         return base_humidty + variation

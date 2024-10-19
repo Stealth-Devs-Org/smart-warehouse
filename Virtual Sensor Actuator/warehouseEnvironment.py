@@ -14,6 +14,7 @@ desired_warehouse_humidity_values = [45.0, 47.5, 48.0, 49.5, 44.0, 50.2, 46.8]  
 
 
 
+# for database environment...............................................
 
 warehouse_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
 
@@ -34,20 +35,21 @@ directory = 'Virtual Sensor Actuator'
 filename = 'warehouse_Env_data.txt'
 filepath = os.path.join(directory, filename)
 
-def writeToDatabase():
-    global warehouse_temperature_values, warehouse_airquality_values, warehouse_smoke_values, warehouse_humidity_values
-    with open(filepath, 'w') as file:
-        file.write("Temperature Values :\n")
-        file.write(', '.join(map(str, warehouse_temperature_values)) + "\n\n")
+# def writeToDatabase():      # uncomment this and a write function in main to write data to file only first time.
+#     global warehouse_temperature_values, warehouse_airquality_values, warehouse_smoke_values, warehouse_humidity_values
+#     with open(filepath, 'w') as file:
+#         file.write("Temperature Values :\n")
+#         file.write(', '.join(map(str, warehouse_temperature_values)) + "\n\n")
         
-        file.write("AirQuality Values :\n")
-        file.write(', '.join(map(str, warehouse_airquality_values)) + "\n\n")
+#         file.write("AirQuality Values :\n")
+#         file.write(', '.join(map(str, warehouse_airquality_values)) + "\n\n")
         
-        file.write("Smoke Values :\n")
-        file.write(', '.join(map(str, warehouse_smoke_values)) + "\n\n")
+#         file.write("Smoke Values :\n")
+#         file.write(', '.join(map(str, warehouse_smoke_values)) + "\n\n")
         
-        file.write("Humidity Values :\n")
-        file.write(', '.join(map(str, warehouse_humidity_values)) + "\n")
+#         file.write("Humidity Values :\n")
+#         file.write(', '.join(map(str, warehouse_humidity_values)) + "\n")
+
 
 def ReadFromDatabase():
     with open(filepath, 'r') as file:
@@ -61,7 +63,7 @@ def ReadFromDatabase():
     for i, line in enumerate(lines):
         if "Temperature Values" in line:
             read_temperature_values = list(map(float, lines[i + 1].strip().split(', ')))
-        elif "Air Quality Values" in line:
+        elif "AirQuality Values" in line:
             read_airquality_values = list(map(int, lines[i + 1].strip().split(', ')))
         elif "Smoke Values" in line:
             read_smoke_values = list(map(float, lines[i + 1].strip().split(', ')))
@@ -73,6 +75,8 @@ def ReadFromDatabase():
     print("Smoke Values:", read_smoke_values)
     print("Humidity Values:", read_humidity_values)
 
+    print("\n\n")
+
             
 
 
@@ -80,7 +84,7 @@ def ReadFromDatabase():
 
 
 if __name__ == "__main__":
-    writeToDatabase()
+    # writeToDatabase()
     # print("Data written to file 'warehouse_data.txt'")
     while True:
         ReadFromDatabase()
