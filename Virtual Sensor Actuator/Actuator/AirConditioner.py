@@ -6,30 +6,30 @@ import paho.mqtt.client as mqtt
 from actuatorUtils import SetActuatorState, actuator_state, ReadVariableFromDatabase
 
 sys.path.append('Virtual Sensor Actuator')
-from warehouseEnvironment import desired_warehouse_airquality_values
+from warehouseEnvironment import desired_warehouse_temperature_values
 
 
 AirConditionerID = [
     # Partition 1
-    ["(2,2)", "(2,10)"],
+    ["(2,2)"],
     
     # Partition 2
-    ["(9,11)", "(19,11)", "(19,3)", "(9,3)"],
+    ["(9,11)"],
     
     # Partition 3
-    ["(28,11)", "(41,11)", "(28,3)", "(41,3)"],
+    ["(28,11)"],
     
     # Partition 4
-    ["(5,15)", "(2,28)", "(5,28)", "(2,19)"],
+    ["(5,15)"],
     
     # Partition 5
-    ["(12,27)", "(19,27)", "(19,17)", "(12,17)"],
+    ["(12,27)"],
     
     # Partition 6
-    ["(52,13)", "(52,26)", "(46,17)", "(46,24)"],
+    ["(52,13)"],
     
     # Partition 7
-    ["(28,18)", "(36,18)", "(28,27)", "(36,27)"]
+    ["(28,18)"]
 ]
 
 BROKER = "localhost"  
@@ -49,13 +49,14 @@ class AirConditioner(threading.Thread):
         self.client.loop_start()  #loop in seperate thread...
         
     def run(self):
+        self.connect_mqtt()
         while self.running:
             rateofChange = self.get_RateofChange()
-            self.AdjustValues(rateofChange)
-            SetActuatorState("AirConditioner", self.actuator_id, self.actuator_id, self.partition_id, round(rateofChange, 2), 1)
+            self.AdjustValues(rateofChange, "Temperature Values")
+            SetActuatorState("AirConditioner", self.actuator_id,  self.partition_id,self.actuator_id, round(rateofChange, 2), 1)
             print(f"Actuator state: {actuator_state}")
             self.client.publish(TOPIC, str(actuator_state)) 
-            time.sleep(1)
+            time.sleep(1.2)
 
     def stop(self):
         self.running = False
@@ -68,36 +69,68 @@ class AirConditioner(threading.Thread):
     #     return base_temperature + variation
 
 
-    directory = 'Virtual Sensor Actuator'
-    filename = 'warehouse_data.txt'
-    filepath = os.path.join(directory, filename)
 
     def get_RateofChange(self):  # optional to send in Mqtt
         rateofchange = 0.3
         return rateofchange
 
-    def AdjustValues(self,rateOfChange):
+    def AdjustValues(self,rateOfChange, varaible):
         warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
         global desired_warehouse_temperature_values
 
-        if desired_warehouse_airquality_values[self.partition_id] > warehouse_temperature_values[self.partition_id]:
+
+        if desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] < rateOfChange and desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] > 0:
+            warehouse_temperature_values[self.partition_id] = desired_warehouse_temperature_values[self.partition_id]
+            self.writeValuesToDatabase(warehouse_temperature_values, varaible)
+
+        elif desired_warehouse_temperature_values[self.partition_id] > warehouse_temperature_values[self.partition_id]:
             value = warehouse_temperature_values[self.partition_id] + rateOfChange
-            warehouse_temperature_values[self.partition_id] = value
-            self.writeValuesToDatabase(warehouse_temperature_values)
+            warehouse_temperature_values[self.partition_id] = round(value, 1)
+
+            self.writeValuesToDatabase(warehouse_temperature_values, varaible)
         
-        elif desired_warehouse_airquality_values[self.partition_id] < warehouse_temperature_values[self.partition_id]:
+        elif desired_warehouse_temperature_values[self.partition_id] < warehouse_temperature_values[self.partition_id]:
             value = warehouse_temperature_values[self.partition_id] - rateOfChange
-            warehouse_temperature_values[self.partition_id] = value
-            self.writeValuesToDatabase(warehouse_temperature_values)
+            warehouse_temperature_values[self.partition_id] = round(value, 1)
+            self.writeValuesToDatabase(warehouse_temperature_values ,varaible)
+
+    
+
+    def writeValuesToDatabase(self,values,varaible):
+        directory = 'Virtual Sensor Actuator'
+        filename = 'warehouse_Env_data.txt'
+        filepath = os.path.join(directory, filename)
+        
+        warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
+        warehouse_airquality_values = ReadVariableFromDatabase("AirQuality Values")
+        warehouse_smoke_values = ReadVariableFromDatabase("Smoke Values")
+        warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
+
+        if varaible == "Temperature Values":
+            warehouse_temperature_values = values 
+        elif varaible == "AirQuality Values":
+            warehouse_airquality_values = int(values)
+        elif varaible == "Smoke Values":
+            warehouse_smoke_values = values
+        elif varaible == "Humidity Values":
+            warehouse_humidity_values = values
         
 
-
-    def writeValuesToDatabase(values):
-        global filepath
-        warehouse_temperature_values = values
 
         with open(filepath, 'w') as file:
+            file.write("Temperature Values :\n")
             file.write(', '.join(map(str, warehouse_temperature_values)) + "\n\n")
+            
+            file.write("AirQuality Values :\n")
+            file.write(', '.join(map(str, warehouse_airquality_values)) + "\n\n")
+            
+            file.write("Smoke Values :\n")
+            file.write(', '.join(map(str, warehouse_smoke_values)) + "\n\n")
+            
+            file.write("Humidity Values :\n")
+            file.write(', '.join(map(str, warehouse_humidity_values)) + "\n")
+
+
             
 
 

@@ -59,7 +59,7 @@ class AirQualitySensor(threading.Thread):
         self.connect_mqtt()
         while self.running:
             airquality = self.get_airquality_value()
-            SetSensorState("AirQuality", self.sensor_id, self.sensor_id, self.partition_id, round(airquality, 2), 1)
+            SetSensorState("AirQuality", self.sensor_id,  self.partition_id,self.sensor_id, round(airquality, 2), 1)
             #print(f"ClientID={self.client}")
             print(f"Sensor state: {sensor_state}")
             self.client.publish(TOPIC, str(sensor_state)) 

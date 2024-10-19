@@ -42,7 +42,7 @@ class HumiditySensor(threading.Thread):
     def run(self):
         while self.running:
             humidity = self.get_humidity_value()
-            SetSensorState("Humidity", self.sensor_id, self.sensor_id, self.partition_id, round(humidity, 2), 1)
+            SetSensorState("Humidity", self.sensor_id,  self.partition_id,self.sensor_id, round(humidity, 2), 1)
             print(f"Sensor state: {sensor_state}")
             client.publish(TOPIC, str(sensor_state))
             time.sleep(1)
