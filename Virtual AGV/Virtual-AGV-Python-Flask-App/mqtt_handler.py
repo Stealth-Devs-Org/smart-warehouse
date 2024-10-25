@@ -108,9 +108,9 @@ def on_message(client, userdata, message):
             t2 = data["t2"]
             t3 = data["t3"]
             if data["topic"] == "agv/location":
-                SaveToCSV(t1, t2, t3, t, "update_location.csv")
+                SaveToCSV(agv_id, t1, t2, t3, t, "update_location.csv")
             elif data["topic"] == "agv/task_complete":
-                SaveToCSV(t1, t2, t3, t, "update_task_end.csv")
+                SaveToCSV(agv_id, t1, t2, t3, t, "update_task_end.csv")
 
     except json.JSONDecodeError as e:
         print(f"Error decoding message: {e}")

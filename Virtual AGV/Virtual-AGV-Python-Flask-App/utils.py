@@ -185,7 +185,7 @@ def Get_values_from_agv_json(file_name, key_list="all"):
     values = {key: agv_status.get(key, 0) for key in key_list}
     return values
 
-def SaveToCSV(t1, t2, t3, t4, filename):
+def SaveToCSV(agv_id, t1, t2, t3, t4, filename):
     # Check if file exists
     file_exists = os.path.isfile(filename)
 
@@ -195,7 +195,7 @@ def SaveToCSV(t1, t2, t3, t4, filename):
 
         # If file does not exist, write the header
         if not file_exists:
-            writer.writerow(["t1", "t2", "t3", "t4"])  # Write the header
+            writer.writerow(["AGV_Id", "t1", "t2", "t3", "t4"])  # Write the header
 
         # Write the row with timestamps
-        writer.writerow([t1, t2, t3, t4])
+        writer.writerow([agv_id, t1, t2, t3, t4])

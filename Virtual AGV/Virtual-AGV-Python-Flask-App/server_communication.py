@@ -29,7 +29,7 @@ def RequestPathClearance(AGV_ID, segment):
         t3 = response_data.get("t3")
 
         # Save t1, t2, t3, t4 to a CSV file
-        SaveToCSV(t1_server, t2, t3, t4, "get_path_clearance.csv")
+        SaveToCSV("agv"+str(AGV_ID), t1_server, t2, t3, t4, "get_path_clearance.csv")
         return response_data.get("result")
     except requests.exceptions.RequestException as e:
         print(f"Error obtaining path clearance: {e}")
@@ -58,7 +58,7 @@ def ObtainGoalHttp(AGV_ID):
         t3 = response_data.get("t3")
 
         # Save t1, t2, t3, t4 to a CSV file
-        SaveToCSV(t1_server, t2, t3, t4, "get_goal.csv")
+        SaveToCSV("agv"+str(AGV_ID), t1_server, t2, t3, t4, "get_goal.csv")
         
         return response_data
     except requests.exceptions.RequestException as e:
