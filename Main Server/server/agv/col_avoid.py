@@ -74,10 +74,14 @@ def stop_agv(agv_id, col_agv_id):
         return
 
     topic = f"{agv_id}/interrupt"
-    message_dict = {"interrupt": 1}
+    message_dict = {
+                    "agv_id": agv_id,
+                    "interrupt": 1}
     
     t1 = time.time()
     message_dict['t1'] = t1
+    message_dict['t2'] = t1 # Dummy value as in format of response from main server
+    message_dict['t3'] = t1 # Dummy value as in format of response from main server
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
@@ -99,10 +103,13 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
         return
 
     topic = f"{agv_id}/interrupt"
-    message_dict = {"interrupt": 2}
+    message_dict = {"agv_id": agv_id,
+                    "interrupt": 2}
 
     t1 = time.time()
     message_dict['t1'] = t1
+    message_dict['t2'] = t1 # Dummy value as in format of response from main server
+    message_dict['t3'] = t1 # Dummy value as in format of response from main server
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
@@ -239,10 +246,15 @@ def path_clearance():
         print(f"AGV with id {agv_id} not found")
         print(agvs_data.keys())
         message_dict = {"result": 0}  # 0 means AGV not found
-        
+    
+    # Add same payload as the request
+    message_dict['agv_id'] = agv_id
+    message_dict['segment'] = segment
+
     # Add timestamps to the response
     message_dict["t1"] = t1
     message_dict["t2"] = t2
+    
     # Capture t3 (time when the goal is sent back to client)
     t3 = time.time()
     message_dict["t3"] = t3
@@ -276,6 +288,7 @@ def get_goal():
         task = working_agvs[agv_id]
         sending_task = task_divider(task)
     
+    sending_task["agv_id"] = agv_id
     # Add timestamps to the response
     sending_task["t1"] = t1
     sending_task["t2"] = t2

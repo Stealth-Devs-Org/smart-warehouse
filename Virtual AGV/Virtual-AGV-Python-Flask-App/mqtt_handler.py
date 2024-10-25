@@ -86,10 +86,9 @@ def on_message(client, userdata, message):
         data = json.loads(message.payload.decode())
         if message.topic == MQTT_INTERRUPT_TOPIC:
             print(f"Received message on topic '{message.topic}': {data}")
-            t1 = data['t1']
 
             interrupt_value = data.get("interrupt")
-            SendResponse(agv_id, interrupt_value, t1, t)
+            SendResponse(data, t)
 
             if interrupt_value == 1:
                 SetInterrupt(1)
@@ -131,23 +130,25 @@ def UpdateCurrentLocation():
         "segment": agv_state["current_segment"],
         "status": agv_state["current_status"],
         "timestamp": timestamp,
-        "t1": t1
+        "qos": 1,
+        "t1": t1,
+        "t2": t1, # Dummy value as in format of response from main server
+        "t3": t1, # Dummy value as in format of response from main server
+        "topic": "agv/location", # Dummy value as in format of response from main server
+
     }
     mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
     print(
         f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
     )
 
-def SendResponse(AGV_ID, interrupt_value, t1, t2):   
+def SendResponse(data, t2):   
+    
+    response = data
+    response["t2"] = t2
+
     t3 = time.time()
-    response = {
-        "agv_id": AGV_ID,
-        "interrupt_value": interrupt_value,
-        "t1": t1,
-        "t2": t2,
-        "t3": t3,
-        
-    }
+    response["t3"] = t3
 
     response = json.dumps(response)
     mqtt_client.publish(MQTT_AGV_RESPONSE_TOPIC, response, qos=2)
@@ -162,7 +163,15 @@ def EndTask(AGV_ID):
         # Get the current time in a readable format
         t1 = time.time()
 
-        data = {"agv_id": f"agv{AGV_ID}", "timestamp": timestamp, "t1": t1}
+        data = {
+                "agv_id": f"agv{AGV_ID}", 
+                "timestamp": timestamp,
+                "qos": 2,
+                "topic": "agv/task_complete",
+                "t1": t1,
+                "t2": t1, # Dummy value as in format of response from main server
+                "t3": t1, # Dummy value as in format of response from main server
+                }
         mqtt_client.publish(MQTT_TASK_END_TOPIC, json.dumps(data), qos=2)
 
     except Exception as e:

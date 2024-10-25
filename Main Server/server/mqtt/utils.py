@@ -42,7 +42,6 @@ mqtt_client = mqtt.Client()
 
 
 def ConnectMQTT():
-    try:
         mqtt_client.connect(Config.MQTT_BROKER_URL, Config.MQTT_BROKER_PORT, Config.MQTT_KEEPALIVE)
         mqtt_client.subscribe("agv/location", qos=1)  # Subscribe to the location topic
         print("Subscribed to agv/location")
@@ -51,51 +50,44 @@ def ConnectMQTT():
         mqtt_client.subscribe("agv/response", qos=2)
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
-    except Exception as e:
-        print(f"Failed to connect to MQTT broker: {e}")
 
 
 def on_message(client, userdata, message):
-    try:
-        t = time.time()
+        t = time.time() 
         topic = message.topic
         payload = message.payload.decode()
         data = json.loads(payload)
-        t1 = data["t1"]
-        SendResponse(data["agv_id"], t1, t, topic)
-
-        if topic == "agv/location":
-            from server.agv.col_avoid import update_agv_location
-
-            update_agv_location(data)
-
-        elif topic == "agv/task_complete":
-            from server.agv.scheduler import task_complete
-
-            task_complete(data)
         
-        elif topic == "agv/response":
+        if topic == "agv/response":
+            t1 = data["t1"]
             t2 = data["t2"]
             t3 = data["t3"]
-            SaveToCSV(data["agv_id"], data["interrupt_value"], t1, t2, t3, t, "interrupt_response.csv")
+            SaveToCSV(data["agv_id"], data["interrupt"], t1, t2, t3, t, "interrupt_response.csv")
+        else:
+            SendResponse(data, t)
+            if topic == "agv/location":
+                from server.agv.col_avoid import update_agv_location
 
-    except json.JSONDecodeError as e:
-        print(f"Error decoding message: {e}")
+                update_agv_location(data)
+
+            elif topic == "agv/task_complete":
+                from server.agv.scheduler import task_complete
+
+                task_complete(data)
+        
+        
 
 
-def SendResponse(AGV_ID, t1, t2, topic):
-    response_topic = f"{AGV_ID}/response"
-    
+def SendResponse(data, t2):
+    response_topic = f"{data["agv_id"]}/response"
+    response = data
+    response["t2"]= t2
+
     t3 = time.time()
-    response = {
-        "t1": t1,
-        "t2": t2,
-        "t3": t3,
-        "topic": topic
-    }
+    response["t3"]= t3
 
     response = json.dumps(response)
-    mqtt_client.publish(response_topic, response, qos=2)
+    mqtt_client.publish(response_topic, response, qos=data["qos"])
     return
 
 def SaveToCSV(AGV_ID, interrupt_value,  t1, t2, t3, t4, filename):

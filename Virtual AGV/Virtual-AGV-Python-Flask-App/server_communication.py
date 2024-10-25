@@ -7,10 +7,15 @@ MAIN_SERVER_URL = "http://127.0.0.1:5000"
 
 def RequestPathClearance(AGV_ID, segment):
     url = MAIN_SERVER_URL + "/path_clearance"
-    payload = {"agv_id": f"agv{AGV_ID}", "segment": segment}
+    payload = {"agv_id": f"agv{AGV_ID}", 
+               "segment": segment,
+               "result": 0, # Dummy value in the format of response from server
+               }
     # Capture t1 (time when the request is sent)
     t1 = time.time()
     payload["t1"] = t1  # Add t1 to the payload
+    payload["t2"] = t1 # Dummy values in the format of response from server
+    payload["t3"] = t1 # Dummy values in the format of response from server
 
     print(f"Requesting path clearance for segment: {segment}")
 
@@ -38,10 +43,16 @@ def RequestPathClearance(AGV_ID, segment):
 
 def ObtainGoalHttp(AGV_ID):
     url = MAIN_SERVER_URL + "/get_goal"
-    payload = {"agv_id": f"agv{AGV_ID}"}
+    payload = {"agv_id": f"agv{AGV_ID}",
+               "destination": (0,0), # Dummy values in the format of response from server
+               "storage": (0,0,0),# Dummy values in the format of response from server
+               "action": 2, # Dummy values in the format of response from server
+        }
     # Capture t1 (time when the request is sent)
     t1 = time.time()
     payload["t1"] = t1  # Add t1 to the payload
+    payload["t2"] = t1 # Dummy values in the format of response from server
+    payload["t3"] = t1 # Dummy values in the format of response from server
 
     try:
         response = requests.post(url, json=payload)
