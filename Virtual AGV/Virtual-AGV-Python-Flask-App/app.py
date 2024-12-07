@@ -76,7 +76,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
             path_clearance = RequestPathClearance(AGV_ID, segment)
             # time.sleep(1)
 
-            if (path_clearance) == 1:
+            if (path_clearance) == 1: # No obstacles
                 previous_obstacles = None
                 print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 current_direction = SimulateTurning(
@@ -211,7 +211,7 @@ def send_keep_alive():
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "2"))
+    instance_id = int(os.getenv("INSTANCE_ID", "3"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]

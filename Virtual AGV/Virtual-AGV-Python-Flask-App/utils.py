@@ -7,6 +7,7 @@ agv_state = {}
 
 
 def CreateSegments(path):
+    start_time = time.time()
     segments = []
     if not path:
         return segments
@@ -31,6 +32,8 @@ def CreateSegments(path):
                 direction = new_direction
             current_segment.append(path[i])
     segments.append(current_segment)
+    end_time = time.time()
+    SaveProcessTime('segmentCreationTime.csv',start_time, end_time)
     return segments
 
 
@@ -126,6 +129,7 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
 
 
 def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
+    start_time = time.time()
     # Find the farthest obstacle from the start of the remaining path
     start_point = remain_path[0][0]  # First point in the remaining path
     farthest_obstacle_distance = max(
@@ -147,6 +151,8 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     # Compare the times to decide whether the new path is better
     is_new_path_efficient = time_to_remain_path > time_to_new_path
     waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
+    end_time = time.time()
+    SaveProcessTime('pathEvaluationTime.csv',start_time, end_time)
     return is_new_path_efficient, waiting_time
 
 
@@ -199,3 +205,26 @@ def SaveToCSV(agv_id, t1, t2, t3, t4, filename):
 
         # Write the row with timestamps
         writer.writerow([agv_id, t1, t2, t3, t4])
+
+def SaveProcessTime(filename, t1, t2, t3=0):
+    # Check if file exists
+    file_exists = os.path.isfile(filename)
+
+    # Open CSV file in append mode
+    with open(filename, mode="a", newline='') as file:
+        writer = csv.writer(file)
+
+        if t3!=0:
+            # If file does not exist, write the header
+            if not file_exists:
+                writer.writerow(["t1", "t2", "t3"])  # Write the header
+
+            # Write the row with timestamps
+            writer.writerow([t1, t2, t3])
+        else:
+            # If file does not exist, write the header
+            if not file_exists:
+                writer.writerow(["t1", "t2"])  # Write the header
+
+            # Write the row with timestamps
+            writer.writerow([t1, t2])

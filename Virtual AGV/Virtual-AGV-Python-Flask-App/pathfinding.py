@@ -1,8 +1,8 @@
 import copy
 from queue import PriorityQueue
-
+import time
 import pandas as pd
-
+from utils import SaveProcessTime
 
 def ReadGrid(file_path):
     def process_connected_nodes(connected_nodes_str):
@@ -22,6 +22,7 @@ def ReadGrid(file_path):
 
 
 def CalculatePath(start, goal, grid):
+    start_time = time.time()
     print("Calculating path from", start, "to", goal)
 
     def heuristic(a, b):
@@ -67,10 +68,13 @@ def CalculatePath(start, goal, grid):
         node = came_from[node]
     path.append(goal)
     print("Returning path")
+    end_time = time.time()
+    SaveProcessTime('pathCalculationTime.csv',start_time, end_time)
     return path
 
 
 def RecalculatePath(obstacles, current_node, goal, fixed_grid):
+    t1 = time.time()
     grid = copy.deepcopy(fixed_grid)
     if obstacles:
         obstacles = [tuple(obstacle) for obstacle in obstacles]
@@ -79,6 +83,8 @@ def RecalculatePath(obstacles, current_node, goal, fixed_grid):
             for node, connections in grid.items():
                 if obs in connections:
                     grid[node].remove(obs)
-
+    t2 = time.time()
     new_path = CalculatePath(current_node, goal, grid)
+    t3 = time.time()
+    SaveProcessTime('pathRecalculationTime.csv',t1,t2,t3)
     return new_path, obstacles
