@@ -55,20 +55,20 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
     from mqtt_handler import EndTask, UpdateCurrentLocation
 
     if action == 0:
-        print("Stopped at ideal location")
+        # ---------- print("Stopped at ideal location")
         return direction
     elif action == 2 or action == 3:
         direction = SimulateTurning(
             AGV_ID, current_location, (storage[0], storage[1]), direction, turning_time
         )
         duration = LoadUnload(storage[2])
-        if action == 2:
+        '''if action == 2:
             print(f"AGV {AGV_ID} started loading at {current_location}...")
         else:
-            print(f"AGV {AGV_ID} started unloading at {current_location}...")
+            print(f"AGV {AGV_ID} started unloading at {current_location}...")'''
         time.sleep(duration)
     elif action == 4:
-        print(f"AGV {AGV_ID} started charging at {current_location}...")
+        # ---------- print(f"AGV {AGV_ID} started charging at {current_location}...")
         duration = 10
     agv_state["current_status"] = action
     agv_state["current_direction"] = direction
@@ -96,7 +96,7 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
         direction = "W"
 
     if current_direction == direction:
-        print("same direction:" + direction)
+        # ---------- print("same direction:" + direction)
         return direction
     elif (
         (current_direction == "N" and direction == "E")
@@ -120,7 +120,7 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
     ):
         turning_time *= 2
         agv_state["current_status"] = 7  # Turning Back
-    print("Turning from " + current_direction + " to " + direction)
+    # ---------- print("Turning from " + current_direction + " to " + direction)
     UpdateCurrentLocation()
     time.sleep(turning_time)
     agv_state["current_status"] = 8  # Turning Completed
@@ -145,8 +145,8 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
         sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
     )
 
-    print("time to remain_path", time_to_remain_path)
-    print("time to new_path", time_to_new_path)
+    # ---------- print("time to remain_path", time_to_remain_path)
+    # ---------- print("time to new_path", time_to_new_path)
 
     # Compare the times to decide whether the new path is better
     is_new_path_efficient = time_to_remain_path > time_to_new_path

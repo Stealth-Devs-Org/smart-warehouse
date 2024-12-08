@@ -35,11 +35,11 @@ def read_config(config_path):
 
 
 def ObtainGoal(idle_location):
-    print("Obtaining goal...")
+    # ---------- print("Obtaining goal...")
     # goal = GetGoal()
     goal = ObtainGoalHttp(AGV_ID)
     if goal is None:
-        print("Goal not found. Returning default goal.")
+        # ---------- print("Goal not found. Returning default goal.")
         return idle_location, None, 0
     print("Goal:", goal)
     if goal:
@@ -54,7 +54,7 @@ def ObtainGoal(idle_location):
         destination = idle_location
         storage = None
         action = 0
-    print("Returning goal...", destination, storage, action)
+    # ---------- print("Returning goal...", destination, storage, action)
     return destination, storage, action
 
 
@@ -78,7 +78,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
 
             if (path_clearance) == 1: # No obstacles
                 previous_obstacles = None
-                print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
+                # ---------- print(f"Proceeding to the segment from {current_location} to {segment[-1]}")
                 current_direction = SimulateTurning(
                     AGV_ID, current_location, segment[0], current_direction, turning_time
                 )
@@ -89,7 +89,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                 for cell in segment:
 
                     if len(segment) > 1 and cell == segment[1]:
-                        print(f"Current location: {current_location}, next location: {cell}")
+                        # ---------- print(f"Current location: {current_location}, next location: {cell}")
                         current_direction = SimulateTurning(
                             AGV_ID, current_location, cell, current_direction, turning_time
                         )
@@ -105,7 +105,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         # print(f"Current interrupt value: {interrupt_value}")
 
                         if interrupt_value == 1:
-                            print("Stop signal received! Halting AGV.")
+                            # ---------- print("Stop signal received! Halting AGV.")
                             agv_state["current_status"] = 0
                             UpdateCurrentLocation()
 
@@ -115,8 +115,8 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                             interrupted = 1
 
                         elif interrupt_value == 2:
-                            print("Recalculating path...")
-                            print("Interrupt value:", interrupt_value)
+                            # ---------- print("Recalculating path...")
+                            # ---------- print("Interrupt value:", interrupt_value)
                             agv_state["current_status"] = 0
                             UpdateCurrentLocation()
 
@@ -149,9 +149,9 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                 time.sleep(cell_time)
 
             else:
-                print("obstacle*", path_clearance)
+                # ---------- print("obstacle*", path_clearance)
                 if path_clearance == None:
-                    print("No path clearance received. Retrying...")
+                    # ---------- print("No path clearance received. Retrying...")
                     return
                 current_location_tuple = tuple(current_location)
                 new_path, obstacles = RecalculatePath(
@@ -162,24 +162,24 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                     time.sleep(cell_time * 1)
                 else:
                     recal_path = 0
-                    print("New path:", new_path)
+                    # ---------- print("New path:", new_path)
                     new_segments = CreateSegments(new_path)
-                    print("previous_obstacles:", previous_obstacles)
-                    print("obstacles:", obstacles)
+                    # ---------- print("previous_obstacles:", previous_obstacles)
+                    # ---------- print("obstacles:", obstacles)
                     if obstacles != previous_obstacles:
                         remain_path = [agv_state["current_segment"]] + segments[index + 1 :]
                         is_new_path_efficient, waiting_time = EvalNewPath(
                             new_segments, obstacles, remain_path, cell_time, turning_time
                         )
-                        print("is_new_path_efficient:", is_new_path_efficient)
-                        print("waiting_time:", waiting_time)
+                        # ---------- print("is_new_path_efficient:", is_new_path_efficient)
+                        # ---------- print("waiting_time:", waiting_time)
                         if not is_new_path_efficient:
                             previous_obstacles = obstacles
-                            print("Waiting for obstacle to clear...", time.time())
+                            # ---------- print("Waiting for obstacle to clear...", time.time())
                             agv_state["current_status"] = 9  # Waiting for obstacle to clear
                             UpdateCurrentLocation()
                             time.sleep(waiting_time)
-                            print("Obstacle assumed cleared!", time.time())
+                            # ---------- print("Obstacle assumed cleared!", time.time())
                             break
                         else:
                             recal_path = 1
@@ -191,7 +191,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         index = 0
                         break
 
-    print("End of path reached")
+    # ---------- print("End of path reached")
     agv_state["current_status"] = 0
     SetGoal(None)
     current_direction = SimulateEndAction(
@@ -204,7 +204,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
 def send_keep_alive():
     while True:
         time.sleep(5)
-        print("Sending keep alive")
+        # ---------- print("Sending keep alive")
         UpdateCurrentLocation()
 
 
@@ -256,21 +256,21 @@ if __name__ == "__main__":
             idle_time -= 0.5
             time.sleep(0.5)
 
-        print("Destination:", destination, "Storage:", storage, "Action:", action)
+        # --------- print("Destination:", destination, "Storage:", storage, "Action:", action)
         current_location = tuple(agv_state["current_location"])
         if (idle_location != current_location) or (destination != current_location):
-            print("Current location is not the destination")
+            # ---------- print("Current location is not the destination")
 
             # Compute the path using D* Lite
             path = CalculatePath(current_location, destination, grid)
-            print("Path:", path)
+            # ---------- print("Path:", path)
 
             # Break the path into straight-line segments
             segments = CreateSegments(path)
-            print("segments:", segments)
+            # ---------- print("segments:", segments)
 
             # Display the path interactively
             InteractivePathDisplay(segments, destination, storage, action)
         else:
-            print("AGV is already at the destination")
+            # ---------- print("AGV is already at the destination")
             time.sleep(5)

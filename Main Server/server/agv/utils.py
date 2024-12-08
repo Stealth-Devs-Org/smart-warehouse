@@ -1,7 +1,7 @@
 import math
-
+import os
 import ujson as json
-
+import csv
 
 def get_common_elements(array1, array2):
     set1 = set(tuple(x) for x in array1)
@@ -250,3 +250,18 @@ def Update_collisions_json(object):
 
         with open("server/agv/json_data/collisions.json", "w") as f:
             json.dump(collisions, f)
+
+def SaveProcessTime(filename, t1, t2):
+    # Check if file exists
+    file_exists = os.path.isfile(filename)
+
+    # Open CSV file in append mode
+    with open(filename, mode="a", newline='') as file:
+        writer = csv.writer(file)
+
+        # If file does not exist, write the header
+        if not file_exists:
+            writer.writerow(["t1", "t2"])  # Write the header
+
+        # Write the row with timestamps
+        writer.writerow([t1, t2])

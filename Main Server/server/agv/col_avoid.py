@@ -13,6 +13,7 @@ from server.agv.utils import (
     get_common_elements,
     get_high_value_agv_id,
     is_path_crossing,
+    SaveProcessTime
 )
 
 agv = Blueprint("agv", __name__)
@@ -85,7 +86,7 @@ def stop_agv(agv_id, col_agv_id):
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
-    print(f"Sent stop signal to AGV {agv_id}")
+    # print(f"Sent stop signal to AGV {agv_id}")
 
     if agv_id not in sent_interrupts:
         sent_interrupts[agv_id] = {}
@@ -113,7 +114,7 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
-    print(f"Sent recalibrate signal to AGV {agv_id}")
+    # print(f"Sent recalibrate signal to AGV {agv_id}")
 
     if agv_id not in sent_interrupts:
         sent_interrupts[agv_id] = {}
@@ -126,15 +127,16 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
     # agvs_data = Get_values_from_agv_json()
+    t1 = time.time()
 
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
     if close_agv_pairs:
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
             if crossing_segment != []:
-                print(
+                '''print(
                     f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
-                )
+                )'''
                 agv_pair = get_high_value_agv_id(agv_pair[0], agv_pair[1])
                 stop_agv(agv_pair[0], agv_pair[1])
                 recalibrate_path(
@@ -142,12 +144,15 @@ def collision_avoidance():
                     agvs_data[agv_pair[1]]["segment"],
                     agv_pair[0],
                 )
+
+    t2 = time.time()
+    SaveProcessTime('CollosionAvoidanceTime.csv',t1,t2)
     detect_collision()
 
 
 def run_collision_avoidance(interval):
     def start():
-        print("Collision monitoring started")
+        # print("Collision monitoring started")
         while True:
             collision_avoidance()
             time.sleep(interval)
@@ -260,6 +265,8 @@ def path_clearance():
     message_dict["t3"] = t3
     
     message_json = json.dumps(message_dict)
+
+    SaveProcessTime('PathClearanceTime.csv',t2,t3)
     return message_json
 
 @agv.route("/")

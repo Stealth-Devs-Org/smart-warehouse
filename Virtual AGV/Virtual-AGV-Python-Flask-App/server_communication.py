@@ -17,7 +17,7 @@ def RequestPathClearance(AGV_ID, segment):
     payload["t2"] = t1 # Dummy values in the format of response from server
     payload["t3"] = t1 # Dummy values in the format of response from server
 
-    print(f"Requesting path clearance for segment: {segment}")
+    # ---------- print(f"Requesting path clearance for segment: {segment}")
 
     try:
         response = requests.post(url, json=payload)
@@ -73,5 +73,5 @@ def ObtainGoalHttp(AGV_ID):
         
         return response_data
     except requests.exceptions.RequestException as e:
-        print(f"Error obtaining goal: {e}")
+        # ---------- print(f"Error obtaining goal: {e}")
         return None

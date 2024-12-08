@@ -23,7 +23,7 @@ def ReadGrid(file_path):
 
 def CalculatePath(start, goal, grid):
     start_time = time.time()
-    print("Calculating path from", start, "to", goal)
+    # ---------- print("Calculating path from", start, "to", goal)
 
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -67,7 +67,7 @@ def CalculatePath(start, goal, grid):
             return []  # Return empty path if no valid path exists
         node = came_from[node]
     path.append(goal)
-    print("Returning path")
+    # ---------- print("Returning path")
     end_time = time.time()
     SaveProcessTime('pathCalculationTime.csv',start_time, end_time)
     return path
