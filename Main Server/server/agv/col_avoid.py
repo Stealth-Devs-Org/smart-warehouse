@@ -145,8 +145,8 @@ def collision_avoidance():
                     agv_pair[0],
                 )
 
-    t2 = time.time()
-    SaveProcessTime('CollosionAvoidanceTime.csv',t1,t2)
+                t2 = time.time()
+                SaveProcessTime('CollosionAvoidanceTime.csv',t1,t2)
     detect_collision()
 
 
