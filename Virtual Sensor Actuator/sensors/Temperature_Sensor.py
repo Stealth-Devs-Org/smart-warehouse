@@ -2,6 +2,7 @@ import threading
 import random
 import time
 import sys
+import json
 import paho.mqtt.client as mqtt
 from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
@@ -61,7 +62,8 @@ class TemperatureSensor(threading.Thread):
             temperature = self.get_temperature_value()
             SetSensorState("Temperature", self.sensor_id,  self.partition_id,self.sensor_id, round(temperature, 2), 1)
             print(f"Sensor state: {sensor_state}")
-            self.client.publish(TOPIC, str(sensor_state)) 
+            # self.client.publish(TOPIC, str(sensor_state)) 
+            self.client.publish(TOPIC, json.dumps(sensor_state))
             time.sleep(1)
 
     def stop(self):
