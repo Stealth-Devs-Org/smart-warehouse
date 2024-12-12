@@ -1,9 +1,10 @@
 import threading
 import random
 import time
+import sys
 import paho.mqtt.client as mqtt
-from warehouseEnvironment import warehouse_airquality_values
-from sensorUtils import SetSensorState, sensor_state
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
+
 
 # Sensor ID for each partition (as coordinate)
 AirQualitysensorID = [
@@ -58,7 +59,7 @@ class AirQualitySensor(threading.Thread):
         self.connect_mqtt()
         while self.running:
             airquality = self.get_airquality_value()
-            SetSensorState("AirQuality", self.sensor_id, self.sensor_id, self.partition_id, round(airquality, 2), 1)
+            SetSensorState("AirQuality", self.sensor_id,  self.partition_id,self.sensor_id, round(airquality, 2), 1)
             #print(f"ClientID={self.client}")
             print(f"Sensor state: {sensor_state}")
             self.client.publish(TOPIC, str(sensor_state)) 
@@ -66,9 +67,10 @@ class AirQualitySensor(threading.Thread):
 
     def stop(self):
         self.running = False
+        self.client.loop_stop()
 
     def get_airquality_value(self):
-        global warehouse_airquality_values
+        warehouse_airquality_values = ReadVariableFromDatabase("AirQuality Values")
         base_airquality = warehouse_airquality_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_airquality + variation

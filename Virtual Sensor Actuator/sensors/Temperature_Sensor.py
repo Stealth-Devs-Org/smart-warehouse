@@ -1,9 +1,11 @@
 import threading
 import random
 import time
+import sys
 import paho.mqtt.client as mqtt
-from warehouseEnvironment import warehouse_temperature_values
-from sensorUtils import SetSensorState, sensor_state
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
+
+
 
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
@@ -34,40 +36,46 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "/sensor_temperature"
 
-client = mqtt.Client()
+# client = mqtt.Client()
 
 
-def connect_mqtt():
-    client.connect(BROKER, PORT, 60)
-    client.loop_start()  #loop in seperate thread...
+# def connect_mqtt():
+#     client.connect(BROKER, PORT, 60)
+#     client.loop_start()  #loop in seperate thread...
 
 class TemperatureSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
         threading.Thread.__init__(self)
+        self.client = mqtt.Client()
         self.sensor_id = sensor_id
         self.partition_id = partition_id
         self.running = True  
+
+    def connect_mqtt(self):
+        self.client.connect(BROKER, PORT, 60)
+        self.client.loop_start()  #loop in seperate thread...
         
     def run(self):
+        self.connect_mqtt()
         while self.running:
             temperature = self.get_temperature_value()
-            SetSensorState("Temperature", self.sensor_id, self.sensor_id, self.partition_id, round(temperature, 2), 1)
+            SetSensorState("Temperature", self.sensor_id,  self.partition_id,self.sensor_id, round(temperature, 2), 1)
             print(f"Sensor state: {sensor_state}")
-            client.publish(TOPIC, str(sensor_state))
-            #self.publish_temperature(temperature)             # Publish 
+            self.client.publish(TOPIC, str(sensor_state)) 
             time.sleep(1)
 
     def stop(self):
+        self.client.loop_stop()
         self.running = False
 
     def get_temperature_value(self):
-        global warehouse_temperature_values
+        warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
         base_temperature = warehouse_temperature_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)
         return base_temperature + variation
 
 def main():
-    connect_mqtt()
+    # connect_mqtt()
 
     no_of_partitions = len(TempsensorID)
     allSensors = []
@@ -92,7 +100,7 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        client.loop_stop()  # Stop the MQTT loop
+        
 
 if __name__ == "__main__":
     main()
