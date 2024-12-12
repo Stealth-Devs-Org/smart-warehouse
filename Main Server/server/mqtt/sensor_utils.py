@@ -89,6 +89,7 @@ def on_message(client, userdata, message):
         reading = data.get("temperature", 0.0)
         status = 1  
 
+
     elif topic == "/sensor_airquality":
         sensor_type = "Air Quality"
         reading = data.get("air_quality", 0.0)
@@ -107,10 +108,12 @@ def on_message(client, userdata, message):
     SetSensorState(sensor_type, sensor_id, partition_id, sensor_location, reading, status)
 
     # Print updated sensor state
-    print(f"Updated sensor state: {sensor_state}")
+    #print(f"Updated sensor state: {sensor_state}")
+
+    
 
         
-        
+
 
 
 # def SendResponse(data, t2):
