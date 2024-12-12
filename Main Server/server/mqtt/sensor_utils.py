@@ -61,7 +61,7 @@ def on_message(client, userdata, message):
         sensor_state["current_status"] = data.get("current_status")
 
     elif topic == "/sensor_airquality":
-        sensor_state["sensor_type"] = "Air Quality"
+        sensor_state["sensor_type"] = "AirQuality"
         sensor_state["sensor_id"] = data.get("sensor_id")
         sensor_state["partition_id"] = data.get("partition_id")
         sensor_state["sensor_location"] = data.get("sensor_location")
