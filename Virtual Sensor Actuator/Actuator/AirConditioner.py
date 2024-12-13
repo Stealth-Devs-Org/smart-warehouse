@@ -74,29 +74,29 @@ class AirConditioner(threading.Thread):
         rateofchange = 0.3
         return rateofchange
 
-    def AdjustValues(self,rateOfChange, varaible):
+    def AdjustValues(self,rateOfChange, variable):
         warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
         global desired_warehouse_temperature_values
 
 
         if desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] < rateOfChange and desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] > 0:
             warehouse_temperature_values[self.partition_id] = desired_warehouse_temperature_values[self.partition_id]
-            self.writeValuesToDatabase(warehouse_temperature_values, varaible)
+            self.writeValuesToDatabase(warehouse_temperature_values, variable)
 
         elif desired_warehouse_temperature_values[self.partition_id] > warehouse_temperature_values[self.partition_id]:
             value = warehouse_temperature_values[self.partition_id] + rateOfChange
             warehouse_temperature_values[self.partition_id] = round(value, 1)
 
-            self.writeValuesToDatabase(warehouse_temperature_values, varaible)
+            self.writeValuesToDatabase(warehouse_temperature_values, variable)
         
         elif desired_warehouse_temperature_values[self.partition_id] < warehouse_temperature_values[self.partition_id]:
             value = warehouse_temperature_values[self.partition_id] - rateOfChange
             warehouse_temperature_values[self.partition_id] = round(value, 1)
-            self.writeValuesToDatabase(warehouse_temperature_values ,varaible)
+            self.writeValuesToDatabase(warehouse_temperature_values ,variable)
 
     
 
-    def writeValuesToDatabase(self,values,varaible):
+    def writeValuesToDatabase(self,values,variable):
         directory = 'Virtual Sensor Actuator'
         filename = 'warehouse_Env_data.txt'
         filepath = os.path.join(directory, filename)
@@ -106,13 +106,13 @@ class AirConditioner(threading.Thread):
         warehouse_smoke_values = ReadVariableFromDatabase("Smoke Values")
         warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
 
-        if varaible == "Temperature Values":
+        if variable == "Temperature Values":
             warehouse_temperature_values = values 
-        elif varaible == "AirQuality Values":
+        elif variable == "AirQuality Values":
             warehouse_airquality_values = int(values)
-        elif varaible == "Smoke Values":
+        elif variable == "Smoke Values":
             warehouse_smoke_values = values
-        elif varaible == "Humidity Values":
+        elif variable == "Humidity Values":
             warehouse_humidity_values = values
         
 

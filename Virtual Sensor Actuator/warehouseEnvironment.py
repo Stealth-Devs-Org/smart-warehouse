@@ -4,14 +4,13 @@ import os
 
 # for Actuator...............................................
 
-desired_warehouse_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 38.1]
+desired_warehouse_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
 
 desired_warehouse_airquality_values = [500.0, 520.0, 480.0, 700.0, 650.0, 580.0, 600.0] # in ppm
 
-desired_warehouse_smoke_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3] # binary value?
-
 desired_warehouse_humidity_values = [45.0, 47.5, 48.0, 49.5, 44.0, 50.2, 46.8]  # in %RH
 
+# desired_warehouse_smoke_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3] # binary value?
 
 
 # for database environment...............................................
@@ -20,9 +19,10 @@ warehouse_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
 
 warehouse_airquality_values = [500.0, 520.0, 480.0, 700.0, 650.0, 580.0, 600.0] # in ppm
 
-warehouse_smoke_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3] # binary value?
-
 warehouse_humidity_values = [45.0, 47.5, 48.0, 49.5, 44.0, 50.2, 46.8]  # in %RH
+
+# warehouse_smoke_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3] # binary value?
+
 
 # def main ():
 #     while True:
