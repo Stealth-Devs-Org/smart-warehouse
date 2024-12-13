@@ -2,7 +2,7 @@ import os
 
 sensor_state = {"sensor_type": "", "sensor_id": "","partition_id": 0, "sensor_location": "", "reading": 0.0, "current_status": 0}
 
-def SetSensorState(type, id,partID, location, reading, status):
+def SetSensorState(type, id, partID, location, reading, status):
     global sensor_state
     sensor_state["sensor_type"] = type
     sensor_state["sensor_id"] = id
@@ -30,5 +30,3 @@ def ReadVariableFromDatabase(Variable):  # Variable = "Temperature Values", "Air
     
     return Variable_values
     # print("Variable Values:", Variable_values)
-
-
