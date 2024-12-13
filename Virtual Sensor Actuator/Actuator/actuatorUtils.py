@@ -2,7 +2,7 @@ import os
 
 actuator_state = {"actuator_type": "", "actuator_id": "","partition_id": 0, "actuator_location": "", "rate_of_Change": 0.0, "current_status": 0}
 
-def SetActuatorState(type, id,partID, location, reading, status):
+def SetActuatorState(type, id, partID, location, reading, status):
     global actuator_state
     actuator_state["actuator_type"] = type
     actuator_state["actuator_id"] = id
@@ -24,7 +24,7 @@ def ReadVariableFromDatabase(Variable):  # Variable = "Temperature Values", "Air
     with open(filepath, 'r') as file:
         lines = file.readlines()
 
-    Varaible_values = []
+    Variable_values = []
     for i, line in enumerate(lines):
         if Variable in line:
             Variable_values = list(map(float, lines[i + 1].strip().split(', ')))
