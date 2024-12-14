@@ -211,7 +211,7 @@ def send_keep_alive():
 if __name__ == "__main__":
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "0"))
+    instance_id = int(os.getenv("INSTANCE_ID", "2"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
