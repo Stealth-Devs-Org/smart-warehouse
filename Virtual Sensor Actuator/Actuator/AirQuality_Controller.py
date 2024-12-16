@@ -6,10 +6,10 @@ import paho.mqtt.client as mqtt
 from actuatorUtils import SetActuatorState, actuator_state, ReadVariableFromDatabase
 
 sys.path.append('Virtual Sensor Actuator')
-from warehouseEnvironment import desired_warehouse_temperature_values
+from warehouseEnvironment import desired_warehouse_airquality_values
 
 
-AirConditionerID = [
+AirQualityCtrlID = [
     # Partition 1
     ["(2,2)"],
     
@@ -34,9 +34,9 @@ AirConditionerID = [
 
 BROKER = "localhost"  
 PORT = 1883
-TOPIC = "/actuator_AirConditioner"
+TOPIC = "/actuator_AirQuality"
 
-class AirConditioner(threading.Thread):
+class AirQualityCtrl(threading.Thread):
     def __init__(self, actuator_id, partition_id):
         threading.Thread.__init__(self)
         self.client = mqtt.Client()
@@ -52,8 +52,8 @@ class AirConditioner(threading.Thread):
         self.connect_mqtt()
         while self.running:
             rateofChange = self.get_RateofChange()
-            self.AdjustValues(rateofChange, "Temperature Values")
-            SetActuatorState("AirConditioner", self.actuator_id,  self.partition_id,self.actuator_id, round(rateofChange, 2), 1)
+            self.AdjustValues(rateofChange, "AirQuality Values")
+            SetActuatorState("AirQualityController", self.actuator_id,  self.partition_id, self.actuator_id, round(rateofChange, 2), 1)
             print(f"Actuator state: {actuator_state}")
             self.client.publish(TOPIC, str(actuator_state)) 
             time.sleep(1.2)
@@ -62,37 +62,37 @@ class AirConditioner(threading.Thread):
         self.running = False
         self.client.loop_stop()
 
-    # def get_temperature_value(self):
-    #     global warehouse_temperature_values
-    #     base_temperature = warehouse_temperature_values[self.partition_id]
+    # def get_airquality_value(self):
+    #     global warehouse_airquality_values
+    #     base_temperature = warehouse_airquality_values[self.partition_id]
     #     variation = random.uniform(-0.1, 0.1)
     #     return base_temperature + variation
 
 
 
     def get_RateofChange(self):  # optional to send in Mqtt
-        rateofchange = 0.3
+        rateofchange = 5
         return rateofchange
 
     def AdjustValues(self,rateOfChange, variable):
-        warehouse_temperature_values = ReadVariableFromDatabase("Temperature Values")
-        global desired_warehouse_temperature_values
+        warehouse_airquality_values = ReadVariableFromDatabase("AirQuality Values")
+        global desired_warehouse_airquality_values
 
 
-        if desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] < rateOfChange and desired_warehouse_temperature_values[self.partition_id] - warehouse_temperature_values[self.partition_id] > 0:
-            warehouse_temperature_values[self.partition_id] = desired_warehouse_temperature_values[self.partition_id]
-            self.writeValuesToDatabase(warehouse_temperature_values, variable)
+        if desired_warehouse_airquality_values[self.partition_id] - warehouse_airquality_values[self.partition_id] < rateOfChange and desired_warehouse_airquality_values[self.partition_id] - warehouse_airquality_values[self.partition_id] > 0:
+            warehouse_airquality_values[self.partition_id] = desired_warehouse_airquality_values[self.partition_id]
+            self.writeValuesToDatabase(warehouse_airquality_values, variable)
 
-        elif desired_warehouse_temperature_values[self.partition_id] > warehouse_temperature_values[self.partition_id]:
-            value = warehouse_temperature_values[self.partition_id] + rateOfChange
-            warehouse_temperature_values[self.partition_id] = round(value, 1)
+        elif desired_warehouse_airquality_values[self.partition_id] > warehouse_airquality_values[self.partition_id]:
+            value = warehouse_airquality_values[self.partition_id] + rateOfChange
+            warehouse_airquality_values[self.partition_id] = round(value, 1)
 
-            self.writeValuesToDatabase(warehouse_temperature_values, variable)
+            self.writeValuesToDatabase(warehouse_airquality_values, variable)
         
-        elif desired_warehouse_temperature_values[self.partition_id] < warehouse_temperature_values[self.partition_id]:
-            value = warehouse_temperature_values[self.partition_id] - rateOfChange
-            warehouse_temperature_values[self.partition_id] = round(value, 1)
-            self.writeValuesToDatabase(warehouse_temperature_values ,variable)
+        elif desired_warehouse_airquality_values[self.partition_id] < warehouse_airquality_values[self.partition_id]:
+            value = warehouse_airquality_values[self.partition_id] - rateOfChange
+            warehouse_airquality_values[self.partition_id] = round(value, 1)
+            self.writeValuesToDatabase(warehouse_airquality_values, variable)
 
     
 
@@ -135,13 +135,13 @@ class AirConditioner(threading.Thread):
 
 
 def main():
-    no_of_partitions = len(AirConditionerID)
+    no_of_partitions = len(AirQualityCtrlID)
     allActuators = []
 
     for j in range(no_of_partitions):
         allActuators.append([])
-        for coord in AirConditionerID[j]:
-            actuator = AirConditioner(actuator_id=coord, partition_id=j)  
+        for coord in AirQualityCtrlID[j]:
+            actuator = AirQualityCtrl(actuator_id=coord, partition_id=j)  
             allActuators[j].append(actuator) 
             actuator.start()
 

@@ -9,7 +9,7 @@ sys.path.append('Virtual Sensor Actuator')
 from warehouseEnvironment import desired_warehouse_humidity_values
 
 
-HumidifierID = [
+HumidityCtrlID = [
     # Partition 1
     ["(2,2)"],
     
@@ -34,9 +34,9 @@ HumidifierID = [
 
 BROKER = "localhost"  
 PORT = 1883
-TOPIC = "/actuator_Humidifier"
+TOPIC = "/actuator_Humidity"
 
-class Humidifier(threading.Thread):
+class HumidityCtrl(threading.Thread):
     def __init__(self, actuator_id, partition_id):
         threading.Thread.__init__(self)
         self.client = mqtt.Client()
@@ -53,7 +53,7 @@ class Humidifier(threading.Thread):
         while self.running:
             rateofChange = self.get_RateofChange()
             self.AdjustValues(rateofChange, "Humidity Values")
-            SetActuatorState("Humidifier", self.actuator_id,  self.partition_id,self.actuator_id, round(rateofChange, 2), 1)
+            SetActuatorState("HumidityController", self.actuator_id,  self.partition_id, self.actuator_id, round(rateofChange, 2), 1)
             print(f"Actuator state: {actuator_state}")
             self.client.publish(TOPIC, str(actuator_state)) 
             time.sleep(1.2)
@@ -71,32 +71,32 @@ class Humidifier(threading.Thread):
 
 
     def get_RateofChange(self):  # optional to send in Mqtt
-        rateofchange = 0.3
+        rateofchange = 0.5
         return rateofchange
 
-    def AdjustValues(self,rateOfChange, varaible):
+    def AdjustValues(self,rateOfChange, variable):
         warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
         global desired_warehouse_humidity_values
 
 
         if desired_warehouse_humidity_values[self.partition_id] - warehouse_humidity_values[self.partition_id] < rateOfChange and desired_warehouse_humidity_values[self.partition_id] - warehouse_humidity_values[self.partition_id] > 0:
             warehouse_humidity_values[self.partition_id] = desired_warehouse_humidity_values[self.partition_id]
-            self.writeValuesToDatabase(warehouse_humidity_values, varaible)
+            self.writeValuesToDatabase(warehouse_humidity_values, variable)
 
         elif desired_warehouse_humidity_values[self.partition_id] > warehouse_humidity_values[self.partition_id]:
             value = warehouse_humidity_values[self.partition_id] + rateOfChange
             warehouse_humidity_values[self.partition_id] = round(value, 1)
 
-            self.writeValuesToDatabase(warehouse_humidity_values, varaible)
+            self.writeValuesToDatabase(warehouse_humidity_values, variable)
         
         elif desired_warehouse_humidity_values[self.partition_id] < warehouse_humidity_values[self.partition_id]:
             value = warehouse_humidity_values[self.partition_id] - rateOfChange
             warehouse_humidity_values[self.partition_id] = round(value, 1)
-            self.writeValuesToDatabase(warehouse_humidity_values ,varaible)
+            self.writeValuesToDatabase(warehouse_humidity_values, variable)
 
     
 
-    def writeValuesToDatabase(self,values,varaible):
+    def writeValuesToDatabase(self,values,variable):
         directory = 'Virtual Sensor Actuator'
         filename = 'warehouse_Env_data.txt'
         filepath = os.path.join(directory, filename)
@@ -106,13 +106,13 @@ class Humidifier(threading.Thread):
         warehouse_smoke_values = ReadVariableFromDatabase("Smoke Values")
         warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
 
-        if varaible == "Temperature Values":
+        if variable == "Temperature Values":
             warehouse_temperature_values = values 
-        elif varaible == "AirQuality Values":
+        elif variable == "AirQuality Values":
             warehouse_airquality_values = int(values)
-        elif varaible == "Smoke Values":
+        elif variable == "Smoke Values":
             warehouse_smoke_values = values
-        elif varaible == "Humidity Values":
+        elif variable == "Humidity Values":
             warehouse_humidity_values = values
         
 
@@ -135,13 +135,13 @@ class Humidifier(threading.Thread):
 
 
 def main():
-    no_of_partitions = len(HumidifierID)
+    no_of_partitions = len(HumidityCtrlID)
     allActuators = []
 
     for j in range(no_of_partitions):
         allActuators.append([])
-        for coord in HumidifierID[j]:
-            actuator = Humidifier(actuator_id=coord, partition_id=j)  
+        for coord in HumidityCtrlID[j]:
+            actuator = HumidityCtrl(actuator_id=coord, partition_id=j)  
             allActuators[j].append(actuator) 
             actuator.start()
 
