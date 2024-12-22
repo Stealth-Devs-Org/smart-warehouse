@@ -5,12 +5,12 @@ import threading
 
 import paho.mqtt.client as mqtt
 
-from utils import Get_values_from_agv_json , SaveToCSV
+from utils import SaveToCSV
 
 interrupt = 0  # Global interrupt variable
-goal = None  # Global goal variable
+#goal = None  # Global goal variable
 interrupt_lock = threading.Lock()
-goal_lock = threading.Lock()
+#goal_lock = threading.Lock()
 agv_id = None
 
 MQTT_BROKER = "localhost"
@@ -38,16 +38,16 @@ def GetInterrupt():
         return interrupt
 
 
-def SetGoal(new_goal):
-    global goal
-    with goal_lock:
-        goal = new_goal
+# def SetGoal(new_goal):
+#     global goal
+#     with goal_lock:
+#         goal = new_goal
 
 
-def GetGoal():
-    global goal
-    with goal_lock:
-        return goal
+# def GetGoal():
+#     global goal
+#     with goal_lock:
+#         return goal
 
 
 def setTopic(AGV_ID):
@@ -55,9 +55,9 @@ def setTopic(AGV_ID):
     global agv_id
     agv_id = f"agv{AGV_ID}"
     global MQTT_INTERRUPT_TOPIC
-    global MQTT_GOAL_TOPIC
+    #global MQTT_GOAL_TOPIC
     global MQTT_RESPONSE_TOPIC
-    MQTT_GOAL_TOPIC = f"{agv_id}/goal"
+    #MQTT_GOAL_TOPIC = f"{agv_id}/goal"
     MQTT_INTERRUPT_TOPIC = f"{agv_id}/interrupt"
     MQTT_RESPONSE_TOPIC = f"{agv_id}/response"
     '''print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
@@ -70,7 +70,7 @@ def ConnectMQTT(AGV_ID):
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
         mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC, qos=2)  # Subscribe to the interrupt topic
-        mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
+        #mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
         mqtt_client.subscribe(MQTT_RESPONSE_TOPIC, qos=2) 
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
@@ -85,7 +85,7 @@ def on_message(client, userdata, message):
         t = time.time()
         data = json.loads(message.payload.decode())
         if message.topic == MQTT_INTERRUPT_TOPIC:
-            # ---------- print(f"Received message on topic '{message.topic}': {data}")
+            print(f"Received message on topic '{message.topic}': {data}")
 
             interrupt_value = data.get("interrupt")
             SendResponse(data, t)

@@ -120,7 +120,7 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
     ):
         turning_time *= 2
         agv_state["current_status"] = 7  # Turning Back
-    # ---------- print("Turning from " + current_direction + " to " + direction)
+    print("Turning from " + current_direction + " to " + direction)
     UpdateCurrentLocation()
     time.sleep(turning_time)
     agv_state["current_status"] = 8  # Turning Completed
@@ -161,35 +161,6 @@ import threading
 # Create a file lock
 file_lock = threading.Lock()
 
-
-def Update_agv_json(file_name, object):
-    with file_lock:
-        try:
-            with open(file_name, "r") as f:
-                agv_status = json.load(f)
-        except FileNotFoundError:
-            agv_status = {}
-
-    for key in object:
-        agv_status[key] = object[key]
-
-    with open(file_name, "w") as f:
-        json.dump(agv_status, f)
-
-
-def Get_values_from_agv_json(file_name, key_list="all"):
-    with file_lock:
-        try:
-            with open(file_name, "r") as f:
-                agv_status = json.load(f)
-        except FileNotFoundError:
-            agv_status = {}
-
-    if key_list == "all":
-        return agv_status
-
-    values = {key: agv_status.get(key, 0) for key in key_list}
-    return values
 
 def SaveToCSV(agv_id, t1, t2, t3, t4, filename):
     # Check if file exists

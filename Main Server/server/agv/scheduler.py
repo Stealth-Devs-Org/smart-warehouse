@@ -91,7 +91,7 @@ def task_divider(task):
     end_path_location = task["end_path_location"]
 
     # Dividing the task into 2 (halfway)
-    if not task["halfway"]:
+    if not task["halfway"]: # AGV has completed picking
         task = {
             "destination": start_path_location,
             "storage": start_pallet_location,
@@ -161,12 +161,12 @@ def task_complete(data):
             # Update_working_agvs_json(working_agvs)
             print("Loading task completed by " + agv_id)
 
-            sending_task = task_divider(task)
-            topic = f"{agv_id}/goal"
-            message_dict = sending_task
-            message_json = json.dumps(message_dict)
-            mqtt_client.publish(topic, message_json, qos=2)
-            print("Unloading task" + message_json + " assigned to " + agv_id)
+            # sending_task = task_divider(task)
+            # topic = f"{agv_id}/goal"
+            # message_dict = sending_task
+            # message_json = json.dumps(message_dict)
+            # mqtt_client.publish(topic, message_json, qos=2)
+            # print("Unloading task" + message_json + " assigned to " + agv_id)
         else:
             del working_agvs[agv_id]
             # working_agvs[agv_id] = None
