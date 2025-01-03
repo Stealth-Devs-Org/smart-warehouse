@@ -43,10 +43,13 @@ def on_message(client, userdata, message):
     payload = message.payload.decode()
     #print(f"Received by Server : {topic}: {payload}")
 
-    data = {
-        "topic": topic,
-        "payload": json.loads(payload)
-        }
+    # data = {
+    #     "topic": topic,
+    #     "payload": json.loads(payload)   // with toipc and payload
+    #     }
+    
+    data = json.loads(payload)
+        
     send_sensor_data_through_websocket(data)
 
     try:
