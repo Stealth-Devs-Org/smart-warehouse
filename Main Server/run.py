@@ -31,8 +31,8 @@ def start_sensor_websocket_thread():
     """
     Start a separate thread for the send_sensor_data_websocket function.
     """
-    sensor_thread = threading.Thread(target=send_sensor_data_websocket, daemon=True)
-    sensor_thread.start()
+    # sensor_thread = threading.Thread(target=send_sensor_data_websocket, daemon=True)
+    # sensor_thread.start()
 
 
 

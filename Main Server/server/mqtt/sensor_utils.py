@@ -6,6 +6,11 @@ import paho.mqtt.client as mqtt
 
 from server.config import Config 
 
+# from server.sensors.sensorhandler import send_sensor_data_websocket
+
+from server.websocket.websocket import send_sensor_data_through_websocket
+
+
 # mqtt_client = Mqtt()
 mqtt_client = mqtt.Client()
 
@@ -30,11 +35,19 @@ def ConnectMQTT():
         print("subscribed to sensor_humidity")
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
+        
 
 
 def on_message(client, userdata, message):
     topic = message.topic
     payload = message.payload.decode()
+    #print(f"Received by Server : {topic}: {payload}")
+
+    data = {
+        "topic": topic,
+        "payload": json.loads(payload)
+        }
+    send_sensor_data_through_websocket(data)
 
     try:
         data = json.loads(payload) 

@@ -61,7 +61,7 @@ class TemperatureSensor(threading.Thread):
         while self.running:
             temperature = self.get_temperature_value()
             SetSensorState("Temperature", self.sensor_id,  self.partition_id,self.sensor_id, round(temperature, 2), 1)
-            print(f"Sensor state: {sensor_state}")
+            print(f"Sensor state: {sensor_state} \n")
             # self.client.publish(TOPIC, str(sensor_state)) 
             self.client.publish(TOPIC, json.dumps(sensor_state))
             time.sleep(1)
