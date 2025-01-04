@@ -10,25 +10,25 @@ from warehouseEnvironment import desired_warehouse_temperature_values
 
 
 AirConditionerID = [
-    # Partition 1
+    # Partition 0
     ["(2,2)"],
     
-    # Partition 2
+    # Partition 1
     ["(9,11)"],
     
-    # Partition 3
+    # Partition 2
     ["(28,11)"],
     
-    # Partition 4
+    # Partition 3
     ["(5,15)"],
     
-    # Partition 5
+    # Partition 4
     ["(12,27)"],
     
-    # Partition 6
+    # Partition 5
     ["(52,13)"],
     
-    # Partition 7
+    # Partition 6
     ["(28,18)"]
 ]
 

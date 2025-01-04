@@ -25,7 +25,7 @@ desired_warehouse_humidity_values = [45.0, 47.5, 48.0, 49.5, 44.0, 50.2, 46.8]  
 
 # # for database environment..................................uncomment for ............. writing first time
 
-# warehouse_temperature_values = [25.0, 25.5, 24.5, 25.5, 23.5, 23.8, 23.7]
+# warehouse_temperature_values = [250.0, 250.5, 240.5, 250.5, 230.5, 230.8, 230.7]
 
 # warehouse_airquality_values = [500.0, 520.0, 480.0, 700.0, 650.0, 580.0, 600.0] # in ppm
 
@@ -86,7 +86,7 @@ def ReadFromDatabase():
 
 
 if __name__ == "__main__":
-    #writeToDatabase()        ## uncomment for .................................. writing first time
+    # writeToDatabase()        ## uncomment for .................................. writing first time
     print("Data written to file 'warehouse_data.txt'")
     while True:
         ReadFromDatabase()

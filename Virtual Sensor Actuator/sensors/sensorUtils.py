@@ -1,6 +1,6 @@
 import os
 
-sensor_state = {"sensor_type": "", "sensor_id": "","partition_id": 0, "sensor_location": "", "reading": 0.0, "current_status": 0}
+sensor_state = {"sensor_type": "", "sensor_id": "","partition_id": 0, "sensor_location": "", "reading": 0.0, "current_status": 1}
 
 def SetSensorState(type, id,partID, location, reading, status):
     global sensor_state
