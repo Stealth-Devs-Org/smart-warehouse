@@ -27,19 +27,20 @@ class Position:
         return False
 
     def count_position(self, status):
-        if self.detect_IR_output_change():
-            if status == 1:
-                self.count += 1
-            elif status == 2:
-                self.count -= 1
-            else:
-                return None
-            self.convert_to_location(self.count)
-            print(f"Current location: {self.current_location}")
-            print(f"Count: {self.count}")
+        # if self.detect_IR_output_change():
+        if status == 1:
+            self.count += 1
+        elif status == 2:
+            self.count -= 1
+        else:
             return None
+        self.convert_to_location(self.count)
+        print(f"Current location: {self.current_location}")
+        print(f"Count: {self.count}")
+        return None
 
-    def convert_to_location(self, count):
+    def convert_to_location(self):
+        count = self.count
         if count < 3:
             self.current_location = [36, 13 + count]
         elif count < 15:
@@ -65,3 +66,149 @@ class Position:
         else:
             self.current_location = [30 + (count - 87), 12]
         return None
+
+    def decide_forward_backward(self, direction):
+        count = self.count
+        if count < 3:
+            if count == 2:
+                if direction in ["N", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "N":
+                    return 1
+                elif direction == "S":
+                    return 2
+
+        elif count < 15:
+            if count == 14:
+                if direction in ["N", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "W":
+                    return 1
+                elif direction == "E":
+                    return 2
+
+        elif count < 19:
+            if count == 18:
+                if direction in ["N", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "N":
+                    return 1
+                elif direction == "S":
+                    return 2
+
+        elif count < 32:
+            if count == 31:
+                if direction in ["N", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "E":
+                    return 1
+                elif direction == "W":
+                    return 2
+
+        elif count < 35:
+            if count == 34:
+                if direction in ["N", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "N":
+                    return 1
+                elif direction == "S":
+                    return 2
+
+        elif count < 49:
+            if count == 48:
+                if direction in ["S", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "W":
+                    return 1
+                elif direction == "E":
+                    return 2
+
+        elif count < 58:
+            if count == 57:
+                if direction in ["S", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "S":
+                    return 1
+                elif direction == "N":
+                    return 2
+
+        elif count < 61:
+            if count == 60:
+                if direction in ["S", "W"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "W":
+                    return 1
+                elif direction == "E":
+                    return 2
+
+        elif count < 70:
+            if count == 69:
+                if direction in ["S", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "S":
+                    return 1
+                elif direction == "N":
+                    return 2
+
+        elif count < 80:
+            if count == 79:
+                if direction in ["N", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "E":
+                    return 1
+                elif direction == "W":
+                    return 2
+
+        elif count < 88:
+            if count == 87:
+                if direction in ["N", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "N":
+                    return 1
+                elif direction == "S":
+                    return 2
+
+        else:
+            if count == 93:
+                if direction in ["N", "E"]:
+                    return 1
+                else:
+                    return 2
+            else:
+                if direction == "E":
+                    return 1
+                elif direction == "W":
+                    return 2

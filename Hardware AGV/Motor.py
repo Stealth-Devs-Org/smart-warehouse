@@ -62,3 +62,11 @@ class Motor:
         GPIO.output(self.in3, GPIO.LOW)
         GPIO.output(self.in4, GPIO.HIGH)
         self.status = 2
+
+    def move(self, direction):
+        if direction == 1:
+            self.move_forward()
+        elif direction == 2:
+            self.move_backward()
+        else:
+            self.stop_moving()

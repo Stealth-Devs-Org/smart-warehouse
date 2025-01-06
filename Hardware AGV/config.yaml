@@ -1,0 +1,58 @@
+defaults: &defaults
+  speed: 1  # Default speed of the AGVs
+  cell_distance: 2  # Default cell distance between two cells
+  direction: "N"  # Default initial direction of the AGVs
+  turning_time: 1  # Default time taken to turn the AGVs
+  grid_path: "grid.xlsx"  # Default file path of the warehouse map
+
+instances:
+  - port: 5001
+    AGV_ID: 1
+    current_location: [36, 13]
+    idle_location: [36, 13]
+    <<: *defaults  # Merges default values here
+
+  - port: 5002
+    AGV_ID: 2
+    current_location: [37, 13]
+    idle_location: [37, 13]
+    <<: *defaults  # Merges default values here
+
+  - port: 5003
+    AGV_ID: 3
+    current_location: [38, 13]
+    idle_location: [38, 13]
+    <<: *defaults  # Merges default values here
+
+  - port: 5004
+    AGV_ID: 4
+    current_location: [39, 13]
+    idle_location: [39, 13]
+    <<: *defaults  # Merges default values here
+
+  - port: 5005
+    AGV_ID: 5
+    current_location: [38,29]
+    idle_location: [38,29]
+    <<: *defaults  # Merges default values here
+
+  - port: 5006
+    AGV_ID: 6
+    current_location: [9, 29]
+    idle_location: [9, 29]
+    <<: *defaults  # Merges default values here
+
+  - port: 5007
+    AGV_ID: 7
+    current_location: [23, 29]
+    idle_location: [23, 29]
+    <<: *defaults  # Merges default values here
+
+  - port: 5008
+    AGV_ID: 8
+    current_location: [24, 29]
+    idle_location: [24, 29]
+    <<: *defaults  # Merges default values here
+
+  # Add more instances as needed
+ 
