@@ -130,20 +130,22 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
 
 def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     start_time = time.time()
-    # Find the farthest obstacle from the start of the remaining path
+    # Find the farthest obstacle from the start of the remaining path assuming the obstacle moving towards the AGV
     start_point = remain_path[0][0]  # First point in the remaining path
-    farthest_obstacle_distance = max(
-        abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1])
-        for obstacle in obstacles
-    )
+    farthest_obstacle_distance = 0 
+    for obstacle in obstacles:
+        if obstacle in remain_path[0]:
+            distance = abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1])
+            if distance > farthest_obstacle_distance:
+                farthest_obstacle_distance = distance
+    
 
     # Calculate total time for remaining path and new path
-    time_to_remain_path = (
-        farthest_obstacle_distance + sum(len(segment) for segment in remain_path)
-    ) * cell_time + len(remain_path) * turning_time
-    time_to_new_path = (
-        sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
-    )
+    time_to_remain_path = (farthest_obstacle_distance + sum(len(segment) for segment in remain_path)) * cell_time 
+    + len(remain_path) * turning_time
+    
+    time_to_new_path = sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
+    
 
     # ---------- print("time to remain_path", time_to_remain_path)
     # ---------- print("time to new_path", time_to_new_path)

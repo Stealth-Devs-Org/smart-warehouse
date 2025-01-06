@@ -90,12 +90,7 @@ def on_message(client, userdata, message):
             interrupt_value = data.get("interrupt")
             SendResponse(data, t)
 
-            if interrupt_value == 1:
-                SetInterrupt(1)
-                # ---------- print("Received 'Stop' interrupt. Stopping AGV.")
-            else:
-                SetInterrupt(interrupt_value)
-                # ---------- print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt_value)
+            SetInterrupt(interrupt_value)
 
         #elif message.topic == MQTT_GOAL_TOPIC:
             # print(f"Received message on topic '{message.topic}': {data}")

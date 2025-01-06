@@ -53,7 +53,7 @@ def ObtainGoal(idle_location):
 
 
 def MoveAGV(segments_list, destination, storage, action):
-    previous_obstacles = None
+    waiting = 0
     
     current_direction = agv_state["current_direction"]
     current_location = agv_state["current_location"]
@@ -75,7 +75,7 @@ def MoveAGV(segments_list, destination, storage, action):
             path_clearance = RequestPathClearance(AGV_ID, segment)
             
             if (path_clearance) == 1: # No obstacles
-                previous_obstacles = None
+                waiting = 0
                                 
                 agv_state["current_status"] = 1
                 UpdateCurrentLocation()
@@ -142,7 +142,7 @@ def MoveAGV(segments_list, destination, storage, action):
             
 
             else:
-                print("obstacle*", path_clearance)
+                print("obstacles", path_clearance)
                 if path_clearance == None:
                     print("No path clearance received. Retrying...")
                     return
@@ -157,9 +157,8 @@ def MoveAGV(segments_list, destination, storage, action):
                     recal_path = 0
                     print("New path:", new_path)
                     new_segments = CreateSegments(new_path)
-                    print("previous_obstacles:", previous_obstacles)
-                    print("obstacles:", obstacles)
-                    if obstacles != previous_obstacles:
+                    print("waiting :", waiting)
+                    if waiting < 2:
                         remain_path = [agv_state["current_segment"]] + segments[index + 1 :]
                         is_new_path_efficient, waiting_time = EvalNewPath(
                             new_segments, obstacles, remain_path, cell_time, turning_time
@@ -167,7 +166,7 @@ def MoveAGV(segments_list, destination, storage, action):
                         print("is_new_path_efficient:", is_new_path_efficient)
                         print("waiting_time:", waiting_time)
                         if not is_new_path_efficient:
-                            previous_obstacles = obstacles
+                            waiting += 1
                             print("Waiting for obstacle to clear...")
                             time.sleep(waiting_time)
                             break
@@ -203,7 +202,7 @@ if __name__ == "__main__":
 
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "0"))
+    instance_id = int(os.getenv("INSTANCE_ID", "3"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
