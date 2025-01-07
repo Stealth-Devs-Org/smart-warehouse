@@ -14,34 +14,34 @@ storage_pallet_locations = {}
 
 # Assigning pallet locations with respective path location
 for y in range(5, 12):
-    inbound_pallet_locations[(18, y)] = (17, y)
+    # inbound_pallet_locations[(18, y)] = (17, y)
     # inbound_pallet_locations[(19, y)] = (20, y)
-    # inbound_pallet_locations[(21, y)] = (20, y)
+    inbound_pallet_locations[(21, y)] = (20, y)
     # inbound_pallet_locations[(22, y)] = (23, y)
-    outbound_pallet_locations[(25, y)] = (24, y)
+    # outbound_pallet_locations[(25, y)] = (24, y)
     # outbound_pallet_locations[(26, y)] = (27, y)
     # outbound_pallet_locations[(28, y)] = (27, y)
-    # outbound_pallet_locations[(29, y)] = (30, y)
+    outbound_pallet_locations[(29, y)] = (30, y)
 
 for x in range(11, 22):
+    #     storage_pallet_locations[(x, 27)] = (x, 28)
+    #     storage_pallet_locations[(x, 26)] = (x, 25)
+    #     storage_pallet_locations[(x, 24)] = (x, 25)
+    #     storage_pallet_locations[(x, 23)] = (x, 22)
+    storage_pallet_locations[(x, 21)] = (x, 22)
+    storage_pallet_locations[(x, 20)] = (x, 19)
+    storage_pallet_locations[(x, 18)] = (x, 19)
+#     storage_pallet_locations[(x, 17)] = (x, 16)
+
+for x in range(25, 36):
     # storage_pallet_locations[(x, 27)] = (x, 28)
     # storage_pallet_locations[(x, 26)] = (x, 25)
     # storage_pallet_locations[(x, 24)] = (x, 25)
     # storage_pallet_locations[(x, 23)] = (x, 22)
-    # storage_pallet_locations[(x, 21)] = (x, 22)
-    # storage_pallet_locations[(x, 20)] = (x, 19)
-    # storage_pallet_locations[(x, 18)] = (x, 19)
-    storage_pallet_locations[(x, 17)] = (x, 16)
-
-# for x in range(25, 36):
-#     storage_pallet_locations[(x, 27)] = (x, 28)
-#     storage_pallet_locations[(x, 26)] = (x, 25)
-#     storage_pallet_locations[(x, 24)] = (x, 25)
-#     storage_pallet_locations[(x, 23)] = (x, 22)
-#     storage_pallet_locations[(x, 21)] = (x, 22)
-#     storage_pallet_locations[(x, 20)] = (x, 19)
-#     storage_pallet_locations[(x, 18)] = (x, 19)
-#     storage_pallet_locations[(x, 17)] = (x, 16)
+    storage_pallet_locations[(x, 21)] = (x, 22)
+    storage_pallet_locations[(x, 20)] = (x, 19)
+    storage_pallet_locations[(x, 18)] = (x, 19)
+    # storage_pallet_locations[(x, 17)] = (x, 16)
 
 
 def generate_random_task():
@@ -120,10 +120,14 @@ def assign_task_to_agv():
         available_agvs = [agv for agv in agvs if agv not in working_agvs.keys()]
         if not available_agvs:
             return None
-        print("Available AGVs: " + str(available_agvs))
-        agv_id = random.choice(available_agvs)
+        elif "agv1" in available_agvs:
+            agv_id = "agv1"
+            task = generate_task_for_agv1()
+        else:
+            print("Available AGVs: " + str(available_agvs))
+            agv_id = random.choice(available_agvs)
+            task = generate_random_task()
 
-    task = generate_random_task()
     task["assigned_agv"] = agv_id
     working_agvs[agv_id] = task
     # Update_working_agvs_json(working_agvs)
@@ -172,3 +176,55 @@ def task_complete(data):
             # working_agvs[agv_id] = None
             # Update_working_agvs_json(working_agvs)
             print("Unloading task completed by " + agv_id)
+
+
+def generate_task_for_agv1():
+    inbound_pallet_locations_local = {}
+    outbound_pallet_locations_local = {}
+    storage_pallet_locations_local = {}
+
+    for y in range(5, 12):
+        inbound_pallet_locations_local[(21, y)] = (20, y)
+        outbound_pallet_locations_local[(29, y)] = (30, y)
+
+    for x in range(25, 36):
+        storage_pallet_locations_local[(x, 21)] = (x, 22)
+        storage_pallet_locations_local[(x, 20)] = (x, 19)
+        storage_pallet_locations_local[(x, 18)] = (x, 19)
+
+    # Randomly selecting a pallet to move
+    in_or_out = random.choice(["inbound", "outbound"])
+    if in_or_out == "inbound":
+        start_locations = list(inbound_pallet_locations_local.keys())
+        end_locations = list(storage_pallet_locations_local.keys())
+        start_pallet_location = random.choice(start_locations)
+        start_path_location = inbound_pallet_locations_local[start_pallet_location]
+        end_pallet_location = random.choice(end_locations)
+        end_path_location = storage_pallet_locations_local[end_pallet_location]
+    else:
+        start_locations = list(storage_pallet_locations_local.keys())
+        end_locations = list(outbound_pallet_locations_local.keys())
+        start_pallet_location = random.choice(start_locations)
+        start_path_location = storage_pallet_locations_local[start_pallet_location]
+        end_pallet_location = random.choice(end_locations)
+        end_path_location = outbound_pallet_locations_local[end_pallet_location]
+
+    # Convert tuple to list
+    start_pallet_location = list(start_pallet_location)
+    start_path_location = list(start_path_location)
+    end_pallet_location = list(end_pallet_location)
+    end_path_location = list(end_path_location)
+
+    start_pallet_location.append(random.choice([1, 5]))  # Randomly selecting the pallet height
+    end_pallet_location.append(random.choice([1, 5]))  # Randomly selecting the pallet height
+
+    task = {
+        "halfway": False,
+        "assigned_agv": None,
+        "start_pallet_location": start_pallet_location,
+        "start_path_location": start_path_location,
+        "end_pallet_location": end_pallet_location,
+        "end_path_location": end_path_location,
+    }
+
+    return task
