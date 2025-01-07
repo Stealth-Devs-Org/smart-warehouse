@@ -12,7 +12,7 @@ class Position:
         self.IR_pin = 3
 
         # Set GPIO mode
-        GPIO.setmode(GPIO.BOARD)
+        GPIO.setmode(GPIO.BCM)
 
         # Set GPIO pin
         GPIO.setup(self.IR_pin, GPIO.IN)

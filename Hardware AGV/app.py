@@ -129,6 +129,8 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
 
                         if interrupted:
                             break
+
+                        time.sleep(0.01)
                     if interrupted:
                         break
 
@@ -232,11 +234,11 @@ if __name__ == "__main__":
     cell_distance = config["cell_distance"]  # cell_distance between two cells
     turning_time = config["turning_time"]  # Time taken to turn the AGV in 45 degrees
     direction = config["direction"]  # Initial direction of the AGV
-    current_location = motor_object.current_location
+    current_location = position_object.current_location
     idle_location = tuple(config["idle_location"])
 
     agv_state["agv_id"] = AGV_ID
-    agv_state["current_location"] = motor_object.current_location
+    agv_state["current_location"] = position_object.current_location
     agv_state["current_status"] = 0
     agv_state["current_segment"] = [agv_state["current_location"]]
     agv_state["current_direction"] = direction

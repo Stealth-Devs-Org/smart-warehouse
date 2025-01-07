@@ -125,7 +125,7 @@ def UpdateCurrentLocation():
     t1 = time.time()
 
     location_data = {
-        "agv_id": f"agv{agv_state["agv_id"]}",
+        "agv_id": f"agv{agv_state['agv_id']}",
         "location": agv_state["current_location"],
         "segment": agv_state["current_segment"],
         "status": agv_state["current_status"],
@@ -139,7 +139,7 @@ def UpdateCurrentLocation():
     }
     mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
     print(
-        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+        f"Published current location {location_data['location']} & status {agv_state['current_status']} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
     )
 
 def SendResponse(data, t2):   
