@@ -43,8 +43,8 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
     from server.agv.keep_alive import permanent_obstacles
 
     # permanent_obstacles = Get_values_from_permanent_obstacles_json()
-    if permanent_obstacles:
-        obstacles = obstacles + get_common_elements(permanent_obstacles.values(), segment)
+    # if permanent_obstacles:
+    #     obstacles = obstacles + get_common_elements(permanent_obstacles.values(), segment)
 
     cur_agv_loc = agvs_data[agv_id]["location"]
     if cur_agv_loc in obstacles:
@@ -59,7 +59,7 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
             agvs_data, agv_id, range_of_obstacle_detection
         )
         obstacles = obstacles + obstacles_within_range
-
+        #obstacles = obstacles + permanent_obstacles.values()
         obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
         #obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
@@ -209,8 +209,8 @@ def update_agv_location(data):
     #     and sent_interrupts[data["agv_id"]]["location"] != data["location"]
     # ):
     #     del sent_interrupts[data["agv_id"]]
-
-    collision_avoidance()
+    if data["status"] == 1:
+        collision_avoidance()
 
     # Remove the AGV location from permanent obstacles since it is back alive
     remove_from_permanent_obstacles(data["agv_id"])
@@ -239,7 +239,7 @@ def path_clearance():
         del sent_interrupts[agv_id]
     elif data["agv_id"] in sent_interrupts.keys() and sent_interrupts[agv_id]["interrupt"] == 1:
         del sent_interrupts[agv_id]
-    collision_avoidance()
+    
 
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
     if not obstacles:

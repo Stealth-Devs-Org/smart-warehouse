@@ -84,9 +84,7 @@ def SimulateTurning(AGV_ID, current_location, next_location, current_direction, 
     # from app import agv_state
     from mqtt_handler import UpdateCurrentLocation
 
-    if current_location[0] == next_location[0] and current_location[1] == next_location[1]:
-        return current_direction
-    elif current_location[0] == next_location[0] and current_location[1] < next_location[1]:
+    if current_location[0] == next_location[0] and current_location[1] < next_location[1]:
         direction = "N"
     elif current_location[0] == next_location[0] and current_location[1] > next_location[1]:
         direction = "S"

@@ -2,10 +2,8 @@ import copy
 import os
 import threading
 import time
-
 import ujson as json
 import yaml
-
 from mqtt_handler import (
     ConnectMQTT,
     GetInterrupt,
@@ -68,28 +66,24 @@ def MoveAGV(segments_list, destination, storage, action):
         while True:
             interrupted = 0
             segment = agv_state["current_segment"]
-
-            agv_state["current_status"] = 0
-            UpdateCurrentLocation()
+            
+            if agv_state["current_status"] != 0:
+                agv_state["current_status"] = 0
+                UpdateCurrentLocation()
 
             path_clearance = RequestPathClearance(AGV_ID, segment)
             
             if (path_clearance) == 1: # No obstacles
                 waiting = 0
-                                
+                if len(segment) == 1:
+                    current_direction = SimulateTurning(AGV_ID, current_location, segment[1], current_direction, turning_time)
+                    agv_state["current_direction"] = current_direction
                 agv_state["current_status"] = 1
                 UpdateCurrentLocation()
-
+                
                 for cell in segment:
-
-                    if len(segment) > 1 and cell == segment[1]:
-                        # ---------- print(f"Current location: {current_location}, next location: {cell}")
-                        current_direction = SimulateTurning(
-                            AGV_ID, current_location, cell, current_direction, turning_time
-                        )
-                        agv_state["current_direction"] = current_direction
-                        agv_state["current_status"] = 1
-
+                    if cell == agv_state["current_location"]:
+                        continue
                     movement_time = 0
                     
                     while movement_time < cell_time:
@@ -109,19 +103,16 @@ def MoveAGV(segments_list, destination, storage, action):
                             interrupted = 1
 
                         elif interrupt_value == 2:
-                            print("Recalculating path...")
+                            print("Recalculate signal received!")
                             
-                            agv_state["current_status"] = 0
-                            UpdateCurrentLocation()
-
-                            
-
                             SetInterrupt(0)
                             interrupted = 1
 
                         if interrupted:
                             break
-
+                        if agv_state["current_status"] != 1:
+                            agv_state["current_status"] = 1
+                            UpdateCurrentLocation()
                         time.sleep(cell_time / interrupt_check_intervals)
                         movement_time += cell_time / interrupt_check_intervals
 
@@ -147,6 +138,7 @@ def MoveAGV(segments_list, destination, storage, action):
                     print("No path clearance received. Retrying...")
                     return
                 current_location_tuple = tuple(current_location)
+                print("Recalculating path...")
                 new_path, obstacles = RecalculatePath(
                     (path_clearance), current_location_tuple, destination, fixed_grid
                 )
@@ -164,15 +156,15 @@ def MoveAGV(segments_list, destination, storage, action):
                             new_segments, obstacles, remain_path, cell_time, turning_time
                         )
                         print("is_new_path_efficient:", is_new_path_efficient)
-                        print("waiting_time:", waiting_time)
                         if not is_new_path_efficient:
                             waiting += 1
-                            print("Waiting for obstacle to clear...")
+                            print("Waiting for obstacle to clear...waiting_time:", waiting_time)
                             time.sleep(waiting_time)
                             break
                         else:
                             recal_path = 1
                     else:
+                        print("Waiting count exceeded. Use new path...")
                         recal_path = 1
 
                     if recal_path:
@@ -202,7 +194,7 @@ if __name__ == "__main__":
 
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "3"))
+    instance_id = int(os.getenv("INSTANCE_ID", "0"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
@@ -224,7 +216,7 @@ if __name__ == "__main__":
 
     cell_time = cell_distance / speed
     interrupt_check_intervals = 200 # Per cell
-    interrupt_waiting_time = cell_time*7
+    interrupt_waiting_time = cell_time*3
 
     # Read the grid from the Excel file
     grid_path = config["grid_path"]
@@ -237,8 +229,6 @@ if __name__ == "__main__":
     #====================================Initialize MQTT Connection====================================#
 
     ConnectMQTT(AGV_ID)
-
-    
 
     # Start the keep-alive thread
     # keep_alive_thread = threading.Thread(target=send_keep_alive)
