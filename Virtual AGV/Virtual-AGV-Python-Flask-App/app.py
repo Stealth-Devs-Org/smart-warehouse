@@ -74,8 +74,9 @@ def MoveAGV(segments_list, destination, storage, action):
             path_clearance = RequestPathClearance(AGV_ID, segment)
             
             if (path_clearance) == 1: # No obstacles
+                print("No obstacles in the segment",segment)
                 waiting = 0
-                if len(segment) == 1:
+                if len(segment) != 1:
                     current_direction = SimulateTurning(AGV_ID, current_location, segment[1], current_direction, turning_time)
                     agv_state["current_direction"] = current_direction
                 agv_state["current_status"] = 1
@@ -93,7 +94,7 @@ def MoveAGV(segments_list, destination, storage, action):
                         #print(f"Current interrupt value: {interrupt_value}")
 
                         if interrupt_value == 1:
-                            print("Stop signal received! Halting AGV.")
+                            print("Stop signal received! Halting AGV.",time.time())
                             agv_state["current_status"] = 0
                             UpdateCurrentLocation()
 
@@ -103,7 +104,7 @@ def MoveAGV(segments_list, destination, storage, action):
                             interrupted = 1
 
                         elif interrupt_value == 2:
-                            print("Recalculate signal received!")
+                            print("Recalculate signal received!,",time.time())
                             
                             SetInterrupt(0)
                             interrupted = 1
@@ -194,7 +195,7 @@ if __name__ == "__main__":
 
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "0"))
+    instance_id = int(os.getenv("INSTANCE_ID", "3"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]

@@ -134,7 +134,7 @@ def UpdateCurrentLocation():
     }
     mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
     print(
-        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC} at{time.time()}"
     )
 
 def SendResponse(data, t2):   

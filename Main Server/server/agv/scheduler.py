@@ -2,7 +2,7 @@ import json
 import random
 import threading
 import time
-
+from server.agv.keep_alive import permanent_obstacles
 from server.agv.utils import Update_working_agvs_json
 from server.mqtt.utils import mqtt_client
 
@@ -117,7 +117,7 @@ def assign_task_to_agv():
     if not agvs:
         return None
     else:
-        available_agvs = [agv for agv in agvs if agv not in working_agvs.keys()]
+        available_agvs = [agv for agv in agvs if (agv not in working_agvs.keys() and agv not in permanent_obstacles.keys())]    
         if not available_agvs:
             return None
         print("Available AGVs: " + str(available_agvs))

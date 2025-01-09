@@ -135,9 +135,7 @@ def collision_avoidance():
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
             if crossing_segment != []:
-                '''print(
-                    f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
-                )'''
+                print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}")
                 agv_pair = get_high_value_agv_id(agv_pair[0], agv_pair[1])
                 stop_agv(agv_pair[0], agv_pair[1])
                 recalibrate_path(
