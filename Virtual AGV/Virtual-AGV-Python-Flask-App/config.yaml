@@ -32,8 +32,8 @@ instances:
 
   - port: 5005
     AGV_ID: 5
-    current_location: [38,29]
-    idle_location: [38,29]
+    current_location: [37,12]
+    idle_location: [37,12]
     <<: *defaults  # Merges default values here
 
   - port: 5006

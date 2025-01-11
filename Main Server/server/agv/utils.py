@@ -1,7 +1,7 @@
 import math
-
+import os
 import ujson as json
-
+import csv
 
 def get_common_elements(array1, array2):
     set1 = set(tuple(x) for x in array1)
@@ -19,16 +19,16 @@ This is done to avoid collisions with other agvs.
 """
 
 
-def get_buffered_positions(buffer, current_agv_postions):
-    buffered_positions = []
-    for position in current_agv_postions:
-        for i in range(-buffer, buffer + 1):
-            for j in range(-buffer, buffer + 1):
-                new_position = [position[0] + i, position[1] + j]
-                if new_position not in buffered_positions:
-                    buffered_positions.append(new_position)
+# def get_buffered_positions(buffer, current_agv_postions):
+#     buffered_positions = []
+#     for position in current_agv_postions:
+#         for i in range(-buffer, buffer + 1):
+#             for j in range(-buffer, buffer + 1):
+#                 new_position = [position[0] + i, position[1] + j]
+#                 if new_position not in buffered_positions:
+#                     buffered_positions.append(new_position)
 
-    return buffered_positions
+#     return buffered_positions
 
 
 def calculate_distance(coord1, coord2):
@@ -88,7 +88,7 @@ def get_close_agv_pairs(agvs_data, threshold):
     """
     distances = calculate_agv_distances(agvs_data)
     close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
-    close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
+    #close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
 
     return close_pairs
 
@@ -117,45 +117,45 @@ def get_agvs_location_within_range(agvs_data, agv_id, threshold):
     return agvs_within_range
 
 
-def get_distance_of_furthest_obstacle(agv_location, obstacles):
-    """
-    Get the distance of the furthest obstacle from the AGV location.
+# def get_distance_of_furthest_obstacle(agv_location, obstacles):
+#     """
+#     Get the distance of the furthest obstacle from the AGV location.
 
-    Parameters:
-    agv_location (list): The current location of the AGV as [x, y].
-    obstacles (list): A list of obstacle locations as [x, y].
+#     Parameters:
+#     agv_location (list): The current location of the AGV as [x, y].
+#     obstacles (list): A list of obstacle locations as [x, y].
 
-    Returns:
-    float: The distance of the furthest obstacle from the AGV location.
-    """
-    max_distance = 0
-    for obstacle in obstacles:
-        distance = calculate_distance(agv_location, obstacle)
-        if distance > max_distance:
-            max_distance = distance
+#     Returns:
+#     float: The distance of the furthest obstacle from the AGV location.
+#     """
+#     max_distance = 0
+#     for obstacle in obstacles:
+#         distance = calculate_distance(agv_location, obstacle)
+#         if distance > max_distance:
+#             max_distance = distance
 
-    return max_distance
+#     return max_distance
 
 
-def is_segment_occupied(agvs_data, agv_id, segment):
-    """
-    Check if the segment of the path is occupied by other AGVs.
+# def is_segment_occupied(agvs_data, agv_id, segment):
+#     """
+#     Check if the segment of the path is occupied by other AGVs.
 
-    Parameters:
-    agvs_data (dict): A dictionary containing AGV data.
-    agv_id (str): The ID of the AGV.
-    segment (list): A list of coordinates representing the segment of the path.
+#     Parameters:
+#     agvs_data (dict): A dictionary containing AGV data.
+#     agv_id (str): The ID of the AGV.
+#     segment (list): A list of coordinates representing the segment of the path.
 
-    Returns:
-    bool: True if the segment is occupied, False otherwise.
-    """
-    for agv in agvs_data.values():
-        if (
-            "location" in agv
-            and agv["agv_id"] != agv_id
-            and (agv["segment"] in segment or segment in agv["segment"])
-        ):
-            return True
+#     Returns:
+#     bool: True if the segment is occupied, False otherwise.
+#     """
+#     for agv in agvs_data.values():
+#         if (
+#             "location" in agv
+#             and agv["agv_id"] != agv_id
+#             and (agv["segment"] in segment or segment in agv["segment"])
+#         ):
+#             return True
 
 
 def is_path_crossing(agv_1, agv_2):
@@ -167,14 +167,14 @@ def is_path_crossing(agv_1, agv_2):
     agv_2 (dict): The data of the second AGV.
 
     Returns:
-    bool: True if the paths are crossing, False otherwise.
+    bool: List of path crossing cells.
     """
     loc_1 = agv_1["location"]
     loc_2 = agv_2["location"]
     path_1 = agv_1["segment"]
     path_2 = agv_2["segment"]
 
-    obstacles = []
+    obstacles = [] # Path crossing cells
 
     for i in range(len(path_1)):
         if path_1[i] in path_2:
@@ -197,7 +197,7 @@ def get_high_value_agv_id(agv_1, agv_2):
     agvs_pair (list): A list of tuples representing AGV pairs.
 
     Returns:
-    str: The ID of the AGV with the highest value.
+    str: [low_value_agv_id, high_value_agv_id].
     """
     value_1 = int("".join(filter(str.isdigit, agv_1)))
     value_2 = int("".join(filter(str.isdigit, agv_2)))
@@ -250,3 +250,18 @@ def Update_collisions_json(object):
 
         with open("server/agv/json_data/collisions.json", "w") as f:
             json.dump(collisions, f)
+
+def SaveProcessTime(filename, t1, t2):
+    # Check if file exists
+    file_exists = os.path.isfile(filename)
+
+    # Open CSV file in append mode
+    with open(filename, mode="a", newline='') as file:
+        writer = csv.writer(file)
+
+        # If file does not exist, write the header
+        if not file_exists:
+            writer.writerow(["t1", "t2"])  # Write the header
+
+        # Write the row with timestamps
+        writer.writerow([t1, t2])

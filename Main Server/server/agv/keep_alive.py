@@ -29,7 +29,8 @@ def remove_timeout_agvs():
                 )
                 if timestamp < datetime.now(timezone.utc) - timedelta(seconds=30):
                     permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
-                    del agvs_data[agv_id]
+                    # del agvs_data[agv_id]
+                    agvs_data[agv_id]["status"] = 10
                     # agvs_data[agv_id] = None
                     if agv_id in sent_interrupts.keys():
                         del sent_interrupts[agv_id]

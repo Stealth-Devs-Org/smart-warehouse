@@ -2,7 +2,7 @@ import json
 import random
 import threading
 import time
-
+from server.agv.keep_alive import permanent_obstacles
 from server.agv.utils import Update_working_agvs_json
 from server.mqtt.utils import mqtt_client
 
@@ -91,7 +91,7 @@ def task_divider(task):
     end_path_location = task["end_path_location"]
 
     # Dividing the task into 2 (halfway)
-    if not task["halfway"]:
+    if not task["halfway"]: # AGV has completed picking
         task = {
             "destination": start_path_location,
             "storage": start_pallet_location,
@@ -117,7 +117,7 @@ def assign_task_to_agv():
     if not agvs:
         return None
     else:
-        available_agvs = [agv for agv in agvs if agv not in working_agvs.keys()]
+        available_agvs = [agv for agv in agvs if (agv not in working_agvs.keys() and agv not in permanent_obstacles.keys())]    
         if not available_agvs:
             return None
         elif "agv1" in available_agvs:
@@ -165,12 +165,12 @@ def task_complete(data):
             # Update_working_agvs_json(working_agvs)
             print("Loading task completed by " + agv_id)
 
-            sending_task = task_divider(task)
-            topic = f"{agv_id}/goal"
-            message_dict = sending_task
-            message_json = json.dumps(message_dict)
-            mqtt_client.publish(topic, message_json, qos=2)
-            print("Unloading task" + message_json + " assigned to " + agv_id)
+            # sending_task = task_divider(task)
+            # topic = f"{agv_id}/goal"
+            # message_dict = sending_task
+            # message_json = json.dumps(message_dict)
+            # mqtt_client.publish(topic, message_json, qos=2)
+            # print("Unloading task" + message_json + " assigned to " + agv_id)
         else:
             del working_agvs[agv_id]
             # working_agvs[agv_id] = None

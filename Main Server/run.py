@@ -16,7 +16,7 @@ with open("server/agv/json_data/collisions.json", "w") as f:
     json.dump([], f)
 
 from server import create_app
-from server.agv.col_avoid import run_collision_avoidance
+#from server.agv.col_avoid import run_collision_avoidance
 from server.agv.keep_alive import remove_timeout_agvs, start_saving_data_thread
 from server.agv.scheduler import run_task_scheduler
 from server.websocket.utils import socketio, start_emission_thread

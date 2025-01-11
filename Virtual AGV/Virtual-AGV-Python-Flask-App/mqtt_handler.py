@@ -5,12 +5,12 @@ import threading
 
 import paho.mqtt.client as mqtt
 
-from utils import Get_values_from_agv_json , SaveToCSV
+from utils import SaveToCSV
 
 interrupt = 0  # Global interrupt variable
-goal = None  # Global goal variable
+#goal = None  # Global goal variable
 interrupt_lock = threading.Lock()
-goal_lock = threading.Lock()
+#goal_lock = threading.Lock()
 agv_id = None
 
 MQTT_BROKER = "localhost"
@@ -38,16 +38,16 @@ def GetInterrupt():
         return interrupt
 
 
-def SetGoal(new_goal):
-    global goal
-    with goal_lock:
-        goal = new_goal
+# def SetGoal(new_goal):
+#     global goal
+#     with goal_lock:
+#         goal = new_goal
 
 
-def GetGoal():
-    global goal
-    with goal_lock:
-        return goal
+# def GetGoal():
+#     global goal
+#     with goal_lock:
+#         return goal
 
 
 def setTopic(AGV_ID):
@@ -55,27 +55,27 @@ def setTopic(AGV_ID):
     global agv_id
     agv_id = f"agv{AGV_ID}"
     global MQTT_INTERRUPT_TOPIC
-    global MQTT_GOAL_TOPIC
+    #global MQTT_GOAL_TOPIC
     global MQTT_RESPONSE_TOPIC
-    MQTT_GOAL_TOPIC = f"{agv_id}/goal"
+    #MQTT_GOAL_TOPIC = f"{agv_id}/goal"
     MQTT_INTERRUPT_TOPIC = f"{agv_id}/interrupt"
     MQTT_RESPONSE_TOPIC = f"{agv_id}/response"
-    print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
+    '''print(f"MQTT_LOCATION_TOPIC: {MQTT_LOCATION_TOPIC}")
     print(f"MQTT_GOAL_TOPIC: {MQTT_GOAL_TOPIC}")
     print(f"MQTT_INTERRUPT_TOPIC: {MQTT_INTERRUPT_TOPIC}")
-    print(f"MQTT_RESPONSE_TOPIC: {MQTT_RESPONSE_TOPIC}")
+    print(f"MQTT_RESPONSE_TOPIC: {MQTT_RESPONSE_TOPIC}")'''
 
 def ConnectMQTT(AGV_ID):
     setTopic(AGV_ID)
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
         mqtt_client.subscribe(MQTT_INTERRUPT_TOPIC, qos=2)  # Subscribe to the interrupt topic
-        mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
+        #mqtt_client.subscribe(MQTT_GOAL_TOPIC, qos=2)  # Subscribe to the goal topic
         mqtt_client.subscribe(MQTT_RESPONSE_TOPIC, qos=2) 
         mqtt_client.on_message = on_message  # Set the message handler
         mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
-        print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
-        print(f"Subscribed to MQTT topic '{MQTT_GOAL_TOPIC}' for goals")
+        '''print(f"Subscribed to MQTT topic '{MQTT_INTERRUPT_TOPIC}' for interrupts")
+        print(f"Subscribed to MQTT topic '{MQTT_GOAL_TOPIC}' for goals")'''
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
 
@@ -90,12 +90,7 @@ def on_message(client, userdata, message):
             interrupt_value = data.get("interrupt")
             SendResponse(data, t)
 
-            if interrupt_value == 1:
-                SetInterrupt(1)
-                print("Received 'Stop' interrupt. Stopping AGV.")
-            else:
-                SetInterrupt(interrupt_value)
-                print("Received 'Recalculate path' interrupt. Interrupt value:", interrupt_value)
+            SetInterrupt(interrupt_value)
 
         #elif message.topic == MQTT_GOAL_TOPIC:
             # print(f"Received message on topic '{message.topic}': {data}")
@@ -139,7 +134,7 @@ def UpdateCurrentLocation():
     }
     mqtt_client.publish(MQTT_LOCATION_TOPIC, json.dumps(location_data), qos=1)
     print(
-        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC}'"
+        f"Published current location {location_data['location']} & status {agv_state["current_status"]} to MQTT topic '{MQTT_LOCATION_TOPIC} at{time.time()}"
     )
 
 def SendResponse(data, t2):   
@@ -155,7 +150,7 @@ def SendResponse(data, t2):
     return
 
 def EndTask(AGV_ID):
-    print("Inside EndTask")
+    # ---------- print("Inside EndTask")
     try:
         # Get the current time in a readable format
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
