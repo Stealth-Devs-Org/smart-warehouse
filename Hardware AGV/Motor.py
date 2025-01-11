@@ -1,3 +1,6 @@
+import threading
+import time
+
 import RPi.GPIO as GPIO
 
 
@@ -7,17 +10,25 @@ class Motor:
         self.status = 0  # 0: stopped, 1: forward, 2: backward
         self.speed = 50  # 0-100
 
-        # GPIO pins
-        self.in1 = 17
-        self.in2 = 27
-        self.en_a = 4
+        # Time for moving and stopping in the movement_thread
+        self.move_time = 0.3
+        self.stop_time = 0.5
+        self.movement_thread_started = False
 
-        self.in3 = 22
-        self.in4 = 23
-        self.en_b = 18
+        # GPIO pins
+        self.in1 = 27  # 13
+        self.in2 = 22  # 15
+        self.en_a = 17  # 11
+
+        self.in3 = 23  # 16
+        self.in4 = 24  # 18
+        self.en_b = 25  # 22
 
         # Set GPIO mode
         GPIO.setmode(GPIO.BCM)
+
+        # Clear GPIO channels
+        GPIO.cleanup()
 
         # Set GPIO pins
         GPIO.setup(self.in1, GPIO.OUT)
@@ -28,10 +39,10 @@ class Motor:
         GPIO.setup(self.en_b, GPIO.OUT)
 
         # Set PWM
-        power1 = GPIO.PWM(self.en_a, 100)
-        power2 = GPIO.PWM(self.en_b, 100)
-        power1.start(self.speed)
-        power2.start(self.speed)
+        self.power1 = GPIO.PWM(self.en_a, 1000)
+        self.power2 = GPIO.PWM(self.en_b, 1000)
+        self.power1.start(self.speed)
+        self.power2.start(self.speed)
 
         # Stop the motor at the beginning
         GPIO.output(self.in1, GPIO.LOW)
@@ -40,33 +51,63 @@ class Motor:
         GPIO.output(self.in4, GPIO.LOW)
 
     def move_forward(self):
-        print(f"{self.name} is moving forward")
         GPIO.output(self.in1, GPIO.HIGH)
         GPIO.output(self.in2, GPIO.LOW)
         GPIO.output(self.in3, GPIO.HIGH)
         GPIO.output(self.in4, GPIO.LOW)
-        self.status = 1
 
     def stop_moving(self):
-        print(f"{self.name} is stopping")
         GPIO.output(self.in1, GPIO.LOW)
         GPIO.output(self.in2, GPIO.LOW)
         GPIO.output(self.in3, GPIO.LOW)
         GPIO.output(self.in4, GPIO.LOW)
-        self.status = 0
 
     def move_backward(self):
-        print(f"{self.name} is moving backward")
         GPIO.output(self.in1, GPIO.LOW)
         GPIO.output(self.in2, GPIO.HIGH)
         GPIO.output(self.in3, GPIO.LOW)
         GPIO.output(self.in4, GPIO.HIGH)
-        self.status = 2
 
     def move(self, direction):
         if direction == 1:
+            self.status = 1
+            # print(f"{self.name} is moving forward")
+            if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
+                self.movement_thread_started = True
+                threading.Thread(target=self.movement_thread).start()
             self.move_forward()
+
         elif direction == 2:
+            self.status = 2
+            # print(f"{self.name} is moving backward")
+            if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
+                self.movement_thread_started = True
+                threading.Thread(target=self.movement_thread).start()
             self.move_backward()
         else:
+            self.status = 0
+            # print(f"{self.name} is stopping")
             self.stop_moving()
+
+    def movement_thread(self):
+        if self.status == 1:
+            print(f"{self.name} is moving forward")
+        elif self.status == 2:
+            print(f"{self.name} is moving backward")
+        else:
+            print(f"{self.name} is stopping")
+        while self.status != 0:
+            if self.status == 1:
+                self.move_forward()
+            elif self.status == 2:
+                self.move_backward()
+            time.sleep(self.move_time)
+            self.stop_moving()
+            time.sleep(self.stop_time)
+        self.movement_thread_started = False
+
+    def cleanup(self):
+        self.status = 0
+        self.movement_thread_started = False
+        self.stop_moving()
+        GPIO.cleanup()

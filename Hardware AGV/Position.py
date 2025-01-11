@@ -1,3 +1,5 @@
+import time
+
 import RPi.GPIO as GPIO
 
 
@@ -9,7 +11,7 @@ class Position:
         self.current_location = self.starting_location
 
         # IR sensor pin
-        self.IR_pin = 3
+        self.IR_pin = 4
 
         # Set GPIO mode
         GPIO.setmode(GPIO.BCM)
@@ -23,18 +25,25 @@ class Position:
         new_output = GPIO.input(self.IR_pin)
         if new_output != self.IR_output:
             self.IR_output = new_output
+            time.sleep(0.5)  # Cool down time of 0.5 seconds
             return True
         return False
 
     def count_position(self, status):
         # if self.detect_IR_output_change():
         if status == 1:
-            self.count += 1
+            if self.count == self.total_count:
+                self.count = 0
+            else:
+                self.count += 1
         elif status == 2:
-            self.count -= 1
+            if self.count == -1:
+                self.count = self.total_count - 1
+            else:
+                self.count -= 1
         else:
             return None
-        self.convert_to_location(self.count)
+        self.convert_to_location()
         print(f"Current location: {self.current_location}")
         print(f"Count: {self.count}")
         return None

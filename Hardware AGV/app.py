@@ -86,6 +86,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                 )
                 agv_state["current_direction"] = current_direction
                 agv_state["current_status"] = 1
+
                 UpdateCurrentLocation()
 
                 for cell in segment:
@@ -130,7 +131,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                         if interrupted:
                             break
 
-                        time.sleep(0.01)
+                        time.sleep(0.3)
                     if interrupted:
                         break
 
