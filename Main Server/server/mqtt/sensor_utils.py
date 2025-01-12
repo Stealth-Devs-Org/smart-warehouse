@@ -49,6 +49,8 @@ def on_message(client, userdata, message):
     #     }
     
     data = json.loads(payload)
+
+    
         
     send_sensor_data_through_websocket(data)
 
