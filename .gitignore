@@ -178,5 +178,5 @@ Main Server/server/agv/json_data/permanent_obstacles.json
 Main Server/server/agv/json_data/working_agvs.json
 
 
-#node_modules
+# Node modules
 node_modules/

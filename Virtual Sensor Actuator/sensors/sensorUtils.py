@@ -1,3 +1,4 @@
+
 import os
 
 sensor_state = {"sensor_type": "", "sensor_id": "","partition_id": 0, "sensor_location": "", "reading": 0.0, "current_status": 1}
