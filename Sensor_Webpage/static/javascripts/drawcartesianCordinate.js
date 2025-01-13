@@ -302,13 +302,13 @@ function drawCartesianCoordinates() {
             ]);
 
             // // Draw the labels for each partition
-            drawTextLabel("Part 1", 3.5, 6, 16);
-            drawTextLabel("Part 2", 14.5, 7, 16);
-            drawTextLabel("Part 3", 35, 7, 16);
-            drawTextLabel("Part 4", 4, 21, 16);
-            drawTextLabel("Part 5", 16, 22, 16);
-            drawTextLabel("Part 6", 33, 22, 16);
-            drawTextLabel("Part 7", 49, 20, 16);
+            drawTextLabel("Part 0", 3.5, 6, 16);
+            drawTextLabel("Part 1", 14.5, 7, 16);
+            drawTextLabel("Part 2", 35, 7, 16);
+            drawTextLabel("Part 3", 4, 21, 16);
+            drawTextLabel("Part 4", 16, 22, 16);
+            drawTextLabel("Part 5", 33, 22, 16);
+            drawTextLabel("Part 6", 49, 20, 16);
 
 
 

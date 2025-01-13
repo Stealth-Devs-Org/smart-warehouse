@@ -1,7 +1,9 @@
+import csv
 import math
 import os
+
 import ujson as json
-import csv
+
 
 def get_common_elements(array1, array2):
     set1 = set(tuple(x) for x in array1)
@@ -88,7 +90,7 @@ def get_close_agv_pairs(agvs_data, threshold):
     """
     distances = calculate_agv_distances(agvs_data)
     close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
-    #close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
+    # close_pairs = [agv_pair for agv_pair, distance in distances.items() if distance <= threshold]
 
     return close_pairs
 
@@ -174,7 +176,7 @@ def is_path_crossing(agv_1, agv_2):
     path_1 = agv_1["segment"]
     path_2 = agv_2["segment"]
 
-    obstacles = [] # Path crossing cells
+    obstacles = []  # Path crossing cells
 
     for i in range(len(path_1)):
         if path_1[i] in path_2:
@@ -251,12 +253,13 @@ def Update_collisions_json(object):
         with open("server/agv/json_data/collisions.json", "w") as f:
             json.dump(collisions, f)
 
+
 def SaveProcessTime(filename, t1, t2):
     # Check if file exists
     file_exists = os.path.isfile(filename)
 
     # Open CSV file in append mode
-    with open(filename, mode="a", newline='') as file:
+    with open(filename, mode="a", newline="") as file:
         writer = csv.writer(file)
 
         # If file does not exist, write the header

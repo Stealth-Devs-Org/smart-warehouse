@@ -2,14 +2,11 @@ import copy
 import os
 import threading
 import time
-import ujson as json
+
+# import ujson as json
 import yaml
-from mqtt_handler import (
-    ConnectMQTT,
-    GetInterrupt,
-    SetInterrupt,
-    UpdateCurrentLocation,
-)
+
+from mqtt_handler import ConnectMQTT, GetInterrupt, SetInterrupt, UpdateCurrentLocation
 from pathfinding import CalculatePath, ReadGrid, RecalculatePath
 from server_communication import ObtainGoalHttp, RequestPathClearance
 from utils import (
@@ -52,7 +49,7 @@ def ObtainGoal(idle_location):
 
 def MoveAGV(segments_list, destination, storage, action):
     waiting = 0
-    
+
     current_direction = agv_state["current_direction"]
     current_location = agv_state["current_location"]
 
@@ -66,35 +63,37 @@ def MoveAGV(segments_list, destination, storage, action):
         while True:
             interrupted = 0
             segment = agv_state["current_segment"]
-            
+
             if agv_state["current_status"] != 0:
                 agv_state["current_status"] = 0
                 UpdateCurrentLocation()
 
             path_clearance = RequestPathClearance(AGV_ID, segment)
-            
-            if (path_clearance) == 1: # No obstacles
-                print("No obstacles in the segment",segment)
+
+            if (path_clearance) == 1:  # No obstacles
+                print("No obstacles in the segment", segment)
                 waiting = 0
                 if len(segment) != 1:
-                    current_direction = SimulateTurning(AGV_ID, current_location, segment[1], current_direction, turning_time)
+                    current_direction = SimulateTurning(
+                        AGV_ID, current_location, segment[1], current_direction, turning_time
+                    )
                     agv_state["current_direction"] = current_direction
                 agv_state["current_status"] = 1
                 UpdateCurrentLocation()
-                
+
                 for cell in segment:
                     if cell == agv_state["current_location"]:
                         continue
                     movement_time = 0
-                    
+
                     while movement_time < cell_time:
                         interrupt_value = (
                             GetInterrupt()
                         )  # Fetch interrupt value using thread-safe method
-                        #print(f"Current interrupt value: {interrupt_value}")
+                        # print(f"Current interrupt value: {interrupt_value}")
 
                         if interrupt_value == 1:
-                            print("Stop signal received! Halting AGV.",time.time())
+                            print("Stop signal received! Halting AGV.", time.time())
                             agv_state["current_status"] = 0
                             UpdateCurrentLocation()
 
@@ -104,8 +103,8 @@ def MoveAGV(segments_list, destination, storage, action):
                             interrupted = 1
 
                         elif interrupt_value == 2:
-                            print("Recalculate signal received!,",time.time())
-                            
+                            print("Recalculate signal received!,", time.time())
+
                             SetInterrupt(0)
                             interrupted = 1
 
@@ -130,8 +129,6 @@ def MoveAGV(segments_list, destination, storage, action):
                 else:
                     index += 1
                     break
-
-            
 
             else:
                 print("obstacles", path_clearance)
@@ -191,7 +188,7 @@ def send_keep_alive():
 
 if __name__ == "__main__":
 
-    #====================================Initialize AGV and Fixed Grid====================================#
+    # ====================================Initialize AGV and Fixed Grid====================================#
 
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
@@ -216,8 +213,8 @@ if __name__ == "__main__":
     agv_state["current_direction"] = direction
 
     cell_time = cell_distance / speed
-    interrupt_check_intervals = 200 # Per cell
-    interrupt_waiting_time = cell_time*3
+    interrupt_check_intervals = 200  # Per cell
+    interrupt_waiting_time = cell_time * 3
 
     # Read the grid from the Excel file
     grid_path = config["grid_path"]
@@ -227,7 +224,7 @@ if __name__ == "__main__":
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
 
-    #====================================Initialize MQTT Connection====================================#
+    # ====================================Initialize MQTT Connection====================================#
 
     ConnectMQTT(AGV_ID)
 
@@ -248,11 +245,16 @@ if __name__ == "__main__":
             idle_time -= 0.5
             time.sleep(0.5)
         print("Destination:", destination, "Storage:", storage, "Action:", action)
-        
+
         if (idle_location != current_location) or (destination != current_location):
 
             # Compute the path using D* Lite
-            print("Current location:", current_location, "current_direction:", agv_state["current_direction"])
+            print(
+                "Current location:",
+                current_location,
+                "current_direction:",
+                agv_state["current_direction"],
+            )
             path = CalculatePath(current_location, destination, grid)
             print("Path:", path)
 
