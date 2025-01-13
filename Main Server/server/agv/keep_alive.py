@@ -8,6 +8,7 @@ from server.agv.utils import (
     Update_sent_interrupt_json,
     Update_working_agvs_json,
 )
+from server.websocket.websocket import send_obstacle_data_through_websocket
 
 permanent_obstacles = {}
 
@@ -29,6 +30,7 @@ def remove_timeout_agvs():
                 )
                 if timestamp < datetime.now(timezone.utc) - timedelta(seconds=30):
                     permanent_obstacles[agv_id] = agvs_data[agv_id]["location"]
+                    send_obstacle_data_through_websocket(permanent_obstacles)
                     del agvs_data[agv_id]
                     # agvs_data[agv_id] = None
                     if agv_id in sent_interrupts.keys():
@@ -56,6 +58,7 @@ def remove_from_permanent_obstacles(agv_id):
 
     if agv_id in permanent_obstacles.keys():
         del permanent_obstacles[agv_id]
+        send_obstacle_data_through_websocket(permanent_obstacles)
         # permanent_obstacles[agv_id] = None
         # Update_permanent_obstacles_json(permanent_obstacles)
         print("AGV", agv_id, "is back alive")

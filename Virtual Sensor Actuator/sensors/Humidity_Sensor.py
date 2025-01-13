@@ -1,9 +1,9 @@
 import threading
 import random
+import sys
 import time
 import paho.mqtt.client as mqtt
-from warehouseEnvironment import warehouse_humidity_values
-from sensorUtils import SetSensorState, sensor_state
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
 # Sensor ID for each partition (as coordinate)
 HumiditysensorID = [
@@ -39,16 +39,17 @@ class HumiditySensor(threading.Thread):
     def run(self):
         while self.running:
             humidity = self.get_humidity_value()
-            SetSensorState("Humidity", self.sensor_id, self.sensor_id, self.partition_id, round(humidity, 2), 1)
+            SetSensorState("Humidity", self.sensor_id,  self.partition_id,self.sensor_id, round(humidity, 2), 1)
             print(f"Sensor state: {sensor_state}")
             client.publish(TOPIC, str(sensor_state))
             time.sleep(1)
 
     def stop(self):
         self.running = False
+        self.client.loop_stop()
 
     def get_humidity_value(self):
-        global warehouse_humidity_values
+        warehouse_airquality_values = ReadVariableFromDatabase("Humidity Values")
         base_humidty = warehouse_humidity_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)   
         return base_humidty + variation
@@ -79,7 +80,6 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        client.loop_stop()  # Stop the MQTT loop
 
 if __name__ == "__main__":
     main()
