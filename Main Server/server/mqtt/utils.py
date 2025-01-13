@@ -68,6 +68,3 @@ def on_message(client, userdata, message):
             task_complete(data)
     except json.JSONDecodeError as e:
         print(f"Error decoding message: {e}")
-
-
-
