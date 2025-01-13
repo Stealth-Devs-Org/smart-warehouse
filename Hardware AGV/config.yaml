@@ -3,7 +3,7 @@ defaults: &defaults
   cell_distance: 2  # Default cell distance between two cells
   direction: "N"  # Default initial direction of the AGVs
   turning_time: 1  # Default time taken to turn the AGVs
-  grid_path: "Physical AGV Grid.xlsx"  # Default file path of the warehouse map
+  grid_path: "PhysicalAGV.xlsx"  # Default file path of the warehouse map
 
 instances:
   - port: 5001
