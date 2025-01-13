@@ -179,7 +179,7 @@ def update_agv_location(data):
 
     emit_to_webpage(agvs_data, permanent_obstacles)
     # send_through_websocket({"agvs_data": agvs_data})  # Send the AGV data to the Unity warehouse
-    send_agv_data_through_websocket(data)  # Send the AGV data to the web page
+    send_agv_data_through_websocket(data)  # Send the AGV data to the web page / Unity warehouse
 
     # Remove the AGV location from permanent obstacles since it is back alive
     remove_from_permanent_obstacles(data["agv_id"])
