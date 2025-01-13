@@ -2,6 +2,7 @@ import json
 import random
 import threading
 import time
+
 from server.agv.keep_alive import permanent_obstacles
 from server.agv.utils import Update_working_agvs_json
 from server.mqtt.utils import mqtt_client
@@ -91,7 +92,7 @@ def task_divider(task):
     end_path_location = task["end_path_location"]
 
     # Dividing the task into 2 (halfway)
-    if not task["halfway"]: # AGV has completed picking
+    if not task["halfway"]:  # AGV has completed picking
         task = {
             "destination": start_path_location,
             "storage": start_pallet_location,
@@ -117,12 +118,17 @@ def assign_task_to_agv():
     if not agvs:
         return None
     else:
-        available_agvs = [agv for agv in agvs if (agv not in working_agvs.keys() and agv not in permanent_obstacles.keys())]    
+        available_agvs = [
+            agv
+            for agv in agvs
+            if (agv not in working_agvs.keys() and agv not in permanent_obstacles.keys())
+        ]
         if not available_agvs:
             return None
-        elif "agv1" in available_agvs:
-            agv_id = "agv1"
-            task = generate_task_for_agv1()
+        elif "agv2" in available_agvs:
+            print("Available AGVs: " + str(available_agvs))
+            agv_id = "agv2"
+            task = generate_task_for_agv2()
         else:
             print("Available AGVs: " + str(available_agvs))
             agv_id = random.choice(available_agvs)
@@ -178,17 +184,17 @@ def task_complete(data):
             print("Unloading task completed by " + agv_id)
 
 
-def generate_task_for_agv1():
+def generate_task_for_agv2():
     inbound_pallet_locations_local = {}
     outbound_pallet_locations_local = {}
     storage_pallet_locations_local = {}
 
     for y in range(5, 12):
-        inbound_pallet_locations_local[(21, y)] = (20, y)
+        inbound_pallet_locations_local[(22, y)] = (23, y)
         outbound_pallet_locations_local[(29, y)] = (30, y)
 
     for x in range(25, 36):
-        storage_pallet_locations_local[(x, 21)] = (x, 22)
+        # storage_pallet_locations_local[(x, 21)] = (x, 22)
         storage_pallet_locations_local[(x, 20)] = (x, 19)
         storage_pallet_locations_local[(x, 18)] = (x, 19)
 

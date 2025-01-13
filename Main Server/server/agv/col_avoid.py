@@ -7,13 +7,13 @@ from flask import Blueprint, jsonify, render_template, request
 
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
+    SaveProcessTime,
     Update_collisions_json,
     get_agvs_location_within_range,
     get_close_agv_pairs,
     get_common_elements,
     get_high_value_agv_id,
     is_path_crossing,
-    SaveProcessTime
 )
 
 agv = Blueprint("agv", __name__)
@@ -59,9 +59,9 @@ def find_obstacles_in_segment(agvs_data, agv_id, segment):
             agvs_data, agv_id, range_of_obstacle_detection
         )
         obstacles = obstacles + obstacles_within_range
-        #obstacles = obstacles + permanent_obstacles.values()
+        # obstacles = obstacles + permanent_obstacles.values()
         obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
-        #obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
+        # obstacles = list(set(tuple(obstacle) for obstacle in obstacles))
 
     return obstacles
 
@@ -70,20 +70,18 @@ from server.mqtt.utils import mqtt_client
 
 
 # This function sends a stop signal to the AGV with the given ID. The AGV stalls for a while and then continues its path.
-def stop_agv(agv_id, col_agv_id):#agv_id:low_value_agv_id, col_agv_id: high_value_agv_id
+def stop_agv(agv_id, col_agv_id):  # agv_id:low_value_agv_id, col_agv_id: high_value_agv_id
 
     if (agv_id in sent_interrupts) and sent_interrupts[agv_id]["interrupt"] == 1:
         return
 
     topic = f"{agv_id}/interrupt"
-    message_dict = {
-                    "agv_id": agv_id,
-                    "interrupt": 1}
-    
+    message_dict = {"agv_id": agv_id, "interrupt": 1}
+
     t1 = time.time()
-    message_dict['t1'] = t1
-    message_dict['t2'] = t1 # Dummy value as in format of response from main server
-    message_dict['t3'] = t1 # Dummy value as in format of response from main server
+    message_dict["t1"] = t1
+    message_dict["t2"] = t1  # Dummy value as in format of response from main server
+    message_dict["t3"] = t1  # Dummy value as in format of response from main server
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
@@ -97,7 +95,9 @@ def stop_agv(agv_id, col_agv_id):#agv_id:low_value_agv_id, col_agv_id: high_valu
 
 
 # This function sends a recalibrate signal to the AGV with the given ID. The AGV stops and recalibrates its path and move.
-def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:high_value_agv_id, col_agv_id: low_value_agv_id
+def recalibrate_path(
+    agv_id, segment, col_agv_id, crossing_segment=[]
+):  # agv_id:high_value_agv_id, col_agv_id: low_value_agv_id
 
     if agv_id in sent_interrupts and (
         sent_interrupts[agv_id]["interrupt"] == 1 or sent_interrupts[agv_id]["interrupt"] == 2
@@ -105,13 +105,12 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:h
         return
 
     topic = f"{agv_id}/interrupt"
-    message_dict = {"agv_id": agv_id,
-                    "interrupt": 2}
+    message_dict = {"agv_id": agv_id, "interrupt": 2}
 
     t1 = time.time()
-    message_dict['t1'] = t1
-    message_dict['t2'] = t1 # Dummy value as in format of response from main server
-    message_dict['t3'] = t1 # Dummy value as in format of response from main server
+    message_dict["t1"] = t1
+    message_dict["t2"] = t1  # Dummy value as in format of response from main server
+    message_dict["t3"] = t1  # Dummy value as in format of response from main server
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
@@ -124,7 +123,7 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:h
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
     # Update_sent_interrupt_json(sent_interrupts)
 
- 
+
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
     # agvs_data = Get_values_from_agv_json()
@@ -135,7 +134,9 @@ def collision_avoidance():
         for agv_pair in close_agv_pairs:
             crossing_segment = is_path_crossing(agvs_data[agv_pair[0]], agvs_data[agv_pair[1]])
             if crossing_segment != []:
-                print(f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}")
+                print(
+                    f"Path crossing detected between AGV {agv_pair[0]} and AGV {agv_pair[1]} crossing segment {crossing_segment}"
+                )
                 agv_pair = get_high_value_agv_id(agv_pair[0], agv_pair[1])
                 stop_agv(agv_pair[0], agv_pair[1])
                 recalibrate_path(
@@ -145,7 +146,7 @@ def collision_avoidance():
                 )
 
                 t2 = time.time()
-                SaveProcessTime('CollosionAvoidanceTime.csv',t1,t2)
+                SaveProcessTime("CollosionAvoidanceTime.csv", t1, t2)
     detect_collision()
 
 
@@ -237,7 +238,6 @@ def path_clearance():
         del sent_interrupts[agv_id]
     elif data["agv_id"] in sent_interrupts.keys() and sent_interrupts[agv_id]["interrupt"] == 1:
         del sent_interrupts[agv_id]
-    
 
     obstacles = find_obstacles_in_segment(agvs_data, agv_id, segment)
     if not obstacles:
@@ -250,23 +250,24 @@ def path_clearance():
     #     print(f"AGV with id {agv_id} not found")
     #     print(agvs_data.keys())
     #     message_dict = {"result": 0}  # 0 means AGV not found
-    
+
     # Add same payload as the request
-    message_dict['agv_id'] = agv_id
-    message_dict['segment'] = segment
+    message_dict["agv_id"] = agv_id
+    message_dict["segment"] = segment
 
     # Add timestamps to the response
     message_dict["t1"] = t1
     message_dict["t2"] = t2
-    
+
     # Capture t3 (time when the goal is sent back to client)
     t3 = time.time()
     message_dict["t3"] = t3
-    
+
     message_json = json.dumps(message_dict)
 
-    SaveProcessTime('PathClearanceTime.csv',t2,t3)
+    SaveProcessTime("PathClearanceTime.csv", t2, t3)
     return message_json
+
 
 @agv.route("/")
 def index():
@@ -278,7 +279,12 @@ def get_goal():
     # Capture t2 (time when the request is received)
     t2 = time.time()
 
-    from server.agv.scheduler import generate_random_task, task_divider, working_agvs
+    from server.agv.scheduler import (
+        generate_random_task,
+        generate_task_for_agv2,
+        task_divider,
+        working_agvs,
+    )
 
     data = request.json
     agv_id = data["agv_id"]
@@ -288,12 +294,15 @@ def get_goal():
         task = working_agvs[agv_id]
         sending_task = task_divider(task)
     else:
-        task = generate_random_task()
+        if agv_id == "agv2":
+            task = generate_task_for_agv2()
+        else:
+            task = generate_random_task()
         task["assigned_agv"] = agv_id
         working_agvs[agv_id] = task
-        #task = working_agvs[agv_id]
+        # task = working_agvs[agv_id]
         sending_task = task_divider(task)
-    
+
     sending_task["agv_id"] = agv_id
     # Add timestamps to the response
     sending_task["t1"] = t1
@@ -301,7 +310,7 @@ def get_goal():
     # Capture t3 (time when the goal is sent back to client)
     t3 = time.time()
     sending_task["t3"] = t3
-    
+
     message_json = json.dumps(sending_task)
     return message_json
 
