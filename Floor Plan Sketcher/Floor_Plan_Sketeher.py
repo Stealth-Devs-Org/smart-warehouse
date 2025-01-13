@@ -190,7 +190,7 @@ def on_press(event):
         print(f"Selected point for moving: ({x}, {y})")
 
 # Main execution
-file_path = 'Floor Plan Sketcher\grid.xlsx'  # Path to your input Excel file
+file_path = 'PhysicalAGV.xlsx'  # Path to your input Excel file
 grid = ReadGrid(file_path)
 selected_points = []
 mode = None  # Current mode: add, erase, connect, or move
