@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 class Position:
     def __init__(self):
         self.count = 0
-        self.total_count = 57
+        self.total_count = 58
         self.starting_location = [37, 13]
         self.current_location = self.starting_location
 
@@ -23,16 +23,16 @@ class Position:
 
     def detect_IR_output_change(self):
         new_output = GPIO.input(self.IR_pin)
-        if new_output != self.IR_output:
-            self.IR_output = new_output
-            # time.sleep(0.5)  # Cool down time of 0.5 seconds
+        old_output = self.IR_output
+        self.IR_output = new_output
+        if new_output != old_output:
+            print(f"IR output: {self.IR_output}")
             return True
         return False
-    
-    def detect_location_point(self):
-        if GPIO.input(self.IR_pin) == 1:
-            # time.sleep(0.5)  # Cool down time of 0.5 seconds
-            return True
+
+    # def detect_location_point(self):
+    #     if self.IR_output == 1:
+    #         return True
 
     def count_position(self, status):
         # if self.detect_IR_output_change():
@@ -63,7 +63,7 @@ class Position:
             self.current_location = [23 + (count - 35), 4]
         elif count < 51:
             self.current_location = [30, 4 + (count - 42)]
-        elif count < 57:
+        elif count < 58:
             self.current_location = [30 + (count - 50), 12]
 
     def decide_forward_backward(self, direction):
@@ -129,7 +129,7 @@ class Position:
                     return 2
 
         else:
-            if count == 56:
+            if count == 57:
                 if direction in ["N", "E"]:
                     return 1
                 else:

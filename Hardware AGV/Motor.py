@@ -8,11 +8,12 @@ class Motor:
     def __init__(self):
         self.name = "Motor"
         self.status = 0  # 0: stopped, 1: forward, 2: backward
-        self.speed = 50  # 0-100
+        self.speed1 = 100  # 0-100
+        self.speed2 = 100  # 0-100
 
         # Time for moving and stopping in the movement_thread
-        self.move_time = 0.3
-        self.stop_time = 0.5
+        self.move_time = 0.03
+        self.stop_time = 0.2
         self.movement_thread_started = False
 
         # GPIO pins
@@ -41,8 +42,8 @@ class Motor:
         # Set PWM
         self.power1 = GPIO.PWM(self.en_a, 1000)
         self.power2 = GPIO.PWM(self.en_b, 1000)
-        self.power1.start(self.speed)
-        self.power2.start(self.speed)
+        self.power1.start(self.speed1)
+        self.power2.start(self.speed2)
 
         # Stop the motor at the beginning
         GPIO.output(self.in1, GPIO.LOW)
@@ -62,6 +63,11 @@ class Motor:
         GPIO.output(self.in3, GPIO.LOW)
         GPIO.output(self.in4, GPIO.LOW)
 
+        # GPIO.output(self.in1, GPIO.HIGH)
+        # GPIO.output(self.in2, GPIO.HIGH)
+        # GPIO.output(self.in3, GPIO.HIGH)
+        # GPIO.output(self.in4, GPIO.HIGH)
+
     def move_backward(self):
         GPIO.output(self.in1, GPIO.LOW)
         GPIO.output(self.in2, GPIO.HIGH)
@@ -71,11 +77,9 @@ class Motor:
     def move(self, direction):
         if direction == 1:
             self.status = 1
-            # print(f"{self.name} is moving forward")
             if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
                 self.movement_thread_started = True
                 threading.Thread(target=self.movement_thread).start()
-            self.move_forward()
 
         elif direction == 2:
             self.status = 2
@@ -83,7 +87,6 @@ class Motor:
             if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
                 self.movement_thread_started = True
                 threading.Thread(target=self.movement_thread).start()
-            self.move_backward()
         else:
             self.status = 0
             # print(f"{self.name} is stopping")

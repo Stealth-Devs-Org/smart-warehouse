@@ -85,6 +85,9 @@ def MoveAGV(segments_list, destination, storage, action):
                 agv_state["current_status"] = 1
                 UpdateCurrentLocation()
 
+                for_or_back = position_object.decide_forward_backward(current_direction)
+                motor_object.move(for_or_back)
+
                 for cell in segment:
                     if cell == agv_state["current_location"]:
                         continue
@@ -92,9 +95,6 @@ def MoveAGV(segments_list, destination, storage, action):
                     redo = True
                     while redo:
                         redo = False  # Reset redo flag
-
-                        for_or_back = position_object.decide_forward_backward(current_direction)
-                        motor_object.move(for_or_back)
 
                         while not position_object.detect_IR_output_change():
 
@@ -123,9 +123,6 @@ def MoveAGV(segments_list, destination, storage, action):
                                 agv_state["current_status"] = 1
                                 UpdateCurrentLocation()
 
-                            for_or_back = position_object.decide_forward_backward(current_direction)
-                            motor_object.move(for_or_back)
-
                         time.sleep(0.5)
 
                         if interrupted:
@@ -135,6 +132,9 @@ def MoveAGV(segments_list, destination, storage, action):
                             motor_status = motor_object.status
                             position_object.count_position(motor_status)
 
+                            motor_object.move(0)
+                            print("stop at location point briefly")
+
                             current_location = cell
                             agv_state["current_location"] = current_location
                             current_location_index = segment.index(current_location)
@@ -142,15 +142,26 @@ def MoveAGV(segments_list, destination, storage, action):
                             agv_state["current_status"] = 1
                             UpdateCurrentLocation()
 
+                            time.sleep(0.3)
+                            motor_object.move(for_or_back)
+
                         # Check the condition to redo the actions for the current cell
                         else:
                             redo = True
-                            print("Redoing actions for cell:", cell)
+                            # print(
+                            #     "Redoing actions for cell:",
+                            #     cell,
+                            #     "IR output:",
+                            #     position_object.IR_output,
+                            # )
+                            motor_object.move(for_or_back)
                             continue  # Continue the while loop to redo actions
 
-                else:
-                    index += 1
+                if interrupted:
                     break
+
+                index += 1
+                break
 
             else:
                 print("obstacles", path_clearance)
@@ -215,7 +226,7 @@ if __name__ == "__main__":
 
     # Read configuration file
     config_path = os.getenv("CONFIG_PATH", "config.yaml")
-    instance_id = int(os.getenv("INSTANCE_ID", "1"))
+    instance_id = int(os.getenv("INSTANCE_ID", "0"))
 
     # Load configurations
     config = read_config(config_path)["instances"][instance_id]
@@ -293,4 +304,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
         motor_object.cleanup()
-        exit()
