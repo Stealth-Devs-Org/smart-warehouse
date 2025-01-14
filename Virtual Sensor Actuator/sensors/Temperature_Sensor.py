@@ -87,7 +87,7 @@ def main():
 
     try:
         while True:
-            time.sleep(1)
+            time.sleep(3)
     except KeyboardInterrupt:
         print("\nStopping all sensors...")
         for partition in allSensors:
