@@ -97,10 +97,14 @@ def calculate_averages_from_file(filename):
     for i, partition_data in enumerate(data):
         partition_key = f"part{i}"
         values = list(partition_data.values())
-        average = sum(values) / len(values)
+        if values:  # Check if the list is not empty
+            average = sum(values) / len(values)
+        else:
+            average = 0.0  # Assign a default value if the list is empty
         partition_averages[partition_key] = average
 
     return partition_averages
+
 
 # Function to determine the actuator command
 def determine_actuator_command(current_temp, desired_temp):
