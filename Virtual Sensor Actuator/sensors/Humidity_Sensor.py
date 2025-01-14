@@ -5,9 +5,6 @@ import time
 import paho.mqtt.client as mqtt
 from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
-
-
-
 # Sensor ID for each partition (as coordinate)
 HumiditysensorID = [
     # No Partition for Humidity    
@@ -83,7 +80,6 @@ def main():
             for sensor in partition:
                 sensor.join()
         print("All sensors stopped.")
-        
 
 if __name__ == "__main__":
     main()

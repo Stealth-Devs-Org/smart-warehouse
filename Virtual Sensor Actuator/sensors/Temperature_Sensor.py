@@ -1,3 +1,4 @@
+
 # import threading
 # import random
 # import time
@@ -257,6 +258,7 @@ import time
 import json
 import paho.mqtt.client as mqtt
 from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
+
 
 # Sensor ID for each partition (as coordinate)
 TempsensorID = [
