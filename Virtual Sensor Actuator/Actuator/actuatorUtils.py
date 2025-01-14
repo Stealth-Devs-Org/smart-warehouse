@@ -25,9 +25,6 @@ def SetActuatorState(type, id,partID, location, reading, status):
 
 
 
-directory = 'Virtual Sensor Actuator'
-filename = 'warehouse_Env_data.txt'
-filepath = os.path.join(directory, filename)
 
 
 
