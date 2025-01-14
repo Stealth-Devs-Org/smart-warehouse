@@ -4,6 +4,7 @@ import threading
 import time
 
 from flask import Blueprint, jsonify, render_template, request
+
 from server.agv.db_operations import save_agv_location
 from server.agv.utils import (
     SaveProcessTime,
@@ -268,7 +269,7 @@ def get_goal():
 
     from server.agv.scheduler import (
         generate_random_task,
-        generate_task_for_agv2,
+        generate_task_for_agv1,
         task_divider,
         working_agvs,
     )
@@ -281,8 +282,8 @@ def get_goal():
         task = working_agvs[agv_id]
         sending_task = task_divider(task)
     else:
-        if agv_id == "agv2":
-            task = generate_task_for_agv2()
+        if agv_id == "agv1":
+            task = generate_task_for_agv1()
         else:
             task = generate_random_task()
         task["assigned_agv"] = agv_id

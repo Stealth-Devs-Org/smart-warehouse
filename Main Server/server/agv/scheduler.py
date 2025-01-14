@@ -128,7 +128,7 @@ def assign_task_to_agv():
         elif "agv2" in available_agvs:
             print("Available AGVs: " + str(available_agvs))
             agv_id = "agv2"
-            task = generate_task_for_agv2()
+            task = generate_task_for_agv1()
         else:
             print("Available AGVs: " + str(available_agvs))
             agv_id = random.choice(available_agvs)
@@ -184,12 +184,12 @@ def task_complete(data):
             print("Unloading task completed by " + agv_id)
 
 
-def generate_task_for_agv2():
+def generate_task_for_agv1():
     inbound_pallet_locations_local = {}
     outbound_pallet_locations_local = {}
     storage_pallet_locations_local = {}
 
-    for y in range(5, 12):
+    for y in range(5, 11):
         inbound_pallet_locations_local[(22, y)] = (23, y)
         outbound_pallet_locations_local[(29, y)] = (30, y)
 
