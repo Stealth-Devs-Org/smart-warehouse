@@ -29,17 +29,9 @@ from server.websocket.utils import socketio, start_emission_thread
 
 # #For Sensor Data
 from server.sensors.sensorhandler import send_sensor_data_websocket
-from server.actuatorControl.actuatorHandler import start_actuator_thread # to run the actuatorhandlerScript
-
-
-
-
-# def start_sensor_websocket_thread():
-#     """
-#     Start a separate thread for the send_sensor_data_websocket function.
-#     """
-#     # sensor_thread = threading.Thread(target=send_sensor_data_websocket, daemon=True)
-#     # sensor_thread.start()
+from server.actuatorControl.Temperature_ActuatorController import start_temp_actuator_thread 
+from server.actuatorControl.Humidity_ActuatorController import start_humidity_actuator_thread
+from server.actuatorControl.AirQuality_ActuatorController import start_air_quality_actuator_thread 
 
 
 
@@ -53,9 +45,10 @@ if __name__ == "__main__":
     start_emission_thread(0.5)
     
 
-    # # Start the sensor data websocket thread
-    # start_sensor_websocket_thread()
-    start_actuator_thread()
+    #For ActuatorControl Data
+    start_temp_actuator_thread()
+    start_humidity_actuator_thread()
+    start_air_quality_actuator_thread()
     
 
 
