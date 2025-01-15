@@ -17,21 +17,21 @@ storage_pallet_locations = {}
 for y in range(5, 12):
     # inbound_pallet_locations[(18, y)] = (17, y)
     # inbound_pallet_locations[(19, y)] = (20, y)
-    inbound_pallet_locations[(21, y)] = (20, y)
-    # inbound_pallet_locations[(22, y)] = (23, y)
+    # inbound_pallet_locations[(21, y)] = (20, y)
+    inbound_pallet_locations[(22, y)] = (23, y)
     # outbound_pallet_locations[(25, y)] = (24, y)
     # outbound_pallet_locations[(26, y)] = (27, y)
     # outbound_pallet_locations[(28, y)] = (27, y)
     outbound_pallet_locations[(29, y)] = (30, y)
 
-for x in range(11, 22):
-    #     storage_pallet_locations[(x, 27)] = (x, 28)
-    #     storage_pallet_locations[(x, 26)] = (x, 25)
-    #     storage_pallet_locations[(x, 24)] = (x, 25)
-    #     storage_pallet_locations[(x, 23)] = (x, 22)
-    storage_pallet_locations[(x, 21)] = (x, 22)
-    storage_pallet_locations[(x, 20)] = (x, 19)
-    storage_pallet_locations[(x, 18)] = (x, 19)
+# for x in range(11, 22):
+#     storage_pallet_locations[(x, 27)] = (x, 28)
+#     storage_pallet_locations[(x, 26)] = (x, 25)
+#     storage_pallet_locations[(x, 24)] = (x, 25)
+#     storage_pallet_locations[(x, 23)] = (x, 22)
+#     storage_pallet_locations[(x, 21)] = (x, 22)
+#     storage_pallet_locations[(x, 20)] = (x, 19)
+#     storage_pallet_locations[(x, 18)] = (x, 19)
 #     storage_pallet_locations[(x, 17)] = (x, 16)
 
 for x in range(25, 36):
@@ -39,7 +39,7 @@ for x in range(25, 36):
     # storage_pallet_locations[(x, 26)] = (x, 25)
     # storage_pallet_locations[(x, 24)] = (x, 25)
     # storage_pallet_locations[(x, 23)] = (x, 22)
-    storage_pallet_locations[(x, 21)] = (x, 22)
+    # storage_pallet_locations[(x, 21)] = (x, 22)
     storage_pallet_locations[(x, 20)] = (x, 19)
     storage_pallet_locations[(x, 18)] = (x, 19)
     # storage_pallet_locations[(x, 17)] = (x, 16)

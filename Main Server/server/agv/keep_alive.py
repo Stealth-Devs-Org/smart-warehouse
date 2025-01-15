@@ -40,10 +40,10 @@ def remove_timeout_agvs():
                         del working_agvs[agv_id]
                         # working_agvs[agv_id] = None
                     print("AGV", agv_id, "is timed out")
-                    Update_agv_json(agvs_data)
-                    Update_sent_interrupt_json(sent_interrupts)
-                    Update_permanent_obstacles_json(permanent_obstacles)
-                    Update_working_agvs_json(working_agvs)
+                    # Update_agv_json(agvs_data)
+                    # Update_sent_interrupt_json(sent_interrupts)
+                    # Update_permanent_obstacles_json(permanent_obstacles)
+                    # Update_working_agvs_json(working_agvs)
             time.sleep(1)  # Sleep for a while before checking again
 
     thread = threading.Thread(target=check_agvs)
