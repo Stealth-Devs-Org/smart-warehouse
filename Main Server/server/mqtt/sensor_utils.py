@@ -32,6 +32,7 @@ def ConnectMQTT():
 def on_message(client, userdata, message):
     topic = message.topic
     payload = message.payload.decode()
+    
 
     try:
         data = json.loads(payload)
@@ -40,7 +41,7 @@ def on_message(client, userdata, message):
         return
 
     # Send sensor data through WebSocket
-    send_sensor_data_through_websocket(data)
+    send_sensor_data_through_websocket(data, topic)
 
 
 
@@ -56,18 +57,21 @@ def on_message(client, userdata, message):
 
     if topic == "/sensor_temperature":
         all_Sensor_Temperature_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Temperature_data.json", all_Sensor_Temperature_data)
     elif topic == "/sensor_air_quality":
         all_Sensor_AirQuality_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_AirQuality_data.json", all_Sensor_AirQuality_data)
     elif topic == "/sensor_humidity":
         all_Sensor_Humidity_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Humidity_data.json", all_Sensor_Humidity_data)
     else:
         logging.error(f"Unknown topic: {topic}")
         return
 
 
-    write_to_file("all_Sensor_Temperature_data.json", all_Sensor_Temperature_data)
-    write_to_file("all_Sensor_AirQuality_data.json", all_Sensor_AirQuality_data)
-    write_to_file("all_Sensor_Humidity_data.json", all_Sensor_Humidity_data)
+    
+    
+    
 
     #logging.info(f"Updated data for {topic}: {data}")
 

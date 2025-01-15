@@ -59,14 +59,22 @@ def send_obstacle_data_through_websocket(data):
     loop.run_until_complete(send_to_all_clients(data, "/obstacle"))
 
 
-def send_sensor_data_through_websocket(data):
+def send_sensor_data_through_websocket(data, variable):
     data = json.dumps(data)
     # print("Received external data:", data)
 
     # Send to all WebSocket clients asynchronously
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(send_to_all_clients(data, "/sensor"))
+
+    if variable == "temperature":
+        loop.run_until_complete(send_to_all_clients(data, "/sensor_temperature"))
+    elif variable == "air_quality":
+        loop.run_until_complete(send_to_all_clients(data, "/sensor_air_quality"))
+    elif variable == "humidity":
+        loop.run_until_complete(send_to_all_clients(data, "/sensor_humidity"))
+
+    
 
 
 def send_actuator_data_through_websocket(data):

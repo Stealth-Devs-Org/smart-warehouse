@@ -47,7 +47,8 @@ def determine_actuator_command(current_aqi, desired_aqi):
 def send_to_mqtt(commands):
     payload = json.dumps(commands)
     mqtt_client.publish(TOPIC, payload)
-    print(f"Published to {TOPIC}: {payload}")
+    print(f"Published to {TOPIC}\n")
+    #print(f"Published to {TOPIC}: {payload}")
 
 
 def run_actuator_control():

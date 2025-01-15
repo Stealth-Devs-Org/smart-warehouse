@@ -37,7 +37,7 @@ import json
 
 def ReadVariableFromDatabase(variable_name):
     # Load the data from the JSON file
-    file_path = 'Virtual Sensor Actuator/warehouse_Env_data.json'
+    file_path = 'warehouse_Env_data.json'
     try:
         with open(file_path, 'r') as file:
             data = json.load(file)

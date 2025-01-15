@@ -23,7 +23,7 @@ TOPICtoSubscribe = "/actuator_control_humidity"  # Topic for humidity control
 
 # Function to load JSON data
 def load_json_data():
-    filepath = 'Virtual Sensor Actuator/warehouse_Env_data.json'
+    filepath = 'warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             return json.load(f)
@@ -36,7 +36,7 @@ def load_json_data():
 
 # Function to update JSON data
 def update_json_data(humidity_value, partitionID):
-    filepath = 'Virtual Sensor Actuator/warehouse_Env_data.json'
+    filepath = 'warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)

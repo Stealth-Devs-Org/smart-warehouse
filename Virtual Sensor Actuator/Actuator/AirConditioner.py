@@ -24,7 +24,7 @@ TOPICtoSubscribe = "/actuator_control_temperature"  # Topic for temperature cont
 
 # Function to load JSON data
 def load_json_data():
-    filepath = 'Virtual Sensor Actuator/warehouse_Env_data.json'
+    filepath = 'warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             return json.load(f)
@@ -38,7 +38,7 @@ def load_json_data():
 
 # Function to update JSON data
 def update_json_data(temp_value, partitionID):
-    filepath = 'Virtual Sensor Actuator/warehouse_Env_data.json'
+    filepath = 'warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)
