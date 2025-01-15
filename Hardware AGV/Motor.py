@@ -8,12 +8,14 @@ class Motor:
     def __init__(self):
         self.name = "Motor"
         self.status = 0  # 0: stopped, 1: forward, 2: backward
-        self.speed1 = 100  # 0-100
-        self.speed2 = 100  # 0-100
+        self.speed1_normal = 50  # 0-100
+        self.speed2_normal = 50  # 0-100
+        self.speed1_high = 100  # 0-100
+        self.speed2_high = 100  # 0-100
 
         # Time for moving and stopping in the movement_thread
-        self.move_time = 0.03
-        self.stop_time = 0.2
+        self.move_time = 0.1
+        self.stop_time = 0.25
         self.movement_thread_started = False
 
         # GPIO pins
@@ -42,8 +44,8 @@ class Motor:
         # Set PWM
         self.power1 = GPIO.PWM(self.en_a, 1000)
         self.power2 = GPIO.PWM(self.en_b, 1000)
-        self.power1.start(self.speed1)
-        self.power2.start(self.speed2)
+        self.power1.start(self.speed1_normal)
+        self.power2.start(self.speed2_normal)
 
         # Stop the motor at the beginning
         GPIO.output(self.in1, GPIO.LOW)
@@ -77,16 +79,18 @@ class Motor:
     def move(self, direction):
         if direction == 1:
             self.status = 1
-            if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
-                self.movement_thread_started = True
-                threading.Thread(target=self.movement_thread).start()
+            # if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
+            #     self.movement_thread_started = True
+            #     threading.Thread(target=self.movement_thread).start()
+            self.move_forward()
 
         elif direction == 2:
             self.status = 2
             # print(f"{self.name} is moving backward")
-            if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
-                self.movement_thread_started = True
-                threading.Thread(target=self.movement_thread).start()
+            # if not hasattr(self, "movement_thread_started") or not self.movement_thread_started:
+            #     self.movement_thread_started = True
+            #     threading.Thread(target=self.movement_thread).start()
+            self.move_backward()
         else:
             self.status = 0
             # print(f"{self.name} is stopping")

@@ -63,9 +63,11 @@ def MoveAGV(segments_list, destination, storage, action):
     while index < len(segments):
         segment = segments[index]
         agv_state["current_segment"] = segment
+        prev_for_or_back = 0
+        interrupted = 0
+        skip_count = False
 
         while True:
-            interrupted = 0
             segment = agv_state["current_segment"]
 
             if agv_state["current_status"] != 0:
@@ -87,6 +89,15 @@ def MoveAGV(segments_list, destination, storage, action):
 
                 for_or_back = position_object.decide_forward_backward(current_direction)
                 motor_object.move(for_or_back)
+
+                if (
+                    prev_for_or_back != 0
+                    and prev_for_or_back != for_or_back
+                    and position_object.IR_output == 0
+                ):
+                    skip_count = True
+
+                interrupted = 0
 
                 for cell in segment:
                     if cell == agv_state["current_location"]:
@@ -123,27 +134,33 @@ def MoveAGV(segments_list, destination, storage, action):
                                 agv_state["current_status"] = 1
                                 UpdateCurrentLocation()
 
-                        time.sleep(0.5)
+                            # time.sleep(0.2)
 
                         if interrupted:
                             break
 
                         if position_object.IR_output == 1:
-                            motor_status = motor_object.status
-                            position_object.count_position(motor_status)
+                            time.sleep(0.2)
+                            if skip_count:
+                                skip_count = False
+                                print("skip count")
+                                continue
+                            else:
+                                motor_status = motor_object.status
+                                position_object.count_position(motor_status)
 
-                            motor_object.move(0)
-                            print("stop at location point briefly")
+                                motor_object.move(0)
+                                print("stop at location point briefly")
 
-                            current_location = cell
-                            agv_state["current_location"] = current_location
-                            current_location_index = segment.index(current_location)
-                            agv_state["current_segment"] = segment[current_location_index:]
-                            agv_state["current_status"] = 1
-                            UpdateCurrentLocation()
+                                current_location = cell
+                                agv_state["current_location"] = current_location
+                                current_location_index = segment.index(current_location)
+                                agv_state["current_segment"] = segment[current_location_index:]
+                                agv_state["current_status"] = 1
+                                UpdateCurrentLocation()
 
-                            time.sleep(0.3)
-                            motor_object.move(for_or_back)
+                                time.sleep(0.2)
+                                motor_object.move(for_or_back)
 
                         # Check the condition to redo the actions for the current cell
                         else:
@@ -155,13 +172,16 @@ def MoveAGV(segments_list, destination, storage, action):
                             #     position_object.IR_output,
                             # )
                             motor_object.move(for_or_back)
+                            # time.sleep(0.1)
                             continue  # Continue the while loop to redo actions
 
-                if interrupted:
+                    if interrupted:
+                        break
+                else:
+                    index += 1
+                    motor_object.move(0)
                     break
-
-                index += 1
-                break
+                prev_for_or_back = for_or_back
 
             else:
                 print("obstacles", path_clearance)
@@ -220,6 +240,42 @@ def send_keep_alive():
         UpdateCurrentLocation()
 
 
+def power_up_motor():
+    timestamp = time.time()
+    time_interval = 2.5
+    while True:
+        if motor_object.status != 0:
+            if time.time() - timestamp > time_interval:
+                motor_object.stop_moving()
+                motor_object.power1.start(motor_object.speed1_high)
+                motor_object.power2.start(motor_object.speed2_high)
+
+                while motor_object.status != 0:
+                    if motor_object.status == 1:
+                        motor_object.move_forward()
+                    elif motor_object.status == 2:
+                        motor_object.move_backward()
+                    time.sleep(motor_object.move_time)
+                    motor_object.stop_moving()
+                    time.sleep(motor_object.stop_time)
+                #     status = motor_object.status
+
+                # if status == 1:
+                #     motor_object.move_forward()
+                # elif status == 2:
+                #     motor_object.move_backward()
+                # time.sleep(motor_object.move_time)
+                # motor_object.stop_moving()
+                # time.sleep(motor_object.stop_time)
+
+                motor_object.power1.start(motor_object.speed1_normal)
+                motor_object.power2.start(motor_object.speed2_normal)
+                timestamp = time.time()
+        else:
+            timestamp = time.time()
+        time.sleep(0.2)
+
+
 if __name__ == "__main__":
 
     # ====================================Initialize AGV and Fixed Grid====================================#
@@ -266,6 +322,11 @@ if __name__ == "__main__":
     # keep_alive_thread = threading.Thread(target=send_keep_alive)
     # keep_alive_thread.daemon = True
     # keep_alive_thread.start()
+
+    # Start the motor power-up thread
+    power_up_thread = threading.Thread(target=power_up_motor)
+    power_up_thread.daemon = True
+    power_up_thread.start()
     try:
         while True:
             current_location = tuple(agv_state["current_location"])
