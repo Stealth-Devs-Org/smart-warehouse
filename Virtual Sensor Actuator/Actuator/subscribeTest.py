@@ -9,7 +9,7 @@ import paho.mqtt.client as mqtt
 
 BROKER = "localhost"
 PORT = 1883
-TOPIC = "/actuator_control_temperature"  # The same topic to subscribe to
+TOPIC = "/actuator_control_humidity"  # The same topic to subscribe to
 
 def on_connect(client, userdata, flags, rc):
     print(f"Connected to broker with result code {rc}")
