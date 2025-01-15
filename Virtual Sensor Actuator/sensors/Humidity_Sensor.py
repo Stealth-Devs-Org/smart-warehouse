@@ -49,7 +49,10 @@ class HumiditySensor(threading.Thread):
         self.client.loop_stop()
 
     def get_humidity_value(self):
-        warehouse_airquality_values = ReadVariableFromDatabase("Humidity Values")
+        warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
+        if not warehouse_humidity_values:
+            print("Error: Humidity values not found in the database.")
+            return 0
         base_humidty = warehouse_humidity_values[self.partition_id]
         variation = random.uniform(-0.1, 0.1)   
         return base_humidty + variation

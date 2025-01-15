@@ -50,7 +50,7 @@ class AirQualitySensor(threading.Thread):
         self.running = False
 
     def get_air_quality_value(self):
-        warehouse_air_quality_values = ReadVariableFromDatabase("Air Quality Values")
+        warehouse_air_quality_values = ReadVariableFromDatabase("AirQuality Values")
         if not warehouse_air_quality_values:
             print("Error: Air quality values not found in the database.")
             return 0

@@ -45,8 +45,16 @@ def ReadVariableFromDatabase(variable_name):
         # Return the corresponding variable (in this case, Temperature Values)
         if variable_name == "Temperature Values":
             return data.get("Temperature Values", [])
+        
+        elif variable_name == "AirQuality Values":
+            return data.get("AirQuality Values", [])
+            
+        elif variable_name == "Humidity Values":
+            return data.get("Humidity Values", [])
         else:
             return []
+        
     except FileNotFoundError:
         print(f"Error: {file_path} not found.")
         return []
+

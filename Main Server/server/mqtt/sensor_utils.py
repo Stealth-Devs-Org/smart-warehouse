@@ -20,8 +20,10 @@ logging.basicConfig(level=logging.INFO)
 def ConnectMQTT():
     mqtt_client.connect(Config.MQTT_BROKER_URL, Config.MQTT_BROKER_PORT, Config.MQTT_KEEPALIVE)
     mqtt_client.subscribe("/sensor_temperature", qos=1)
-    mqtt_client.subscribe("/sensor_airquality", qos=1)
+    mqtt_client.subscribe("/sensor_air_quality", qos=1)
     mqtt_client.subscribe("/sensor_humidity", qos=1)
+
+    
     mqtt_client.on_message = on_message
     mqtt_client.loop_start()
     logging.info("MQTT connected and subscribed.")
@@ -54,7 +56,7 @@ def on_message(client, userdata, message):
 
     if topic == "/sensor_temperature":
         all_Sensor_Temperature_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
-    elif topic == "/sensor_airquality":
+    elif topic == "/sensor_air_quality":
         all_Sensor_AirQuality_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
     elif topic == "/sensor_humidity":
         all_Sensor_Humidity_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)

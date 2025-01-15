@@ -7,7 +7,7 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "/actuator_control_air_quality"
 
-desired_air_quality_values = [50, 45, 40, 55, 60, 65, 70]  # Example desired AQI thresholds
+desired_air_quality_values = [50.0, 45.0, 40.0, 55.0, 60.0, 65.0, 70.0]  # Example desired AQI thresholds
 threshold = 10  # Threshold for "off" condition
 filename = 'all_Sensor_AirQuality_data.json'
 
