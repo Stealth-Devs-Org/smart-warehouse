@@ -104,9 +104,9 @@ class HumidityController(threading.Thread):
             print("Error: Missing humidity data.")
             return
 
-        if self.action == "increase":
+        if self.action == "raise":
             current_humidity_values[self.partition_id] += 1
-        elif self.action == "decrease":
+        elif self.action == "reduce":
             current_humidity_values[self.partition_id] -= 1
         elif self.action == "off":
             current_humidity_values[self.partition_id] += 0
