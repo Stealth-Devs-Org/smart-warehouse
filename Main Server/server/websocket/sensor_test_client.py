@@ -38,7 +38,7 @@ import websockets
 
 
 async def client():
-    uri = "ws://localhost:8765/sensor"
+    uri = "ws://localhost:8765/sensor_humidity"
     async with websockets.connect(uri) as websocket:
         while True:
             message = await websocket.recv()

@@ -67,11 +67,11 @@ def send_sensor_data_through_websocket(data, variable):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    if variable == "temperature":
+    if variable == "/sensor_temperature":
         loop.run_until_complete(send_to_all_clients(data, "/sensor_temperature"))
-    elif variable == "air_quality":
+    elif variable == "/sensor_air_quality":
         loop.run_until_complete(send_to_all_clients(data, "/sensor_air_quality"))
-    elif variable == "humidity":
+    elif variable == "/sensor_humidity":
         loop.run_until_complete(send_to_all_clients(data, "/sensor_humidity"))
 
     
