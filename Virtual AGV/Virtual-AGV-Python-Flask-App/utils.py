@@ -1,7 +1,6 @@
+import csv
 import os
 import time
-import csv
-import ujson as json
 
 agv_state = {}
 
@@ -33,7 +32,7 @@ def CreateSegments(path):
             current_segment.append(path[i])
     segments.append(current_segment)
     end_time = time.time()
-    SaveProcessTime('segmentCreationTime.csv',start_time, end_time)
+    SaveProcessTime("segmentCreationTime.csv", start_time, end_time)
     return segments
 
 
@@ -62,10 +61,10 @@ def SimulateEndAction(AGV_ID, current_location, direction, storage, action, turn
             AGV_ID, current_location, (storage[0], storage[1]), direction, turning_time
         )
         duration = LoadUnload(storage[2])
-        '''if action == 2:
+        """if action == 2:
             print(f"AGV {AGV_ID} started loading at {current_location}...")
         else:
-            print(f"AGV {AGV_ID} started unloading at {current_location}...")'''
+            print(f"AGV {AGV_ID} started unloading at {current_location}...")"""
         time.sleep(duration)
     elif action == 4:
         # ---------- print(f"AGV {AGV_ID} started charging at {current_location}...")
@@ -130,20 +129,22 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     start_time = time.time()
     # Find the farthest obstacle from the start of the remaining path assuming the obstacle moving towards the AGV
     start_point = remain_path[0][0]  # First point in the remaining path
-    farthest_obstacle_distance = 0 
+    farthest_obstacle_distance = 0
     for obstacle in obstacles:
         if obstacle in remain_path[0]:
             distance = abs(obstacle[0] - start_point[0]) + abs(obstacle[1] - start_point[1])
             if distance > farthest_obstacle_distance:
                 farthest_obstacle_distance = distance
-    
 
     # Calculate total time for remaining path and new path
-    time_to_remain_path = (farthest_obstacle_distance + sum(len(segment) for segment in remain_path)) * cell_time 
-    + len(remain_path) * turning_time
-    
-    time_to_new_path = sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
-    
+    time_to_remain_path = (
+        farthest_obstacle_distance + sum(len(segment) for segment in remain_path)
+    ) * cell_time
+    +len(remain_path) * turning_time
+
+    time_to_new_path = (
+        sum(len(segment) for segment in new_segments) * cell_time + len(new_segments) * turning_time
+    )
 
     # ---------- print("time to remain_path", time_to_remain_path)
     # ---------- print("time to new_path", time_to_new_path)
@@ -152,7 +153,7 @@ def EvalNewPath(new_segments, obstacles, remain_path, cell_time, turning_time):
     is_new_path_efficient = time_to_remain_path > time_to_new_path
     waiting_time = 0 if is_new_path_efficient else farthest_obstacle_distance * cell_time
     end_time = time.time()
-    SaveProcessTime('pathEvaluationTime.csv',start_time, end_time)
+    SaveProcessTime("pathEvaluationTime.csv", start_time, end_time)
     return is_new_path_efficient, waiting_time
 
 
@@ -167,7 +168,7 @@ def SaveToCSV(agv_id, t1, t2, t3, t4, filename):
     file_exists = os.path.isfile(filename)
 
     # Open CSV file in append mode
-    with open(filename, mode="a", newline='') as file:
+    with open(filename, mode="a", newline="") as file:
         writer = csv.writer(file)
 
         # If file does not exist, write the header
@@ -177,15 +178,16 @@ def SaveToCSV(agv_id, t1, t2, t3, t4, filename):
         # Write the row with timestamps
         writer.writerow([agv_id, t1, t2, t3, t4])
 
+
 def SaveProcessTime(filename, t1, t2, t3=0):
     # Check if file exists
     file_exists = os.path.isfile(filename)
 
     # Open CSV file in append mode
-    with open(filename, mode="a", newline='') as file:
+    with open(filename, mode="a", newline="") as file:
         writer = csv.writer(file)
 
-        if t3!=0:
+        if t3 != 0:
             # If file does not exist, write the header
             if not file_exists:
                 writer.writerow(["t1", "t2", "t3"])  # Write the header
