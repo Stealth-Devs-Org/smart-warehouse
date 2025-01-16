@@ -190,7 +190,7 @@ def generate_task_for_agv1():
     storage_pallet_locations_local = {}
 
     for y in range(5, 11):
-        inbound_pallet_locations_local[(22, y)] = (23, y)
+        # inbound_pallet_locations_local[(22, y)] = (23, y)
         outbound_pallet_locations_local[(29, y)] = (30, y)
 
     for x in range(25, 36):
