@@ -15,7 +15,7 @@ class Motor:
 
         # Time for moving and stopping in the movement_thread
         self.move_time = 0.1
-        self.stop_time = 0.25
+        self.stop_time = 0.1
         self.movement_thread_started = False
 
         # GPIO pins

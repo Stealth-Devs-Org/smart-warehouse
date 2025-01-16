@@ -52,6 +52,8 @@ def ObtainGoal(idle_location):
 
 
 def MoveAGV(segments_list, destination, storage, action):
+    global prev_for_or_back, skip_count, end_IR_output
+
     waiting = 0
 
     current_direction = agv_state["current_direction"]
@@ -63,39 +65,35 @@ def MoveAGV(segments_list, destination, storage, action):
     while index < len(segments):
         segment = segments[index]
         agv_state["current_segment"] = segment
-        prev_for_or_back = 0
+
         interrupted = 0
-        skip_count = False
 
         while True:
             segment = agv_state["current_segment"]
 
             if agv_state["current_status"] != 0:
                 agv_state["current_status"] = 0
+                motor_object.move(0)
                 UpdateCurrentLocation()
 
             path_clearance = RequestPathClearance(AGV_ID, segment)
 
             if (path_clearance) == 1:  # No obstacles
                 print("No obstacles in the segment", segment)
-                waiting = 0
+                waiting = 0  # Variable to keep track of the number of times the AGV has waited for the obstacle to clear
                 if len(segment) != 1:
                     current_direction = SimulateTurning(
                         AGV_ID, current_location, segment[1], current_direction, turning_time
                     )
                     agv_state["current_direction"] = current_direction
+
+                for_or_back = position_object.decide_forward_backward(
+                    current_direction
+                )  # 1: forward, 2: backward
+
                 agv_state["current_status"] = 1
-                UpdateCurrentLocation()
-
-                for_or_back = position_object.decide_forward_backward(current_direction)
                 motor_object.move(for_or_back)
-
-                if (
-                    prev_for_or_back != 0
-                    and prev_for_or_back != for_or_back
-                    and position_object.IR_output == 0
-                ):
-                    skip_count = True
+                UpdateCurrentLocation()
 
                 interrupted = 0
 
@@ -103,11 +101,11 @@ def MoveAGV(segments_list, destination, storage, action):
                     if cell == agv_state["current_location"]:
                         continue
 
-                    redo = True
+                    redo = True  # Flag to redo the actions for the current cell
                     while redo:
                         redo = False  # Reset redo flag
 
-                        while not position_object.detect_IR_output_change():
+                        while not position_object.detect_IR_W2B_change():
 
                             interrupt_value = GetInterrupt()
 
@@ -129,22 +127,36 @@ def MoveAGV(segments_list, destination, storage, action):
                                 interrupted = 1
 
                             if interrupted:
+                                prev_for_or_back = for_or_back
+                                time.sleep(0.5)
+                                end_IR_output = position_object.detect_IR()
                                 break
                             if agv_state["current_status"] != 1:
                                 agv_state["current_status"] = 1
                                 UpdateCurrentLocation()
 
-                            # time.sleep(0.2)
+                        print(prev_for_or_back, for_or_back)
+                        print("end IR output:", end_IR_output)
+                        if (
+                            prev_for_or_back != 0
+                            and prev_for_or_back != for_or_back
+                            and end_IR_output == 0
+                        ):
+                            skip_count = True
+
+                            print("skip count flagged")
 
                         if interrupted:
                             break
 
                         if position_object.IR_output == 1:
-                            time.sleep(0.2)
+                            # time.sleep(0.05)
                             if skip_count:
                                 skip_count = False
                                 print("skip count")
-                                continue
+                                end_IR_output = 1
+                                prev_for_or_back = for_or_back
+                                redo = True
                             else:
                                 motor_status = motor_object.status
                                 position_object.count_position(motor_status)
@@ -158,8 +170,7 @@ def MoveAGV(segments_list, destination, storage, action):
                                 agv_state["current_segment"] = segment[current_location_index:]
                                 agv_state["current_status"] = 1
                                 UpdateCurrentLocation()
-
-                                time.sleep(0.2)
+                                time.sleep(0.5)
                                 motor_object.move(for_or_back)
 
                         # Check the condition to redo the actions for the current cell
@@ -171,7 +182,7 @@ def MoveAGV(segments_list, destination, storage, action):
                             #     "IR output:",
                             #     position_object.IR_output,
                             # )
-                            motor_object.move(for_or_back)
+                            # motor_object.move(for_or_back)
                             # time.sleep(0.1)
                             continue  # Continue the while loop to redo actions
 
@@ -180,8 +191,10 @@ def MoveAGV(segments_list, destination, storage, action):
                 else:
                     index += 1
                     motor_object.move(0)
+                    prev_for_or_back = for_or_back
+                    time.sleep(0.5)
+                    end_IR_output = position_object.detect_IR()
                     break
-                prev_for_or_back = for_or_back
 
             else:
                 print("obstacles", path_clearance)
@@ -242,7 +255,7 @@ def send_keep_alive():
 
 def power_up_motor():
     timestamp = time.time()
-    time_interval = 2.5
+    time_interval = 2
     while True:
         if motor_object.status != 0:
             if time.time() - timestamp > time_interval:
@@ -258,16 +271,8 @@ def power_up_motor():
                     time.sleep(motor_object.move_time)
                     motor_object.stop_moving()
                     time.sleep(motor_object.stop_time)
-                #     status = motor_object.status
 
-                # if status == 1:
-                #     motor_object.move_forward()
-                # elif status == 2:
-                #     motor_object.move_backward()
-                # time.sleep(motor_object.move_time)
-                # motor_object.stop_moving()
-                # time.sleep(motor_object.stop_time)
-
+                motor_object.stop_moving()
                 motor_object.power1.start(motor_object.speed1_normal)
                 motor_object.power2.start(motor_object.speed2_normal)
                 timestamp = time.time()
@@ -314,6 +319,10 @@ if __name__ == "__main__":
     # Create a copy of the fixed grid
     grid = copy.deepcopy(fixed_grid)
 
+    global prev_for_or_back, skip_count, end_IR_output
+    prev_for_or_back = 0
+    end_IR_output = 0
+    skip_count = False
     # ====================================Initialize MQTT Connection====================================#
 
     ConnectMQTT(AGV_ID)

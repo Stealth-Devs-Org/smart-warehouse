@@ -102,7 +102,7 @@ def InteractivePathDisplay(segments_list, destination, storage, action):
                     for_or_back = position_object.decide_forward_backward(current_direction)
                     motor_object.move(for_or_back)
 
-                    while not position_object.detect_IR_output_change():
+                    while not position_object.detect_IR_W2B_change():
                         interrupt_value = GetInterrupt()
 
                         if interrupt_value == 1:

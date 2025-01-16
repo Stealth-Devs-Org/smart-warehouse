@@ -1,3 +1,4 @@
+import threading
 import time
 
 import RPi.GPIO as GPIO
@@ -21,18 +22,22 @@ class Position:
 
         self.IR_output = GPIO.input(self.IR_pin)
 
-    def detect_IR_output_change(self):
+        # threading.Thread(target=self.update_IR_output).start()
+
+    def detect_IR_W2B_change(self):
+        time.sleep(0.025)
         new_output = GPIO.input(self.IR_pin)
         old_output = self.IR_output
         self.IR_output = new_output
-        if new_output != old_output:
-            print(f"IR output: {self.IR_output}")
+        if new_output == 1 and old_output == 0:
+            print(f"New location reached. IR output: {self.IR_output}")
             return True
         return False
 
-    # def detect_location_point(self):
-    #     if self.IR_output == 1:
-    #         return True
+    def detect_IR(self):
+        time.sleep(0.025)
+        self.IR_output = GPIO.input(self.IR_pin)
+        return self.IR_output
 
     def count_position(self, status):
         # if self.detect_IR_output_change():
@@ -139,3 +144,8 @@ class Position:
                     return 1
                 elif direction == "W":
                     return 2
+
+    def update_IR_output(self):
+        while True:
+            self.IR_output = GPIO.input(self.IR_pin)
+            time.sleep(0.05)
