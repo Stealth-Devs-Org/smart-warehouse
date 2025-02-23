@@ -210,7 +210,7 @@ if __name__ == "__main__":
     idle_location = tuple(config["idle_location"])
 
     agv_state["agv_id"] = AGV_ID
-    agv_state["current_location"] = config["current_location"]
+    agv_state["current_location"] = current_location
     agv_state["current_status"] = 0
     agv_state["current_segment"] = [agv_state["current_location"]]
     agv_state["current_direction"] = direction
