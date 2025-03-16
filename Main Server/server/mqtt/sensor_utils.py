@@ -13,6 +13,7 @@ all_Sensor_Humidity_data = [{} for _ in range(7)]
 
 mqtt_client = mqtt.Client()
 
+TOPIC = "/sensor_timestamps"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,8 +31,10 @@ def ConnectMQTT():
 
 
 def on_message(client, userdata, message):
+    t2 = time.time()
     topic = message.topic
     payload = message.payload.decode()
+    print(f"Received message on topic {topic}: {payload}")
     
 
     try:
@@ -40,13 +43,14 @@ def on_message(client, userdata, message):
         logging.error(f"Invalid JSON received on topic {topic}: {payload}")
         return
 
+    data["t2"] = t2
+    t3 = time.time()
+    data["t3"] = t3
+    # Publish the message to the timestamp topic
+    mqtt_client.publish(TOPIC, json.dumps(data), qos=1)
+
     # Send sensor data through WebSocket
     send_sensor_data_through_websocket(data, topic)
-
-
-
-
-
 
 
     partition_id = data.get("partition_id", -1)
