@@ -4,11 +4,14 @@ import os
 import csv
 # from flask_mqtt import Mqtt
 import paho.mqtt.client as mqtt
-
+from server.agv.utils import  SavePacketData
 from server.config import Config
 
 # mqtt_client = Mqtt()
 mqtt_client = mqtt.Client()
+
+location_update_response_id = 0
+task_end_update_response_id = 0
 
 
 # @mqtt_client.on_connect()
@@ -57,30 +60,45 @@ def on_message(client, userdata, message):
         topic = message.topic
         payload = message.payload.decode()
         data = json.loads(payload)
+        recived_packet_id = data["id"]
         
         if topic == "agv/response":
             t1 = data["t1"]
             t2 = data["t2"]
             t3 = data["t3"]
-            SaveToCSV(data["agv_id"], data["interrupt"], t1, t2, t3, t, "interrupt_response.csv")
+            SaveCommunicationTime(data["agv_id"], data["interrupt"], t1, t2, t3, t, "interrupt_response.csv")
+            SavePacketData(recived_packet_id, data["agv_id"], "interrupt_response","received_packets-Main_Server.csv")
         else:
             SendResponse(data, t)
             if topic == "agv/location":
                 from server.agv.col_avoid import update_agv_location
 
                 update_agv_location(data)
+                SavePacketData(recived_packet_id, data["agv_id"],"location_update","received_packets-Main_Server.csv")
 
             elif topic == "agv/task_complete":
                 from server.agv.scheduler import task_complete
 
                 task_complete(data)
+                SavePacketData(recived_packet_id, data["agv_id"], "task_end_update","received_packets-Main_Server.csv")
         
         
 
 
 def SendResponse(data, t2):
     response_topic = f"{data["agv_id"]}/response"
+    if data["topic"] == "agv/location":
+        packet_type = "location_update_response"
+        global location_update_response_id
+        location_update_response_id += 1
+        sent_packet_id = f'{data["agv_id"]}/6/{location_update_response_id}'
+    elif data["topic"] == "agv/task_complete":
+        packet_type = "task_end_update_response"
+        global task_end_update_response_id
+        task_end_update_response_id += 1
+        sent_packet_id = f'{data["agv_id"]}/8/{task_end_update_response_id}'
     response = data
+    response["id"] = sent_packet_id
     response["t2"]= t2
 
     t3 = time.time()
@@ -88,9 +106,10 @@ def SendResponse(data, t2):
 
     response = json.dumps(response)
     mqtt_client.publish(response_topic, response, qos=data["qos"])
+    SavePacketData(sent_packet_id, data["agv_id"], packet_type, "sent_packets-Main_Server.csv")
     return
 
-def SaveToCSV(AGV_ID, interrupt_value,  t1, t2, t3, t4, filename):
+def SaveCommunicationTime(AGV_ID, interrupt_value,  t1, t2, t3, t4, filename):
     # Check if file exists
     file_exists = os.path.isfile(filename)
 

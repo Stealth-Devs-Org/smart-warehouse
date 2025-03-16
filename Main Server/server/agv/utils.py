@@ -265,3 +265,18 @@ def SaveProcessTime(filename, t1, t2):
 
         # Write the row with timestamps
         writer.writerow([t1, t2])
+
+def SavePacketData(packet_id, AGV_ID, type, filename):
+    # Check if file exists
+    file_exists = os.path.isfile(filename)
+
+    # Open CSV file in append mode
+    with open(filename, mode="a", newline='') as file:
+        writer = csv.writer(file)
+
+        # If file does not exist, write the header
+        if not file_exists:
+            writer.writerow(["Packet_ID", "AGV_ID", "Type"])  # Write the header
+
+        # Write the row with timestamps
+        writer.writerow([packet_id, AGV_ID, type])

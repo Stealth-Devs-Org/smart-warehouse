@@ -13,7 +13,8 @@ from server.agv.utils import (
     get_common_elements,
     get_high_value_agv_id,
     is_path_crossing,
-    SaveProcessTime
+    SaveProcessTime,
+    SavePacketData
 )
 
 agv = Blueprint("agv", __name__)
@@ -21,6 +22,9 @@ agv = Blueprint("agv", __name__)
 
 agvs_data = {}
 sent_interrupts = {}
+goal_response_id = 0
+path_clearanse_response_id = 0
+interrupt_id = 0
 
 
 # This function returns the current locations of the AGVs as an array of cordinates.
@@ -74,9 +78,11 @@ def stop_agv(agv_id, col_agv_id):#agv_id:low_value_agv_id, col_agv_id: high_valu
 
     if (agv_id in sent_interrupts) and sent_interrupts[agv_id]["interrupt"] == 1:
         return
-
+    global interrupt_id
+    interrupt_id += 1
+    sent_packet_id = f"{agv_id}/9/{interrupt_id}"
     topic = f"{agv_id}/interrupt"
-    message_dict = {
+    message_dict = {"id": sent_packet_id,
                     "agv_id": agv_id,
                     "interrupt": 1}
     
@@ -87,6 +93,7 @@ def stop_agv(agv_id, col_agv_id):#agv_id:low_value_agv_id, col_agv_id: high_valu
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
+    SavePacketData(sent_packet_id, agv_id, "interrupt", "sent_packets-Main_Server.csv")
     # print(f"Sent stop signal to AGV {agv_id}")
 
     if agv_id not in sent_interrupts:
@@ -103,9 +110,12 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:h
         sent_interrupts[agv_id]["interrupt"] == 1 or sent_interrupts[agv_id]["interrupt"] == 2
     ):
         return
-
+    global interrupt_id
+    interrupt_id += 1
+    sent_packet_id = f"{agv_id}/9/{interrupt_id}"
     topic = f"{agv_id}/interrupt"
-    message_dict = {"agv_id": agv_id,
+    message_dict = {"id":sent_packet_id,
+                    "agv_id": agv_id,
                     "interrupt": 2}
 
     t1 = time.time()
@@ -115,6 +125,7 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:h
 
     message_json = json.dumps(message_dict)
     mqtt_client.publish(topic, message_json, qos=2)
+    SavePacketData(sent_packet_id, agv_id, "interrupt", "sent_packets-Main_Server.csv")
     # print(f"Sent recalibrate signal to AGV {agv_id}")
 
     if agv_id not in sent_interrupts:
@@ -222,6 +233,7 @@ def path_clearance():
     t2 = time.time()
 
     data = request.json
+    recieved_packet_id = data["id"]
     agv_id = data["agv_id"]
     segment = data["segment"]
     t1 = data.get("t1")  # Extract t1 from client request
@@ -251,6 +263,13 @@ def path_clearance():
     #     print(agvs_data.keys())
     #     message_dict = {"result": 0}  # 0 means AGV not found
     
+
+    global path_clearanse_response_id
+    path_clearanse_response_id += 1
+    packet_type = 4
+    sent_packet_id = f"{agv_id}/{packet_type}/{path_clearanse_response_id}"
+    message_dict["id"] = sent_packet_id
+
     # Add same payload as the request
     message_dict['agv_id'] = agv_id
     message_dict['segment'] = segment
@@ -266,6 +285,8 @@ def path_clearance():
     message_json = json.dumps(message_dict)
 
     SaveProcessTime('PathClearanceTime.csv',t2,t3)
+    SavePacketData(recieved_packet_id, agv_id, "path_clearance_request", "received_packets-Main_Server.csv")
+    SavePacketData(sent_packet_id, agv_id, "path_clearance_response", "sent_packets-Main_Server.csv")
     return message_json
 
 @agv.route("/")
@@ -281,6 +302,7 @@ def get_goal():
     from server.agv.scheduler import generate_random_task, task_divider, working_agvs
 
     data = request.json
+    recived_packet_id = data["id"]
     agv_id = data["agv_id"]
     t1 = data.get("t1")  # Extract t1 from client request
 
@@ -293,6 +315,12 @@ def get_goal():
         working_agvs[agv_id] = task
         #task = working_agvs[agv_id]
         sending_task = task_divider(task)
+
+    global goal_response_id
+    goal_response_id += 1
+    packet_type = 2
+    sent_packet_id = f"{agv_id}/{packet_type}/{goal_response_id}"
+    sending_task["id"] = sent_packet_id
     
     sending_task["agv_id"] = agv_id
     # Add timestamps to the response
@@ -303,6 +331,9 @@ def get_goal():
     sending_task["t3"] = t3
     
     message_json = json.dumps(sending_task)
+    SavePacketData(recived_packet_id, agv_id, "goal_request", "received_packets-Main_Server.csv")
+    SavePacketData(sent_packet_id, agv_id, "goal_response", "sent_packets-Main_Server.csv")
+
     return message_json
 
 
