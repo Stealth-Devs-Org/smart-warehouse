@@ -44,10 +44,13 @@ def determine_actuator_command(current_temp, desired_temp):
         return "reduce"
 
 def send_to_mqtt(commands):
+    t1 = time.time()
+    commands["t1"] = t1
+    commands["t2"] = t1
+    commands["t3"] = t1 
     payload = json.dumps(commands)
     mqtt_client.publish(TOPIC, payload)
-    print(f"Published to {TOPIC}\n")
-    #print(f"Published to {TOPIC}: {payload}")
+    print(f"Published to {TOPIC}: {payload}")
 
 
 def run_actuator_control():

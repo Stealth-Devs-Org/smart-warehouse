@@ -20,6 +20,7 @@ BROKER = "localhost"
 PORT = 1883
 TOPICtoPublish = "/actuator_AirConditioner"  # MQTT topic for the air conditioner actuator
 TOPICtoSubscribe = "/actuator_control_temperature"  # Topic for temperature control
+TOPICtoTimestamp = "/temperature_control_timestamps"  # Topic for sensor timestamps
 
 
 # Function to load JSON data
@@ -76,7 +77,18 @@ class AirConditioner(threading.Thread):
 
     def on_message(self, client, userdata, msg):
         """Callback when a message is received on a subscribed topic"""
+
+        # Send ACK for timestamp calculation
+        t2 = time.time()
         data_received = json.loads(msg.payload.decode())
+        print(f"Received message: {data_received}")
+        data_received["t2"] = t2
+        t3 = time.time()
+        data_received["t3"] = t3
+        # Publish the message to the actuator topic
+        self.client.publish(TOPICtoTimestamp, json.dumps(data_received), qos=1)
+
+
         self.action = data_received.get(f"part{self.partition_id}_actuator", "")
         #print(f"Action received for partition {self.partition_id}: {action}")
         
