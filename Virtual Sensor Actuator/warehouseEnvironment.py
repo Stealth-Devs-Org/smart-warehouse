@@ -28,7 +28,8 @@ def writeToDatabase():  # Writing to the database file for the first time
     data = {
         "Temperature Values": warehouse_temperature_values,
         "AirQuality Values": warehouse_airquality_values,
-        "Humidity Values": warehouse_humidity_values
+        "Humidity Values": warehouse_humidity_values,
+        "Smoke Values": warehouse_smoke_values  # Uncomment if needed
     }
     
     with open(filepath, 'w') as file:
@@ -43,11 +44,13 @@ def ReadFromDatabase():
     read_temperature_values = data.get("Temperature Values", [])
     read_airquality_values = data.get("AirQuality Values", [])
     read_humidity_values = data.get("Humidity Values", [])
+    read_smoke_values = data.get("Smoke Values", [])  # Uncomment if needed
     
     # Print the read values
     print("Temperature Values:", read_temperature_values)
     print("Air Quality Values:", read_airquality_values)
     print("Humidity Values:", read_humidity_values)
+    print("Smoke Values:", read_smoke_values)  # Uncomment if needed
     print("\n\n")
 
 

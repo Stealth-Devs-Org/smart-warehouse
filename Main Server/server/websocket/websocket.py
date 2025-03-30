@@ -73,6 +73,8 @@ def send_sensor_data_through_websocket(data, variable):
         loop.run_until_complete(send_to_all_clients(data, "/sensor_air_quality"))
     elif variable == "/sensor_humidity":
         loop.run_until_complete(send_to_all_clients(data, "/sensor_humidity"))
+    elif variable == "/sensor_smoke":
+        loop.run_until_complete(send_to_all_clients(data, "/sensor_smoke"))
 
     
 

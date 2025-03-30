@@ -10,6 +10,7 @@ from server.websocket.websocket import send_sensor_data_through_websocket
 all_Sensor_Temperature_data = [{} for _ in range(7)]  # 7 partitions
 all_Sensor_AirQuality_data = [{} for _ in range(7)]
 all_Sensor_Humidity_data = [{} for _ in range(7)]
+all_Sensor_Smoke_data = [{} for _ in range(7)]
 
 mqtt_client = mqtt.Client()
 
@@ -22,6 +23,7 @@ def ConnectMQTT():
     mqtt_client.subscribe("/sensor_temperature", qos=1)
     mqtt_client.subscribe("/sensor_air_quality", qos=1)
     mqtt_client.subscribe("/sensor_humidity", qos=1)
+    mqtt_client.subscribe("/sensor_smoke", qos=1)
 
     
     mqtt_client.on_message = on_message
@@ -64,6 +66,9 @@ def on_message(client, userdata, message):
     elif topic == "/sensor_humidity":
         all_Sensor_Humidity_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
         write_to_file("all_Sensor_Humidity_data.json", all_Sensor_Humidity_data)
+    elif topic == "/sensor_smoke":
+        all_Sensor_Smoke_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Smoke_data.json", all_Sensor_Smoke_data)
     else:
         logging.error(f"Unknown topic: {topic}")
         return

@@ -5,11 +5,11 @@ import threading
 
 BROKER = "localhost"
 PORT = 1883
-TOPIC = "/actuator_control_temperature"
+TOPIC = "/actuator_control_smoke"
 
-desired_warehouse_temperature_values = [25.0, 25.5, 30.0, 25.5, 23.5, 23.8, 38.1]
-threshold = 0.5  # Threshold for "off" condition
-filename = 'all_Sensor_Temperature_data.json'
+desired_warehouse_smoke_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3]
+threshold = 0.01  # Threshold for "off" condition
+filename = 'all_Sensor_Smoke_data.json'
 
 mqtt_client = mqtt.Client()
 
@@ -35,14 +35,14 @@ def calculate_averages_from_file(filename):
     return partition_averages
 
 
-def determine_actuator_command(current_temp, desired_temp):
-    if abs(desired_temp - current_temp) < threshold:
+def determine_actuator_command(current_smoke, desired_smoke):
+    if abs(desired_smoke - current_smoke) < threshold:
         return "off"
-    elif desired_temp > current_temp:
+    elif desired_smoke > current_smoke:
         return "raise"
-    elif desired_temp < current_temp:
+    elif desired_smoke < current_smoke:
         return "reduce"
-        return "reduce"
+        
     else:
         return "off"
 
@@ -62,10 +62,10 @@ def run_actuator_control():
 
         if partition_averages:
             actuator_commands = {}
-            for i, avg_temp in partition_averages.items():
+            for i, avg_smoke in partition_averages.items():
                 part_index = int(i.replace('part', ''))
-                desired_temp = desired_warehouse_temperature_values[part_index]
-                actuator_command = determine_actuator_command(avg_temp, desired_temp)
+                desired_smoke = desired_warehouse_smoke_values[part_index]
+                actuator_command = determine_actuator_command(avg_smoke, desired_smoke)
                 actuator_commands[f"{i}_actuator"] = actuator_command
             
             send_to_mqtt(actuator_commands)
@@ -73,7 +73,7 @@ def run_actuator_control():
         time.sleep(1)  # 1-second interval
 
 # Start the actuator control in a separate thread
-def start_temp_actuator_thread():
+def start_smoke_actuator_thread():
     thread = threading.Thread(target=run_actuator_control, daemon=True)
     thread.start()
 

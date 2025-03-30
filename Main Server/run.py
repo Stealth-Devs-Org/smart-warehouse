@@ -32,6 +32,8 @@ from server.sensors.sensorhandler import send_sensor_data_websocket
 from server.actuatorControl.Temperature_ActuatorController import start_temp_actuator_thread 
 from server.actuatorControl.Humidity_ActuatorController import start_humidity_actuator_thread
 from server.actuatorControl.AirQuality_ActuatorController import start_air_quality_actuator_thread 
+from server.actuatorControl.Smoke_ActuatorController import start_smoke_actuator_thread
+
 
 
 
@@ -49,6 +51,7 @@ if __name__ == "__main__":
     start_temp_actuator_thread()
     start_humidity_actuator_thread()
     start_air_quality_actuator_thread()
+    start_smoke_actuator_thread()
     
 
 

@@ -51,6 +51,9 @@ def ReadVariableFromDatabase(variable_name):
             
         elif variable_name == "Humidity Values":
             return data.get("Humidity Values", [])
+        
+        elif variable_name == "Smoke Values":
+            return data.get("Smoke Values", [])
         else:
             return []
         
