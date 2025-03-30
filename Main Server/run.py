@@ -2,6 +2,7 @@ import json
 import threading
 
 
+
 with open("server/agv/json_data/agv_data.json", "w") as f:
     json.dump({}, f)
 
@@ -22,17 +23,17 @@ from server.agv.col_avoid import run_collision_avoidance
 from server.agv.keep_alive import remove_timeout_agvs, start_saving_data_thread
 from server.agv.scheduler import run_task_scheduler
 from server.websocket.utils import socketio, start_emission_thread
+
+
+
+
+# #For Sensor Data
 from server.sensors.sensorhandler import send_sensor_data_websocket
+from server.actuatorControl.Temperature_ActuatorController import start_temp_actuator_thread 
+from server.actuatorControl.Humidity_ActuatorController import start_humidity_actuator_thread
+from server.actuatorControl.AirQuality_ActuatorController import start_air_quality_actuator_thread 
+from server.actuatorControl.Smoke_ActuatorController import start_smoke_actuator_thread
 
-
-
-
-def start_sensor_websocket_thread():
-    """
-    Start a separate thread for the send_sensor_data_websocket function.
-    """
-    # sensor_thread = threading.Thread(target=send_sensor_data_websocket, daemon=True)
-    # sensor_thread.start()
 
 
 
@@ -46,8 +47,12 @@ if __name__ == "__main__":
     start_emission_thread(0.5)
     
 
-    # # Start the sensor data websocket thread
-    start_sensor_websocket_thread()
+    #For ActuatorControl Data
+    start_temp_actuator_thread()
+    start_humidity_actuator_thread()
+    start_air_quality_actuator_thread()
+    start_smoke_actuator_thread()
+    
 
 
     socketio.run(app, host="0.0.0.0", port=5000)

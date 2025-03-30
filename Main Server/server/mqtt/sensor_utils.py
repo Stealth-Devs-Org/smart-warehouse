@@ -1,109 +1,99 @@
-import json                    #Added by Sai
+import json
 import time
-
-# from flask_mqtt import Mqtt
 import paho.mqtt.client as mqtt
+import logging
 
-from server.config import Config 
-
-# from server.sensors.sensorhandler import send_sensor_data_websocket
-
+from server.config import Config
 from server.websocket.websocket import send_sensor_data_through_websocket
 
+# Initialize dictionaries for storing sensor data with 7 partitions
+all_Sensor_Temperature_data = [{} for _ in range(7)]  # 7 partitions
+all_Sensor_AirQuality_data = [{} for _ in range(7)]
+all_Sensor_Humidity_data = [{} for _ in range(7)]
+all_Sensor_Smoke_data = [{} for _ in range(7)]
 
-# mqtt_client = Mqtt()
 mqtt_client = mqtt.Client()
 
-sensor_state = {"sensor_type": "", "sensor_id": "","partition_id": 0, "sensor_location": "", "reading": 0.0, "current_status": 0}
 
-# def SetSensorState(type, id,partID, location, reading, status):
-#     global sensor_state
-#     sensor_state["sensor_type"] = type
-#     sensor_state["sensor_id"] = id
-#     sensor_state["partition_id"] = partID
-#     sensor_state["sensor_location"] = location
-#     sensor_state["reading"] = reading
-#     sensor_state["current_status"] = status     # 0 or 1 (0 = inactive, 1 = active)
+logging.basicConfig(level=logging.INFO)
+
 
 def ConnectMQTT():
-        mqtt_client.connect(Config.MQTT_BROKER_URL, Config.MQTT_BROKER_PORT, Config.MQTT_KEEPALIVE)
-        mqtt_client.subscribe("/sensor_temperature", qos=1)  # Subscribe to the location topic
-        print("subscribed to sensor_temperature")
-        mqtt_client.subscribe("/sensor_airquality", qos=1)  # Subscribe to the location topic
-        print("subscribed to sensor_airquality")
-        mqtt_client.subscribe("/sensor_humidity", qos=1)  # Subscribe to the location topic
-        print("subscribed to sensor_humidity")
-        mqtt_client.on_message = on_message  # Set the message handler
-        mqtt_client.loop_start()  # Start the MQTT loop in a separate thread
-        
+    mqtt_client.connect(Config.MQTT_BROKER_URL, Config.MQTT_BROKER_PORT, Config.MQTT_KEEPALIVE)
+    mqtt_client.subscribe("/sensor_temperature", qos=1)
+    mqtt_client.subscribe("/sensor_air_quality", qos=1)
+    mqtt_client.subscribe("/sensor_humidity", qos=1)
+    mqtt_client.subscribe("/sensor_smoke", qos=1)
+
+    
+    mqtt_client.on_message = on_message
+    mqtt_client.loop_start()
+    logging.info("MQTT connected and subscribed.")
 
 
 def on_message(client, userdata, message):
     topic = message.topic
     payload = message.payload.decode()
-    #print(f"Received by Server : {topic}: {payload}")
-
-    # data = {
-    #     "topic": topic,
-    #     "payload": json.loads(payload)   // with toipc and payload
-    #     }
     
-    data = json.loads(payload)
-
-    
-        
-    send_sensor_data_through_websocket(data)
 
     try:
-        data = json.loads(payload) 
+        data = json.loads(payload)
     except json.JSONDecodeError:
-        print(f"Failed to decode JSON for topic {topic}: {payload}")
+        logging.error(f"Invalid JSON received on topic {topic}: {payload}")
         return
 
-    # Default values for sensor state
-    sensor_state.update({
-        "sensor_type": "",  # This will be set based on the topic
-        "sensor_id": data.get("sensor_id", "unknown"),
-        "partition_id": data.get("partition_id", 0),
-        "sensor_location": data.get("sensor_location", "unknown"),
-        "reading": 0.0,  # Placeholder, will be updated below
-        "current_status": 0  # Placeholder, will be updated below
-    })
+    # Send sensor data through WebSocket
+    send_sensor_data_through_websocket(data, topic)
+
+
+
+
+
+
+
+    partition_id = data.get("partition_id", -1)
+    if partition_id < 0 or partition_id >= 7:
+        logging.error(f"Invalid partition_id: {partition_id} in topic {topic}")
+        return
+
 
     if topic == "/sensor_temperature":
-        sensor_state["sensor_type"] = "Temperature"
-        sensor_state["sensor_id"] = data.get("sensor_id")
-        sensor_state["partition_id"] = data.get("partition_id")
-        sensor_state["sensor_location"] = data.get("sensor_location")
-        sensor_state["reading"] = data.get("reading")
-        sensor_state["current_status"] = data.get("current_status")
-
-    elif topic == "/sensor_airquality":
-        sensor_state["sensor_type"] = "AirQuality"
-        sensor_state["sensor_id"] = data.get("sensor_id")
-        sensor_state["partition_id"] = data.get("partition_id")
-        sensor_state["sensor_location"] = data.get("sensor_location")
-        sensor_state["reading"] = data.get("reading")
-        sensor_state["current_status"] = data.get("current_status")
-        
-
+        all_Sensor_Temperature_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Temperature_data.json", all_Sensor_Temperature_data)
+    elif topic == "/sensor_air_quality":
+        all_Sensor_AirQuality_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_AirQuality_data.json", all_Sensor_AirQuality_data)
     elif topic == "/sensor_humidity":
-        sensor_state["sensor_type"] = "Humidity"
-        sensor_state["sensor_id"] = data.get("sensor_id")
-        sensor_state["partition_id"] = data.get("partition_id")
-        sensor_state["sensor_location"] = data.get("sensor_location")
-        sensor_state["reading"] = data.get("reading")
-        sensor_state["current_status"] = data.get("current_status")
-
-
+        all_Sensor_Humidity_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Humidity_data.json", all_Sensor_Humidity_data)
+    elif topic == "/sensor_smoke":
+        all_Sensor_Smoke_data[partition_id][data.get("sensor_id", "unknown")] = data.get("reading", 0.0)
+        write_to_file("all_Sensor_Smoke_data.json", all_Sensor_Smoke_data)
     else:
-        print(f"Unknown topic: {topic}")
+        logging.error(f"Unknown topic: {topic}")
         return
 
-  
 
-    # Print updated sensor state
-    #print(f"Updated sensor state: {sensor_state}")
+    
+    
+    
+
+    #logging.info(f"Updated data for {topic}: {data}")
 
 
+def write_to_file(filename, data):
+    try:
+        with open(filename, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
+    except Exception as e:
+        logging.error(f"Error writing to {filename}: {e}")
 
+# Main function to start the script
+if __name__ == "__main__":
+    ConnectMQTT()
+    try:
+        while True:
+            time.sleep(1)  # Keep the script running
+    except KeyboardInterrupt:
+        mqtt_client.loop_stop()
+        logging.info("MQTT connection stopped.")
