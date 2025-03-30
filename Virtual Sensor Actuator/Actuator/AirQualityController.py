@@ -6,11 +6,14 @@ import random
 
 from actuatorUtils import SetActuatorState, actuator_state  # Import the desired values
 
+# Global lock for JSON file access
+json_lock = threading.Lock()
+
 AirQualityControllerID = [
-    ["(2,2)"],  # Partition 0
-    ["(9,11)"],  # Partition 1
+    ["(2,2)"],    # Partition 0
+    ["(9,11)"],   # Partition 1
     ["(28,11)"],  # Partition 2
-    ["(5,15)"],  # Partition 3
+    ["(5,15)"],   # Partition 3
     ["(12,27)"],  # Partition 4
     ["(52,13)"],  # Partition 5
     ["(28,18)"]   # Partition 6
@@ -25,8 +28,9 @@ TOPICtoSubscribe = "/actuator_control_air_quality"  # Topic for air quality cont
 def load_json_data():
     filepath = 'warehouse_Env_data.json'
     try:
-        with open(filepath, 'r') as f:
-            return json.load(f)
+        with json_lock:  # Synchronize access to JSON file
+            with open(filepath, 'r') as f:
+                return json.load(f)
     except FileNotFoundError:
         print(f"Error: {filepath} not found!")
         return {}
@@ -38,13 +42,13 @@ def load_json_data():
 def update_json_data(air_quality_value, partitionID):
     filepath = 'warehouse_Env_data.json'
     try:
-        with open(filepath, 'r') as f:
-            data = json.load(f)
-
-        data["AirQuality Values"][partitionID] = air_quality_value  # Update air quality values
-
-        with open(filepath, 'w') as f:
-            json.dump(data, f, indent=4)
+        with json_lock:  # Synchronize access to JSON file
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+            data["AirQuality Values"][partitionID] = air_quality_value  # Update air quality values
+            with open(filepath, 'w') as f:
+                json.dump(data, f, indent=4)
+        #print(f"Updated JSON - Partition {partitionID}: Air Quality = {air_quality_value}")
     except FileNotFoundError:
         print(f"Error: {filepath} not found!")
     except json.JSONDecodeError:
@@ -64,12 +68,14 @@ class AirQualityController(threading.Thread):
         # Connect to the broker and subscribe to the control topic
         self.client.connect(BROKER, PORT, 60)
         self.client.subscribe(TOPICtoSubscribe)  # Subscribe to the air quality control topic
+        print(f"Actuator {self.actuator_id} subscribed to {TOPICtoSubscribe}")
         self.client.loop_start()
 
     def on_message(self, client, userdata, msg):
         """Callback when a message is received on a subscribed topic"""
         data_received = json.loads(msg.payload.decode())
         self.action = data_received.get(f"part{self.partition_id}_actuator", "")
+        print(f"Actuator {self.actuator_id} received action: {self.action}")
 
         if self.action == "off":
             self.running = False
@@ -78,6 +84,7 @@ class AirQualityController(threading.Thread):
             self.running = True
             rate_of_change = self.get_rate_of_change()
             SetActuatorState("AirQualityController", self.actuator_id, self.partition_id, self.actuator_id, round(rate_of_change, 2), 1)
+            self.adjust_values("AirQuality Values")  # Immediately adjust values on receiving command
 
         print(f"Actuator state: {actuator_state}")
         self.client.publish(TOPICtoPublish, str(actuator_state))
@@ -86,8 +93,7 @@ class AirQualityController(threading.Thread):
         self.connect_mqtt()
         self.client.on_message = self.on_message  # Set the callback for messages
         while self.running:
-            self.adjust_values("AirQuality Values")
-            time.sleep(random.uniform(1, 4))  # Simulate time passing between actions
+            time.sleep(0.1)  # Keep thread alive without heavy computation
 
     def stop(self):
         self.running = False
@@ -104,6 +110,7 @@ class AirQualityController(threading.Thread):
             print("Error: Missing air quality data.")
             return
 
+        print(f"Partition {self.partition_id} - Action: {self.action}, Current Air Quality: {current_air_quality_values[self.partition_id]}")
         if self.action == "raise":
             current_air_quality_values[self.partition_id] += 30
         elif self.action == "reduce":
@@ -114,7 +121,7 @@ class AirQualityController(threading.Thread):
         current_air_quality = current_air_quality_values[self.partition_id]  # Get the current air quality for the partition
         update_json_data(current_air_quality, self.partition_id)
 
-
+# Main function to initialize actuators
 def main():
     no_of_partitions = len(AirQualityControllerID)
     allActuators = []

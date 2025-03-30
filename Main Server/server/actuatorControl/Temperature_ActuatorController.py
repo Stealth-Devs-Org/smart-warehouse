@@ -40,8 +40,10 @@ def determine_actuator_command(current_temp, desired_temp):
         return "off"
     elif desired_temp > current_temp:
         return "raise"
-    else:
+    elif desired_temp < current_temp:
         return "reduce"
+    else:
+        return "off"
 
 def send_to_mqtt(commands):
     payload = json.dumps(commands)
