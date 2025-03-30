@@ -7,13 +7,13 @@ import random
 from actuatorUtils import SetActuatorState, actuator_state  # Import the desired values
 
 HumidityControllerID = [
-    ["(2,3)"],  # Partition 0
+    [],# ["(2,3)"],  # Partition 0
     ["(10,12)"],  # Partition 1
-    ["(29,12)"],  # Partition 2
-    ["(6,16)"],  # Partition 3
-    ["(13,28)"],  # Partition 4
-    ["(53,14)"],  # Partition 5
-    ["(29,19)"]   # Partition 6
+    # ["(29,12)"],  # Partition 2
+    # ["(6,16)"],  # Partition 3
+    # ["(13,28)"],  # Partition 4
+    # ["(53,14)"],  # Partition 5
+    # ["(29,19)"]   # Partition 6
 ]
 
 BROKER = "localhost"
@@ -23,7 +23,7 @@ TOPICtoSubscribe = "/actuator_control_humidity"  # Topic for humidity control
 
 # Function to load JSON data
 def load_json_data():
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             return json.load(f)
@@ -36,7 +36,7 @@ def load_json_data():
 
 # Function to update JSON data
 def update_json_data(humidity_value, partitionID):
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)

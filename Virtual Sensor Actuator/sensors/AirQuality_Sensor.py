@@ -3,22 +3,23 @@ import random
 import time
 import json
 import paho.mqtt.client as mqtt
-from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
+from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase, SaveToCSV
 
 # Sensor ID for each partition (as coordinate)
 AirQualitysensorID = [
-    ["(2,4)", "(2,8)"],
+    [],# ["(2,4)", "(2,8)"],
     ["(14,11)", "(14,3)", "(14,11)", "(14,3)"],
-    ["(34,11)", "(34,3)", "(34,11)", "(34,3)"],
-    ["(3,16)", "(3,26)", "(3,26)", "(3,16)"],
-    ["(15,27)", "(15,17)", "(15,27)", "(15,17)"],
-    ["(32,18)", "(32,27)", "(32,27)", "(32,18)"],
-    ["(49,14)", "(49,27)", "(49,14)", "(49,27)"]
+    # ["(34,11)", "(34,3)", "(34,11)", "(34,3)"],
+    # ["(3,16)", "(3,26)", "(3,26)", "(3,16)"],
+    # ["(15,27)", "(15,17)", "(15,27)", "(15,17)"],
+    # ["(32,18)", "(32,27)", "(32,27)", "(32,18)"],
+    # ["(49,14)", "(49,27)", "(49,14)", "(49,27)"]
 ]
 
 BROKER = "localhost"
 PORT = 1883
 TOPIC = "/sensor_air_quality"
+TOPICtoSubscribe = "/sensor_timestamps"
 
 class AirQualitySensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
@@ -31,15 +32,31 @@ class AirQualitySensor(threading.Thread):
     def connect_mqtt(self):
         self.client.connect(BROKER, PORT, 60)
         self.client.loop_start()
+        self.client.subscribe(TOPICtoSubscribe, qos=1)
+        self.client.on_message = self.on_message
+
+    def on_message(self, client, userdata, message):
+        t4 = time.time()
+        if message.topic == TOPICtoSubscribe:
+            payload = message.payload.decode()
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                print(f"Invalid JSON received on topic {message.topic}: {payload}")
+                return
+            if data.get("sensor_id") == self.sensor_id and data.get("sensor_type") == "AirQuality":
+                print(f"Received message on topic {message.topic}: {payload}")
+                SaveToCSV(data, t4, "sensorTimestamps.csv")
 
     def run(self):
         self.connect_mqtt()
         while self.running:
             try:
                 air_quality = self.get_air_quality_value()
-                SetSensorState("AirQuality", self.sensor_id, self.partition_id, self.sensor_id, round(air_quality, 2), 1)
+                t1 = time.time()
+                SetSensorState("AirQuality", self.sensor_id, self.partition_id, self.sensor_id, round(air_quality, 2), 1, t1)
                 print(f"Sensor state: {sensor_state} \n")
-                self.client.publish(TOPIC, json.dumps(sensor_state))
+                self.client.publish(TOPIC, json.dumps(sensor_state), qos=1)
                 time.sleep(random.uniform(1, 1.5))
             except Exception as e:
                 print(f"Error in sensor {self.sensor_id}: {e}")

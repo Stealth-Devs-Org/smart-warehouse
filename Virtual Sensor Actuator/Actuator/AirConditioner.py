@@ -7,13 +7,13 @@ import random
 from actuatorUtils import SetActuatorState, actuator_state  # Import the desired values
 
 AirConditionerID = [
-    ["(2,2)"],  # Partition 0
+    [],# ["(2,2)"],  # Partition 0
     ["(9,11)"],  # Partition 1
-    ["(28,11)"],  # Partition 2
-    ["(5,15)"],  # Partition 3
-    ["(12,27)"],  # Partition 4
-    ["(52,13)"],  # Partition 5
-    ["(28,18)"]   # Partition 6
+    # ["(28,11)"],  # Partition 2
+    # ["(5,15)"],  # Partition 3
+    # ["(12,27)"],  # Partition 4
+    # ["(52,13)"],  # Partition 5
+    # ["(28,18)"]   # Partition 6
 ]
 
 BROKER = "localhost"
