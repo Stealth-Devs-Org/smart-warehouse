@@ -168,23 +168,24 @@ from actuatorUtils import SetActuatorState, actuator_state  # Import the desired
 json_lock = threading.Lock()
 
 HumidityControllerID = [
-    ["(2,3)"],    # Partition 0
+    [],# ["(2,3)"],  # Partition 0
     ["(10,12)"],  # Partition 1
-    ["(29,12)"],  # Partition 2
-    ["(6,16)"],   # Partition 3
-    ["(13,28)"],  # Partition 4
-    ["(53,14)"],  # Partition 5
-    ["(29,19)"]   # Partition 6
+    # ["(29,12)"],  # Partition 2
+    # ["(6,16)"],  # Partition 3
+    # ["(13,28)"],  # Partition 4
+    # ["(53,14)"],  # Partition 5
+    # ["(29,19)"]   # Partition 6
 ]
 
 BROKER = "localhost"
 PORT = 1883
 TOPICtoPublish = "/actuator_HumidityController"  # MQTT topic for the humidity controller actuator
 TOPICtoSubscribe = "/actuator_control_humidity"  # Topic for humidity control
+TOPICtoTimestamp = "/humidity_control_timestamps"  # Topic for sensor timestamps
 
 # Function to load JSON data
 def load_json_data():
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with json_lock:  # Synchronize access to JSON file
             with open(filepath, 'r') as f:
@@ -198,7 +199,7 @@ def load_json_data():
 
 # Function to update JSON data
 def update_json_data(humidity_value, partitionID):
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with json_lock:  # Synchronize access to JSON file
             with open(filepath, 'r') as f:
@@ -231,7 +232,17 @@ class HumidityController(threading.Thread):
 
     def on_message(self, client, userdata, msg):
         """Callback when a message is received on a subscribed topic"""
+
+        # Send ACK for timestamp calculation
+        t2 = time.time()
         data_received = json.loads(msg.payload.decode())
+        print(f"Received message: {data_received}")
+        data_received["t2"] = t2
+        t3 = time.time()
+        data_received["t3"] = t3
+        # Publish the message to the actuator topic
+        self.client.publish(TOPICtoTimestamp, json.dumps(data_received), qos=1)
+
         self.action = data_received.get(f"part{self.partition_id}_actuator", "")
         print(f"Actuator {self.actuator_id} received action: {self.action}")
 

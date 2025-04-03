@@ -10,23 +10,24 @@ from actuatorUtils import SetActuatorState, actuator_state  # Import the desired
 json_lock = threading.Lock()
 
 AirQualityControllerID = [
-    ["(2,2)"],    # Partition 0
-    ["(9,11)"],   # Partition 1
-    ["(28,11)"],  # Partition 2
-    ["(5,15)"],   # Partition 3
-    ["(12,27)"],  # Partition 4
-    ["(52,13)"],  # Partition 5
-    ["(28,18)"]   # Partition 6
+    [],# ["(2,2)"],  # Partition 0
+    ["(9,11)"],  # Partition 1
+    # ["(28,11)"],  # Partition 2
+    # ["(5,15)"],  # Partition 3
+    # ["(12,27)"],  # Partition 4
+    # ["(52,13)"],  # Partition 5
+    # ["(28,18)"]   # Partition 6
 ]
 
 BROKER = "localhost"
 PORT = 1883
 TOPICtoPublish = "/actuator_AirQualityController"  # MQTT topic for the air quality controller actuator
 TOPICtoSubscribe = "/actuator_control_air_quality"  # Topic for air quality control
+TOPICtoTimestamp = "/airquality_control_timestamps"  # Topic for sensor timestamps
 
 # Function to load JSON data
 def load_json_data():
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with json_lock:  # Synchronize access to JSON file
             with open(filepath, 'r') as f:
@@ -40,7 +41,7 @@ def load_json_data():
 
 # Function to update JSON data
 def update_json_data(air_quality_value, partitionID):
-    filepath = 'warehouse_Env_data.json'
+    filepath = '../warehouse_Env_data.json'
     try:
         with json_lock:  # Synchronize access to JSON file
             with open(filepath, 'r') as f:
@@ -73,7 +74,17 @@ class AirQualityController(threading.Thread):
 
     def on_message(self, client, userdata, msg):
         """Callback when a message is received on a subscribed topic"""
+
+        # Send ACK for timestamp calculation
+        t2 = time.time()
         data_received = json.loads(msg.payload.decode())
+        print(f"Received message: {data_received}")
+        data_received["t2"] = t2
+        t3 = time.time()
+        data_received["t3"] = t3
+        # Publish the message to the actuator topic
+        self.client.publish(TOPICtoTimestamp, json.dumps(data_received), qos=1)
+
         self.action = data_received.get(f"part{self.partition_id}_actuator", "")
         print(f"Actuator {self.actuator_id} received action: {self.action}")
 
