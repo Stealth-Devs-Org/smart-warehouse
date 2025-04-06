@@ -88,7 +88,7 @@ def on_message(client, userdata, message):
         t2 = data["t2"]
         t3 = data["t3"]
         t4 = t
-        SaveActuatorTimestampsToCSV(type, t1, t2, t3, t4, "actuator_control_temperature.csv")
+        SaveActuatorTimestampsToCSV(type, t1, t2, t3, t4, "actuator_control_timestamps.csv")
 
     
     
