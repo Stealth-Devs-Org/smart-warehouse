@@ -17,6 +17,12 @@ from server.agv.utils import (
     SavePacketData
 )
 
+from server.websocket.websocket import (
+    send_agv_data_through_websocket,
+    send_through_websocket,
+)
+
+
 agv = Blueprint("agv", __name__)
 
 
@@ -133,12 +139,10 @@ def recalibrate_path(agv_id, segment, col_agv_id, crossing_segment=[]):#agv_id:h
     sent_interrupts[agv_id]["interrupt"] = 2
     sent_interrupts[agv_id]["location"] = agvs_data[agv_id]["location"]
     sent_interrupts[agv_id]["col_agv_id"] = col_agv_id
-    # Update_sent_interrupt_json(sent_interrupts)
 
  
 # This function checks for close AGV pairs and sends stop or recalibrate signals to the AGVs. This will be called on every update of AGV locations.
 def collision_avoidance():
-    # agvs_data = Get_values_from_agv_json()
     t1 = time.time()
 
     close_agv_pairs = get_close_agv_pairs(agvs_data, 2)
@@ -221,6 +225,10 @@ def update_agv_location(data):
     if data["status"] == 1:
         collision_avoidance()
 
+    emit_to_webpage(agvs_data, permanent_obstacles)
+    # send_through_websocket({"agvs_data": agvs_data})  # Send the AGV data to the Unity warehouse
+    send_agv_data_through_websocket(data)  # Send the AGV data to the web page / Unity warehouse
+
     # Remove the AGV location from permanent obstacles since it is back alive
     remove_from_permanent_obstacles(data["agv_id"])
 
@@ -238,8 +246,7 @@ def path_clearance():
     segment = data["segment"]
     t1 = data.get("t1")  # Extract t1 from client request
 
-    # agvs_data = Get_values_from_agv_json()
-    # if agv_id in agvs_data.keys():
+    
 
     if (
         agv_id in sent_interrupts.keys()
