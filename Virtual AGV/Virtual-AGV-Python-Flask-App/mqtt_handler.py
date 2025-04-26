@@ -16,7 +16,7 @@ location_update_id = 0
 task_end_update_id = 0
 interrupt_response_id = 0
 
-MQTT_BROKER = "localhost"
+MQTT_BROKER = "localhost" #"192.168.1.12" 
 # MQTT_BROKER = "host.docker.internal"
 
 MQTT_PORT = 1883

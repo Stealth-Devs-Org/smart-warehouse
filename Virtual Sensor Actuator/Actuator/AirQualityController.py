@@ -19,7 +19,7 @@ AirQualityControllerID = [
     # ["(28,18)"]   # Partition 6
 ]
 
-BROKER = "localhost"
+BROKER = "localhost" # "192.168.1.12"
 PORT = 1883
 TOPICtoPublish = "/actuator_AirQualityController"  # MQTT topic for the air quality controller actuator
 TOPICtoSubscribe = "/actuator_control_air_quality"  # Topic for air quality control

@@ -16,7 +16,7 @@ AirQualitysensorID = [
     # ["(49,14)", "(49,27)", "(49,14)", "(49,27)"]
 ]
 
-BROKER = "localhost"
+BROKER = "localhost" # "192.168.1.12"
 PORT = 1883
 TOPIC = "/sensor_air_quality"
 TOPICtoSubscribe = "/sensor_timestamps"

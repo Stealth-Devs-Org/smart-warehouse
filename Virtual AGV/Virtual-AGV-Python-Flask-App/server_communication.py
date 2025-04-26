@@ -1,7 +1,7 @@
 import requests
 import time
 from utils import SaveCommunicationTime, SavePacketData
-MAIN_SERVER_URL = "http://127.0.0.1:5000"
+MAIN_SERVER_URL =  "http://127.0.0.1:5000" #"http://192.168.1.12:5000"
 # MAIN_SERVER_URL = "http://host.docker.internal:5000"
 goal_request_id = 0
 path_clearance_request_id = 0

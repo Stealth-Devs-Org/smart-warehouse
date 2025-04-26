@@ -177,7 +177,7 @@ HumidityControllerID = [
     # ["(29,19)"]   # Partition 6
 ]
 
-BROKER = "localhost"
+BROKER = "localhost" #"192.168.1.12"
 PORT = 1883
 TOPICtoPublish = "/actuator_HumidityController"  # MQTT topic for the humidity controller actuator
 TOPICtoSubscribe = "/actuator_control_humidity"  # Topic for humidity control

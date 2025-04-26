@@ -20,7 +20,7 @@ HumiditysensorID = [
     # ["(49,21)"]
 ]
 
-BROKER = "localhost"
+BROKER =  "localhost" #"192.168.1.12"
 PORT = 1883
 TOPIC = "/sensor_humidity"
 TOPICtoSubscribe = "/sensor_timestamps"

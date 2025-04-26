@@ -185,7 +185,7 @@ AirConditionerID = [
     # ["(28,18)"]   # Partition 6
 ]
 
-BROKER = "localhost"
+BROKER = "localhost" # "192.168.1.12"
 PORT = 1883
 TOPICtoPublish = "/actuator_AirConditioner"  # MQTT topic for the air conditioner actuator
 TOPICtoSubscribe = "/actuator_control_temperature"  # Topic for temperature control

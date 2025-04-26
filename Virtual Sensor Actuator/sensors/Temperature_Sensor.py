@@ -17,7 +17,7 @@ TempsensorID = [
     # ["(52,13)", "(52,26)", "(46,17)", "(46,24)"]
 ]
 
-BROKER = "localhost"
+BROKER ="localhost" #"192.168.1.12" 
 PORT = 1883
 TOPIC = "/sensor_temperature"
 TOPICtoSubscribe = "/sensor_timestamps"
