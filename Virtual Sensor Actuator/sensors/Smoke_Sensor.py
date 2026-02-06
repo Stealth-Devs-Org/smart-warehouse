@@ -1,5 +1,3 @@
-
-
 import threading
 import random
 import time
@@ -7,10 +5,8 @@ import json
 import paho.mqtt.client as mqtt
 from sensorUtils import SetSensorState, sensor_state, ReadVariableFromDatabase
 
-
-HumiditysensorID = [
-    # No Partition for Humidity    
-    
+SmokesensorID = [
+    # No Partition for Smoke (same layout as HumiditySensor for consistency; adjust if needed)
     ["(2,6)"], 
     ["(14,7)"], 
     ["(36,6)"],
@@ -22,9 +18,9 @@ HumiditysensorID = [
 
 BROKER = "localhost"
 PORT = 1883
-TOPIC = "/sensor_humidity"
+TOPIC = "/sensor_smoke"
 
-class HumiditySensor(threading.Thread):
+class SmokeSensor(threading.Thread):
     def __init__(self, sensor_id, partition_id):
         threading.Thread.__init__(self)
         self.client = mqtt.Client()
@@ -40,8 +36,8 @@ class HumiditySensor(threading.Thread):
         self.connect_mqtt()
         while self.running:
             try:
-                humidity = self.get_humidity_value()
-                SetSensorState("Humidity", self.sensor_id, self.partition_id, self.sensor_id, round(humidity, 2), 1)
+                smoke = self.get_smoke_value()
+                SetSensorState("Smoke", self.sensor_id, self.partition_id, self.sensor_id, round(smoke, 4), 1)
                 print(f"Sensor state: {sensor_state} \n")
                 self.client.publish(TOPIC, json.dumps(sensor_state))
                 time.sleep(random.uniform(1, 1.5))
@@ -53,14 +49,14 @@ class HumiditySensor(threading.Thread):
         self.client.loop_stop()
         self.running = False
 
-    def get_humidity_value(self):
-        warehouse_humidity_values = ReadVariableFromDatabase("Humidity Values")
-        if not warehouse_humidity_values:
-            print("Error: Humidity values not found in the database.")
+    def get_smoke_value(self):
+        warehouse_smoke_values = ReadVariableFromDatabase("Smoke Values")
+        if not warehouse_smoke_values:
+            print("Error: Smoke values not found in the database.")
             return 0
-        base_humidity = warehouse_humidity_values[self.partition_id]
-        variation = random.uniform(0, 0.4)
-        return base_humidity + variation
+        base_smoke = warehouse_smoke_values[self.partition_id]
+        variation = random.uniform(0, 0.001)  
+        return base_smoke + variation
 
 def monitor_sensors(allSensors):
     while True:
@@ -68,20 +64,20 @@ def monitor_sensors(allSensors):
             for sensor in partition:
                 if not sensor.running:
                     print(f"Restarting sensor {sensor.sensor_id} in partition {sensor.partition_id}")
-                    new_sensor = HumiditySensor(sensor.sensor_id, sensor.partition_id)
+                    new_sensor = SmokeSensor(sensor.sensor_id, sensor.partition_id)
                     partition.remove(sensor)
                     partition.append(new_sensor)
                     new_sensor.start()
         time.sleep(2)
 
 def main():
-    no_of_partitions = len(HumiditysensorID)
+    no_of_partitions = len(SmokesensorID)
     allSensors = []
 
     for j in range(no_of_partitions):
         allSensors.append([])
-        for coord in HumiditysensorID[j]:
-            sensor = HumiditySensor(sensor_id=coord, partition_id=j)
+        for coord in SmokesensorID[j]:
+            sensor = SmokeSensor(sensor_id=coord, partition_id=j)
             allSensors[j].append(sensor)
             sensor.start()
 

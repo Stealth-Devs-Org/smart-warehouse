@@ -1,7 +1,7 @@
 import requests
 import time
 from utils import SaveToCSV
-MAIN_SERVER_URL = "http://127.0.0.1:5000"
+MAIN_SERVER_URL = "http://127.0.0.1:5050"
 # MAIN_SERVER_URL = "http://host.docker.internal:5000"
 
 

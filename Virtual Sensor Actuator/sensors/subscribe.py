@@ -1,3 +1,7 @@
+
+
+# TEST CODE TO SUBSCRIBE TO TOPICS
+
 import paho.mqtt.client as mqtt
 
 BROKER = "localhost"  

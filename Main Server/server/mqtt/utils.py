@@ -106,8 +106,8 @@ def SaveToCSV(AGV_ID, interrupt_value,  t1, t2, t3, t4, filename):
         writer.writerow([AGV_ID, interrupt_value, t1, t2, t3, t4])
 
 
-            task_complete(data)
-    except json.JSONDecodeError as e:
-        print(f"Error decoding message: {e}")
+    #     task_complete(data)
+    # except json.JSONDecodeError as e:
+    #     print(f"Error decoding message: {e}")            # error detected here without changing the code
 
 
