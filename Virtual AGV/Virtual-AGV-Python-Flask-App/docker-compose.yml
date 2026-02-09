@@ -1,0 +1,94 @@
+services:
+  agv_instance_1:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=0
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+    # ports:
+    #   - "5001:5001"
+
+  agv_instance_2:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=1
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+    # ports:
+    #   - "5002:5001"
+
+  agv_instance_3:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=2
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+  
+  agv_instance_4:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=3
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+
+  agv_instance_5:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=4
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+
+  agv_instance_6:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=5
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+
+  agv_instance_7:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=6
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+
+  agv_instance_8:
+    build: .
+    image: agv:latest
+    environment:
+      # - CONFIG_PATH=/app/config.yaml
+      - INSTANCE_ID=7
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
