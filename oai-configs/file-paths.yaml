@@ -1,0 +1,52 @@
+---
+core:
+  docker-compose:
+    slicing-basic-nrf: conf/docker-compose-slicing-basic-nrf.yaml
+ran:
+  gnb:
+    oai:
+      exec: /home/kurrshanthv/oai/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem
+      config:
+        hardware:
+          n310: 
+            40MHz:
+            60MHz:
+            100MHz:
+          b210:
+            40MHz:
+        simulation:
+          docker:
+            40MHz:
+          host:
+            40MHz: ran-conf/gnb.sa.band78.fr1.106PRB.usrpb210.conf
+    srsRAN: 
+      exec: /home/kurrshanthv/srsRAN_Project/build/apps/gnb/gnb
+      config:
+        hardware:
+          n310:
+            40MHz: 
+            60MHz:
+            100MHz:
+          b210:
+            40MHz: /home/kurrshanthv/oai/bash-scripts/ran-conf/gnb_rf_b210_tdd_n78_40mhz.yml
+  ue:
+    exec: /home/kurrshanthv/oai/openairinterface5g/cmake_targets/ran_build/build/nr-uesoftmodem
+    multi-ue: ran-conf/multi-ue.sh
+    chanmod: ran-conf/channelmod_rfsimu.conf
+    config:
+      simulation:
+        docker:
+        host:
+          ue1: ran-conf/ue1.conf
+          ue2: ran-conf/ue2.conf
+  ric:
+    exec: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/ric/nearRT-RIC
+    config: ric-conf/flexric.conf
+    lib: /usr/local/lib/flexric/
+    xapp:
+      KPM-moni: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/xApp/c/monitor/xapp_kpm_moni
+      RC-moni: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/xApp/c/monitor/xapp_rc_moni
+      RC-ctrl: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/xApp/c/kpm_rc/xapp_kpm_rc
+      Slice-ctrl: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/xApp/c/slice/xapp_rc_slice_ctrl
+      MAC-RLC-PDCP-GTP-moni: /home/kurrshanthv/oai/openairinterface5g/openair2/E2AP/flexric/build/examples/xApp/c/monitor/xapp_gtp_mac_rlc_pdcp_moni
+      

@@ -1,0 +1,796 @@
+# This example configuration outlines how to configure the srsRAN Project gNB to create a single TDD cell
+# transmitting in band 78, with 20 MHz bandwidth and 30 kHz sub-carrier-spacing. A USRP B200 is configured
+# as the RF frontend using split 8. Note in this example an external clock source is not used, so the sync
+# is not defined and the default is used.
+
+# Quality of Service (QoS) example configurations for 5QI 1, 2, 5, 7 and 9
+# Based on 5QI characteristics in TS 23.501 table 5.7.4-1 
+
+# This is a supplementary configuration to modify the RLC and PDCP radio bearers on 
+# a per 5QI basis.
+
+# The default values are picked to try to acheive the QoS requirements defined in
+# TS 23.501 -- System architecture for the 5G System, table 5.7.4-1.
+
+qos:
+  #
+  # Guaranteed Bitrate 5QIs
+  #
+  -
+    # 5QI=1 e.g. Conversational Voice
+    # PDB=100ms PER=10^-2
+    five_qi: 1
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 100
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 50
+  -
+    # 5QI=2 e.g. conversational video
+    # PDB=150ms PER=10^-3
+    five_qi: 2
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 150
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 50
+  -
+    # 5QI=3 e.g. real time gaming
+    # PDB=50ms PER=10^-3
+    five_qi: 3 
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 50
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 35
+  -
+    # 5QI = 4 e.g. non-conversational video 
+    # PDB = 300ms PER = 10^-6
+    five_qi: 4
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 300
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 140
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 80
+          max-retx-threshold: 4
+          poll-pdu: 64
+          poll-byte: 125
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 80
+          t-status-prohibit: 10
+  -
+    # 5QI = 65 e.g. Mission Critical user plane Push To Talk 
+    # PDB = 75ms PER = 10^-2
+    five_qi: 65
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 75
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 50
+  -
+    # 5QI = 66 e.g. Non-Mission-Critical user plane Push To Talk voice 
+    # PDB = 100ms PER = 10^-2
+    five_qi: 66
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 100
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 50
+  -
+    # 5QI = 67 e.g. Mission Critical Video user plane 
+    # PDB = 100ms PER = 10^-3
+    five_qi: 67
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 100
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 50
+  #
+  # Non-Guaranteed Bitrate 5QIs
+  #
+  -
+    # 5QI = 5 e.g IMS signaling 
+    # PDB = 100ms PER = 10^-6
+    five_qi: 5
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 100
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 500
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 80
+          max-retx-threshold: 4
+          poll-pdu: 64
+          poll-byte: 125
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 80
+          t-status-prohibit: 10
+  -
+    # 5QI = 6 e.g Video (Buffered Streaming)
+    # PDB = 300ms PER = 10^-6
+    five_qi: 6
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 300
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 100
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 80
+          max-retx-threshold: 4
+          poll-pdu: 64
+          poll-byte: 125
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 80
+          t-status-prohibit: 10
+  -
+    # 5QI = 7 e.g Voice,Video (Live Streaming)
+    # PDB = 100ms PER = 10^-3
+    five_qi: 7
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: -1
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 50
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 100
+  -
+    # 5QI = 8 e.g Video (Buffered Streaming)
+    # PDB = 300ms PER = 10^-6
+    five_qi: 8
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 300
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 100
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 80
+          max-retx-threshold: 4
+          poll-pdu: 64
+          poll-byte: 125
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 80
+          t-status-prohibit: 10
+  -
+    # 5QI = 9 e.g Video (Buffered Streaming)
+    # PDB = 300ms PER = 10^-6
+    five_qi: 9
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: -1
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 220
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 20
+          max-retx-threshold: 32
+          poll-pdu: 16
+          poll-byte: -1
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 20
+          t-status-prohibit: 10
+  -
+    # 5QI = 10 e.g Video (Buffered Streaming)
+    # PDB = 1100ms PER = 10^-6
+    five_qi: 10
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 1500
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 500
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 20
+          max-retx-threshold: 32
+          poll-pdu: 16
+          poll-byte: -1
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 20
+          t-status-prohibit: 10
+  -
+    # 5QI = 69 e.g Mission Critical delay sensitive signalling
+    # PDB = 60ms PER = 10^-6
+    five_qi: 69
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 60
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 20
+          max-retx-threshold: 32
+          poll-pdu: 16
+          poll-byte: -1
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 20
+          t-status-prohibit: 10
+  -
+    # 5QI = 70 e.g Mission Critical Data
+    # PDB = 200ms PER = 10^-6
+    five_qi: 70
+    pdcp:
+      tx:
+        sn: 18
+        discard_timer: 200
+        status_report_required: false
+      rx:
+        sn: 18
+        t_reordering: 100
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: am
+      am:
+        tx:
+          sn: 18
+          t-poll-retransmit: 20
+          max-retx-threshold: 32
+          poll-pdu: 16
+          poll-byte: -1
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 18
+          t-reassembly: 20
+          t-status-prohibit: 10
+  #
+  # Delay-critical Guaranteed Bitrate 5QIs
+  #
+  -
+    # 5QI = 82 e.g Discrete Automation
+    # PDB = 10ms PER = 10^-4
+    five_qi: 82
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 83 e.g Discrete Automation
+    # PDB = 10ms PER = 10^-4
+    five_qi: 83
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 84 e.g Intelligent transport systems
+    # PDB = 30ms PER = 10^-5
+    five_qi: 84
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 30
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 85 e.g Electricity Distribution-high voltage
+    # PDB = 5ms PER = 10^-5
+    five_qi: 85
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 86 e.g V2X messages
+    # PDB = 5ms PER = 10^-4
+    five_qi: 86
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 87 e.g Interactive Service-Motion tracking data
+    # PDB = 5ms PER = 10^-3
+    five_qi: 87
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 88 e.g Interactive Service-Motion tracking data 
+    # PDB = 10ms PER = 10^-3
+    five_qi: 88
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 10
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 89 e.g Visual content for cloud/edge/split rendering
+    # PDB = 15ms PER = 10^-4
+    five_qi: 89
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 20
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+  -
+    # 5QI = 90 e.g Visual content for cloud/edge/split rendering
+    # PDB = 20ms PER = 10^-4
+    five_qi: 90
+    pdcp:
+      tx:
+        sn: 12
+        discard_timer: 20
+        status_report_required: false
+      rx:
+        sn: 12
+        t_reordering: 0
+        out_of_order_delivery: false
+    f1u_cu_up:
+      backoff_timer: 10
+    f1u_du:
+      backoff_timer: 10
+    rlc:
+      mode: um-bidir
+      um-bidir:
+        tx:
+          sn: 12
+          queue-size: 16384
+          queue-bytes: 6172672
+        rx:
+          sn: 12
+          t-reassembly: 10
+
+cu_cp:
+  amf:
+    addr: 192.168.70.138
+    port: 38412
+    bind_addr: 192.168.70.1
+    supported_tracking_areas:
+      - tac: 1
+        plmn_list:
+          - plmn: "00101"
+            tai_slice_support_list:
+              - sst: 2
+              - sst: 3
+
+ru_sdr:
+  device_driver: uhd
+  device_args: type=b200,num_recv_frames=64,num_send_frames=64
+  srate: 61.44
+  otw_format: sc12
+  tx_gain: 80
+  rx_gain: 40
+
+cell_cfg:
+  dl_arfcn: 632628 # 632628 # 621312
+  band: 78
+  channel_bandwidth_MHz: 40
+  common_scs: 30
+  plmn: "00101"
+  tac: 1
+  pci: 1
+  slicing:
+    - sst: 2
+      sched_cfg:                              # Scheduler configuration for the slice
+        min_prb_policy_ratio: 70                 # Optional UINT (0). Sets the minimum percentage of PRBs to be allocated to the slice. Supported [0 - 100].
+        max_prb_policy_ratio: 100               # Optional UINT (100). Sets the maximum percentage of PRBs to be allocated to the slice. Supported [1 - 100].
+    - sst: 3
+      sched_cfg:                              
+        min_prb_policy_ratio: 0                 
+        max_prb_policy_ratio: 30
+  pdsch:
+    mcs_table: qam64
+  ssb:
+    ssb_period: 20
+  pusch:
+    min_k2: 2
+  tdd_ul_dl_cfg:
+    dl_ul_tx_period: 4
+    nof_dl_slots: 2
+    nof_dl_symbols: 10
+    nof_ul_slots: 1
+    nof_ul_symbols: 0
+  pucch:
+    sr_period_ms: 2
+    min_k1: 2
+  mac_cell_group:
+    bsr_cfg:
+      periodic_bsr_timer: 1
+  
+
+log:
+  filename: /tmp/gnb.log
+  all_level: warning
+
+e2:
+  # enable_cu_cp_e2: true                # Optional BOOLEAN (false). Enables the CU E2 agent for CU-CP. Supported: [false, true]. 
+  # enable_cu_up_e2: true                # Optional BOOLEAN (false). Enables the CU E2 agent for CU-UP. Supported: [false, true]. 
+  enable_du_e2: false                   # Optional BOOLEAN (false). Enables the DU E2 agent. Supported: [false, true].
+  addr: 127.0.0.1                       # Optional TEXT (127.0.0.1). Sets the RIC IP address.
+  port: 36421                           # Optional UINT (36421). Sets the RIC Port. Supported: [20000 - 40000].
+  bind_addr: 127.0.0.1                  # Optional TEXT (127.0.0.1). Sets the local IP address to bind for RIC connection. Supported: IPv4 address.
+  sctp_rto_initial: 120                 # Optional INT (120). Sets the initial retransmission timeout when creating the SCTP connection.
+  sctp_rto_min: 150                     # Optional INT (150). Sets the minimum retransmission timeout for the SCTP connection.
+  sctp_rto_max: 500                     # Optional INT (500). Sets the maximum retransmission timeout for the SCTP connection.
+  sctp_init_max_attempts: 3             # Optional INT (3). Sets the maximum retransmission attempts for the initial SCTP connection.
+  sctp_max_init_timeo: 500              # Optional INT (500). Sets the maximum retransmission timeout for the initial SCTP connection.
+  e2sm_kpm_enabled: true               # Optional BOOLEAN (false). Enabled the E2SM KPM service module. Supported: [false, true].
+  e2sm_rc_enabled: true                # Optional BOOLEAN (false). Enabled the E2SM RC service module. Supported: [false, true].
+  
+pcap:
+  mac_enable: false
+  mac_filename: /tmp/gnb_mac.pcap
+  ngap_enable: false
+  ngap_filename: /tmp/gnb_ngap.pcap
+

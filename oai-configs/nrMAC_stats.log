@@ -1,0 +1,10 @@
+
+E RNTI 077c CU-UE-ID 1 in-sync PH 52 dB PCMAX 20 dBm, average RSRP -44 (12 meas)
+UE 077c: UL-RI 1, TPMI 0
+UE 077c: dlsch_rounds 105/0/0/0, dlsch_errors 0, pucch0_DTX 0, BLER 0.00001 MCS (0) 9
+UE 077c: ulsch_rounds 913/0/0/0, ulsch_errors 0, ulsch_DTX 0, BLER 0.00000 MCS (0) 9 (Qm 2 deltaMCS 0 dB) NPRB 5  SNR 24.0 dB
+UE 077c: MAC:    TX          13026 RX         101348 bytes
+UE 077c: LCID 1: TX            537 RX            299 bytes
+UE 077c: LCID 2: TX              0 RX              0 bytes
+UE 077c: LCID 4: TX             15 RX            345 bytes
+
